@@ -11,6 +11,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.egnss4coffeev2.utils.GeoCalculator
+import com.example.egnss4coffeev2.utils.convertSize
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
@@ -59,7 +60,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         get() = _userChoice
 
     // Method to set coordinates and calculated area
-    fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double? {
+    fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double {
         _coordinates.value = coordinates
         val area = GeoCalculator.calculateArea(coordinates)
         _calculatedArea.value = area
@@ -97,9 +98,25 @@ class MapViewModel @Inject constructor() : ViewModel() {
         _showDialog.value = false
     }
 
-    fun updateRadiusWithChoice(choice: String) {
+    fun updateSizeWithChoice(choice: String) {
         _size.value = choice
         _showDialog.value = false
+    }
+    // Method to retrieve the size input
+    fun getSizeInput(): Double? {
+        return _size.value.toDoubleOrNull()
+    }
+
+    // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
+    fun saveSize(selectedUnit: String, coordinatesData: List<Pair<Double, Double>>?): Number {
+        val currentSize = size.value.toFloatOrNull() ?: 0.0f
+        val finalSize = if (currentSize < 4f) {
+            convertSize(currentSize.toDouble(), selectedUnit)
+        } else {
+            calculateArea(coordinatesData)
+        }
+        updateSize(finalSize.toString())
+        return finalSize
     }
 
 
@@ -145,18 +162,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
             println("Cannot calculate the view coordinates of nothing. : ${e.message}")
         }
         return LatLngBounds(LatLng(0.0, 0.0), LatLng(0.0, 0.0))
-    }
-
-    @Composable
-    fun addMarker(latitude: Double, longitude: Double) {
-        MarkerInfoWindow(
-            state = rememberMarkerState(position = LatLng(latitude, longitude)),
-            snippet = "Some stuff",
-            onClick = {
-                true
-            },
-            draggable = true
-        )
     }
 
     companion object {

@@ -88,11 +88,36 @@ fun SiteForm(navController: NavController) {
     }
 
     fun validateForm(): Boolean {
-        isValid = // You can display an error message for this field if needed
-            !(name.isBlank() || agentName.isBlank() || village.isBlank() || district.isBlank())
+        isValid = true  // Reset isValid to true before starting validation
+
+        if (name.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if (agentName.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+        if (village.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if (district.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if (email.isNotBlank() && !email.contains("@")) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
 
         return isValid
     }
+
 
     val scrollState = rememberScrollState()
     val fillForm = stringResource(id = R.string.fill_form)
@@ -173,7 +198,9 @@ fun SiteForm(navController: NavController) {
                 onDone = { focusRequester3.requestFocus() }
             ),
             value = phoneNumber,
-            onValueChange = { phoneNumber = it },
+            onValueChange = { phoneNumber = it
+                isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
+            },
             label = { Text(stringResource(id = R.string.phone_number)) },
             supportingText = {
                 if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text("Invalid Phone Number")
@@ -271,7 +298,7 @@ fun SiteForm(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (validateForm()) {
+                if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
                     addSite(
                         farmViewModel,
                         name,
@@ -283,12 +310,12 @@ fun SiteForm(navController: NavController) {
                     )
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
-//                    context.finish()
+                    // context.finish()  // Uncomment if you want to finish the activity
                     navController.navigate("siteList")
                     // Show toast indicating success
-                    Toast.makeText(context, "Site added successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.fill_form, Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier

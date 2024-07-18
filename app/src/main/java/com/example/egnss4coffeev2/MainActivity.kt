@@ -5,11 +5,13 @@ import android.Manifest
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -51,17 +53,6 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission is granted. Continue with the action that requires permission.
-            startSyncService()
-        } else {
-            // Permission is denied. Handle the case where the user denies the permission.
-        }
-    }
-
     private val viewModel: MapViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels {
         LanguageViewModelFactory(application)
@@ -69,7 +60,11 @@ class MainActivity : ComponentActivity() {
     private val sharedPreferences by lazy {
         getSharedPreferences("theme_mode", MODE_PRIVATE)
     }
+    private val sharedPref by lazy {
+        getSharedPreferences("FarmCollector", MODE_PRIVATE)
+    }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,14 +78,13 @@ class MainActivity : ComponentActivity() {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
+        //        remove plot_size from shared preferences if it exists
+        if (sharedPref.contains("plot_size")) {
+            sharedPref.edit().remove("plot_size").apply()
+        }
+
         // Start the service when the activity is created
         startSyncService()
-
-        // Optionally, request permission if needed
-        requestSyncPermission()
-
-
-
         setContent {
             val navController = rememberNavController()
             val currentLanguage by languageViewModel.currentLanguage.collectAsState()
@@ -102,10 +96,11 @@ class MainActivity : ComponentActivity() {
             FarmCollectorThemeV2(darkTheme = darkMode.value) {
                 val multiplePermissionsState = rememberMultiplePermissionsState(
                     listOf(
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
                     )
                 )
                 LaunchedEffect(true) {
@@ -181,24 +176,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    private fun requestSyncPermission() {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission already granted, continue with the action
-                startSyncService()
-            }
-            else -> {
-                // Permission has not been granted, request it
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
-
     private fun startSyncService() {
         val serviceIntent = Intent(this, SyncService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)

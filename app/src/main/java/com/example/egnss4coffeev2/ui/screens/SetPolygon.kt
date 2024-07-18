@@ -4,6 +4,7 @@ package com.example.egnss4coffeev2.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.location.Location
 import android.os.Looper
 import android.util.Log
@@ -21,12 +22,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +81,13 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
  * This screen helps you to capture and visualize farm polygon.
  * When capturing, You are able to start, add point, clear map or remove a point on the map
  */
+/**
+ * This screen helps you to capture and visualize farm polygon.
+ * When capturing, You are able to start, add point, clear map or remove a point on the map
+ */
+
+const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
+const val ENTERED_AREA_OPTION = "ENTERED_AREA"
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MissingPermission")
 @Composable
@@ -81,6 +105,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val farmInfo = farmData?.first
     var accuracy by remember { mutableStateOf("") }
     var viewSelectFarm by remember { mutableStateOf(false) }
+    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
 
     val locationRequest = LocationRequest.create().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -88,11 +113,58 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         fastestInterval = 500 // Fastest update interval in milliseconds
     }
 
-    val mapViewModel: MapViewModel = viewModel()
-    val size by mapViewModel.size.collectAsState()
 
-    // State to handle TextField value
-    var textFieldValue by remember { mutableStateOf(TextFieldValue(size.toString())) }
+    val showAlertDialog = remember { mutableStateOf(false) }
+
+    val showPermissionRequest = remember { mutableStateOf(false) }
+
+    val mapViewModel: MapViewModel = viewModel()
+    // Remember the state for showing the dialog
+    val showLocationDialog = remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(Unit) {
+        mapViewModel.clearCoordinates()
+        if (!isLocationEnabled(context)) {
+            showLocationDialog.value = true
+        }
+    }
+
+    // Define string constants
+    val titleText = stringResource(id = R.string.enable_location_services)
+    val messageText = stringResource(id = R.string.location_services_required_message)
+    val enableButtonText = stringResource(id = R.string.enable)
+
+// Dialog to prompt user to enable location services
+    if (showLocationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialog.value = false },
+            title = { Text(titleText) },
+            text = { Text(messageText) },
+            confirmButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    promptEnableLocation(context)
+                }) {
+                    Text(enableButtonText)
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    Toast.makeText(
+                        context,
+                        R.string.location_permission_denied_message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            }
+
+        )
+    }
+
 
     if (!isCapturingCoordinates && farmInfo == null) {
         fusedLocationClient.getCurrentLocation(locationRequest.priority,
@@ -135,43 +207,74 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         viewSelectFarm = true
     }
 
-    val enteredArea = size.toDoubleOrNull() ?: 0.0
-    val calculatedArea = GeoCalculator.calculateArea(coordinates) ?: 0.0f
-
-    // Confirm farm polygon setting
+    val enteredArea = sharedPref.getString("plot_size", "0.0")?.toDoubleOrNull() ?: 0.0
+    val calculatedArea = mapViewModel.calculateArea(coordinates)
     if (showConfirmDialog.value) {
-
-
         ConfirmDialog(
             title = stringResource(id = R.string.set_polygon),
             message = stringResource(id = R.string.confirm_set_polygon),
             showConfirmDialog,
-            fun(){
-                mapViewModel.clearCoordinates()
-                mapViewModel.addCoordinates(coordinates)
-                navController.previousBackStackEntry?.savedStateHandle?.apply {
-                    set("coordinates", coordinates)
-                }
+            fun() {
+                // Check if coordinates size is greater than 4
+//                if (coordinates.size >= 4 && coordinates.first() == coordinates.last()) {
+                if (coordinates.size >= 3) {
+                    mapViewModel.clearCoordinates()
+                    mapViewModel.addCoordinates(coordinates)
+                    navController.previousBackStackEntry?.savedStateHandle?.apply {
+                        set("coordinates", coordinates)
+                    }
 
-                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                } else {
+                    showAlertDialog.value = true
+                }
             }
         )
     }
+
+// Alert dialog for insufficient coordinates
+    if (showAlertDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                showAlertDialog.value = false
+            },
+            title = {
+                Text(text = stringResource(id = R.string.insufficient_coordinates_title))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.insufficient_coordinates_message))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAlertDialog.value = false
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.ok))
+                    showConfirmDialog.value = false
+                    mapViewModel.clearCoordinates()
+                }
+            }
+        )
+    }
+
     // Display AreaDialog if needed
     AreaDialog(
         showDialog = mapViewModel.showDialog.collectAsState().value,
         onDismiss = { mapViewModel.dismissDialog() },
         onConfirm = { chosenArea ->
-            val chosenSize = if (chosenArea.contains("Calculated")) mapViewModel.calculatedArea.toString() else mapViewModel.size.toString()
-            Log.d(TAG, "Choosen Size ${chosenSize}")
-            mapViewModel.updateSize(chosenSize)
-            textFieldValue = TextFieldValue(chosenSize) // Update TextFieldValue
+            val chosenSize = when (chosenArea) {
+                CALCULATED_AREA_OPTION -> calculatedArea.toString()
+                ENTERED_AREA_OPTION -> enteredArea.toString()
+                else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
+            }
+            sharedPref.edit().putString("plot_size", chosenSize).apply()
+            coordinates = listOf() // Clear coordinates array when starting
+            mapViewModel.clearCoordinates()
             navController.navigateUp()
         },
-        calculatedArea = calculatedArea.toDouble(),
+        calculatedArea = calculatedArea,
         enteredArea = enteredArea
-
-
     )
 
     // Confirm clear map
@@ -309,76 +412,86 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
-                            if (!isCapturingCoordinates && !showConfirmDialog.value) {
-                                coordinates = listOf() // Clear coordinates array when starting
-                                viewModel.clearCoordinates()
-                                isCapturingCoordinates = true
-                            } else if (isCapturingCoordinates && !showConfirmDialog.value) {
-                                showConfirmDialog.value = true
+                            if (!isLocationEnabled(context)) {
+                                showLocationDialog.value = true
+                            } else {
+                                if (!isCapturingCoordinates && !showConfirmDialog.value) {
+                                    coordinates = listOf() // Clear coordinates array when starting
+                                    viewModel.clearCoordinates()
+                                    isCapturingCoordinates = true
+                                } else if (isCapturingCoordinates && !showConfirmDialog.value) {
+                                    showConfirmDialog.value = true
+                                }
                             }
                         }) {
-                        Text(
-                            fontSize = 12.sp,
-                            color = Color.Black,
-                            text = if (isCapturingCoordinates) stringResource(id = R.string.finish) else stringResource(
-                                id = R.string.start
-                            )
+                        Icon(
+                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
+                            contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp)
                         )
                     }
                     ElevatedButton(modifier = Modifier
                         .fillMaxWidth(0.28f),
                         shape = RoundedCornerShape(0.dp),
-                        colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        //colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
                         onClick = {
-                            if (context.hasLocationPermission() && isCapturingCoordinates) {
-                                fusedLocationClient.getCurrentLocation(locationRequest.priority,
-                                    object : CancellationToken() {
-                                        override fun onCanceledRequested(p0: OnTokenCanceledListener) =
-                                            CancellationTokenSource().token
+                            if (!isLocationEnabled(context)) {
+                                showLocationDialog.value = true
+                            } else {
+                                if (context.hasLocationPermission() && isCapturingCoordinates) {
+                                    fusedLocationClient.getCurrentLocation(locationRequest.priority,
+                                        object : CancellationToken() {
+                                            override fun onCanceledRequested(p0: OnTokenCanceledListener) =
+                                                CancellationTokenSource().token
 
-                                        override fun isCancellationRequested() = false
-                                    }).addOnSuccessListener { location: Location? ->
-                                    if (location == null) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.can_not_get_location),
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    } else {
-                                        if (location.latitude.toString()
-                                                .split(".")[1].length < 6 || location.longitude.toString()
-                                                .split(".")[1].length < 6
-                                        ) {
+                                            override fun isCancellationRequested() = false
+                                        }).addOnSuccessListener { location: Location? ->
+                                        if (location == null) {
                                             Toast.makeText(
                                                 context,
                                                 context.getString(R.string.can_not_get_location),
                                                 Toast.LENGTH_LONG
                                             ).show()
+                                        } else {
+                                            if (location.latitude.toString()
+                                                    .split(".")[1].length < 6 || location.longitude.toString()
+                                                    .split(".")[1].length < 6
+                                            ) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.can_not_get_location),
+                                                    Toast.LENGTH_LONG
+                                                ).show()
 
-                                            return@addOnSuccessListener
-                                        }
+                                                return@addOnSuccessListener
+                                            }
 
 //                                            update map camera position
-                                        val coordinate =
-                                            Pair(location.latitude, location.longitude)
-                                        accuracy = location.accuracy.toString()
+                                            val coordinate =
+                                                Pair(location.latitude, location.longitude)
+                                            accuracy = location.accuracy.toString()
 
-                                        coordinates = coordinates + coordinate
-                                        viewModel.addMarker(coordinate)
+                                            coordinates = coordinates + coordinate
+                                            viewModel.addMarker(coordinate)
 
 //                                                add camera position
-                                        viewModel.addCoordinate(
-                                            location.latitude, location.longitude
-                                        )
+                                            viewModel.addCoordinate(
+                                                location.latitude, location.longitude
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }) {
-                        Text(
-                            fontSize = 12.sp,
-                            color = Color.White,
-                            text = stringResource(id = R.string.add_point)
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(id = R.string.add_point),
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp)
                         )
+
                     }
                     ElevatedButton(modifier = Modifier
                         .fillMaxWidth(0.22f),
@@ -387,24 +500,26 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         onClick = {
                             showClearMapDialog.value = true
                         }) {
-                        Text(
-                            fontSize = 12.sp,
-                            color = Color.Black,
-                            text = stringResource(id = R.string.reset)
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = stringResource(id = R.string.reset),
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp)
                         )
                     }
                     ElevatedButton(modifier = Modifier.fillMaxWidth(0.28f),
-                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
+//                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
+                        colors = ButtonDefaults.buttonColors(Color.White),
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
                             coordinates = coordinates.dropLast(1)
                             viewModel.removeLastCoordinate();
                         }) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 12.sp,
-                            color = Color.White,
-                            text = stringResource(id = R.string.drop_point)
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(id = R.string.drop_point),
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp)
                         )
                     }
                 }
