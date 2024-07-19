@@ -15,6 +15,7 @@ import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.IdRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -69,6 +70,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.Farm
 import com.example.egnss4coffeev2.database.FarmViewModel
@@ -592,17 +594,6 @@ fun FarmForm(
             }
         }
 
-//        TextField(
-//            value = purchases,
-//            keyboardOptions = KeyboardOptions.Default.copy(
-//                keyboardType = KeyboardType.Number,
-//            ),
-//            onValueChange = { purchases = it },
-//            label = { Text(stringResource(id = R.string.harvested_this_year_in_kgs)) },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(bottom = 16.dp)
-//        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
 //        if ((size.toFloatOrNull() ?: 0f) < 4f) {
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
@@ -737,109 +728,6 @@ fun FarmForm(
                 }
             )
         }
-
-//        Button(
-//            onClick = {
-//                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
-//                    if (isLocationEnabled(context)) {
-//                        val locationRequest = LocationRequest.create().apply {
-//                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//                            interval = 10000 // Update interval in milliseconds
-//                            fastestInterval = 5000 // Fastest update interval in milliseconds
-//                        }
-//
-//                        fusedLocationClient.requestLocationUpdates(
-//                            locationRequest,
-//                            object : LocationCallback() {
-//                                override fun onLocationResult(locationResult: LocationResult) {
-//                                    locationResult.lastLocation?.let { lastLocation ->
-//                                        // Handle the new location
-//                                        latitude = "${lastLocation.latitude}"
-//                                        longitude = "${lastLocation.longitude}"
-//                                    }
-//                                }
-//                            },
-//                            Looper.getMainLooper()
-//                        )
-//                    } else {
-//                        showLocationDialog.value = true
-//                    }
-//                } else {
-//                    navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
-//                    navController.navigate("setPolygon")
-//                    mapViewModel.clearCoordinates()
-//                }
-//            },
-//            modifier = Modifier
-//                .align(Alignment.CenterHorizontally)
-//                .fillMaxWidth(0.7f)
-//                .padding(bottom = 5.dp)
-//                .height(50.dp),
-//            enabled = size.isNotBlank()
-//        ) {
-//            val enteredSize = size.toFloatOrNull() ?: 0f
-//            Text(
-//                text = if (enteredSize >= 4f) {
-//                    stringResource(id = R.string.set_polygon)
-//                } else {
-//                    stringResource(id = R.string.get_coordinates)
-//                }
-//            )
-//        }
-
-
-//        if (!farmerPhoto.isBlank())
-//        {
-//            val imgFile = File(farmerPhoto)
-//
-//            // on below line we are checking if the image file exist or not.
-//            var imgBitmap: Bitmap? = null
-//            if (imgFile.exists()) {
-//                // on below line we are creating an image bitmap variable
-//                // and adding a bitmap to it from image file.
-//                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-//            }
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                    ,
-//                painter = rememberAsyncImagePainter(farmerPhoto),
-//                contentDescription = null
-//            )
-//        }
-//        else
-//        {
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                ,
-//                painter = painterResource(id = R.drawable.image_placeholder),
-//                contentDescription = null
-//            )
-//        }
-//
-//        Button(
-//            onClick = {
-//                val permissionCheckResult =
-//                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-//
-//                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-//                {
-//                    cameraLauncher.launch(uri)
-//                    isImageUploaded = true
-//                }
-//                else
-//                {
-//                    permissionLauncher.launch(Manifest.permission.CAMERA)
-//                }
-//            }
-//        ){
-//            Text(text = stringResource(id = R.string.take_picture))
-//        }
         Button(
             onClick = {
 //                Finding the center of the polygon captured

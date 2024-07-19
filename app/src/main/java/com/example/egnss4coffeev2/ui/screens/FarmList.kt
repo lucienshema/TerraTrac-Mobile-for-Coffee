@@ -173,6 +173,46 @@ fun FormatSelectionDialog(
         }
     )
 }
+
+
+@Composable
+fun ConfirmationDialog(
+    listItems: List<Farm>,
+    action: Action,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
+        val incompleteFarms = farms.filter { farm ->
+            farm.farmerName.isEmpty() || farm.coordinates.isNullOrEmpty() || farm.latitude.isEmpty() || farm.longitude.isEmpty() || farm.memberId.isEmpty()
+        }
+        return Pair(farms.size, incompleteFarms)
+    }
+    val (totalFarms, incompleteFarms) = validateFarms(listItems)
+    val message = when (action) {
+        Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
+        Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.confirm)) },
+        text = { Text(text = message) },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm()
+                onDismiss()
+            }) {
+                Text(text = stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text(text = stringResource(R.string.no))
+            }
+        }
+    )
+}
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(navController: NavController, siteId: Long) {
@@ -192,12 +232,12 @@ fun FarmList(navController: NavController, siteId: Long) {
     var exportFormat by remember { mutableStateOf("") }
 
     var showImportDialog by remember { mutableStateOf(false) }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
 
     // Inside your composable function
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
-
-    fun createFileforsharing(): File? {
+    fun createFileForSharing(): File? {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
@@ -274,7 +314,7 @@ fun FarmList(navController: NavController, siteId: Long) {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
+        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
 
         try {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -350,6 +390,7 @@ fun FarmList(navController: NavController, siteId: Long) {
             }
         }
 
+
     fun initiateFileCreation(activity: Activity) {
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -358,7 +399,7 @@ fun FarmList(navController: NavController, siteId: Long) {
             val getSiteById = cwsListItems.find { it.siteId == siteID }
             val siteName = getSiteById?.name ?: "SiteName"
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
+            val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
             putExtra(Intent.EXTRA_TITLE, filename)
         }
         createDocumentLauncher.launch(intent)
@@ -384,16 +425,13 @@ fun FarmList(navController: NavController, siteId: Long) {
         activity.startActivity(chooserIntent)
     }
     fun exportFile(activity: Activity) {
-        initiateFileCreation(activity)
+        showConfirmationDialog = true
     }
 
 
     // Function to handle the share action
     fun shareFileAction() {
-        val file = createFileforsharing()
-        if (file != null) {
-            shareFile(file)
-        }
+        showConfirmationDialog = true
     }
 
     if (showFormatDialog) {
@@ -408,6 +446,25 @@ fun FarmList(navController: NavController, siteId: Long) {
                     else -> {}
                 }
             }
+        )
+    }
+    if (showConfirmationDialog) {
+        ConfirmationDialog(
+            listItems,
+            action = action!!, // Ensure action is not null
+            onConfirm = {
+                when (action) {
+                    Action.Export -> initiateFileCreation(activity)
+                    Action.Share -> {
+                        val file = createFileForSharing()
+                        if (file != null) {
+                            shareFile(file)
+                        }
+                    }
+                    else -> {}
+                }
+            },
+            onDismiss = { showConfirmationDialog = false }
         )
     }
     if (showImportDialog) {
@@ -592,7 +649,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                 createDocumentLauncher.launch(
                     when (selectedFileType) {
                         "csv" -> "farm_template.csv"
-                        "json" -> "farm_template.json"
+                        "geojson" -> "farm_template.geojson"
                         else -> throw IllegalArgumentException("Unsupported file type: $selectedFileType")
                     }
                 )
@@ -631,7 +688,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                         onDismissRequest = { isDropdownMenuExpanded = false }
                     ) {
                         DropdownMenuItem(onClick = { selectedFileType = "csv";isDropdownMenuExpanded = false }, text = { Text("CSV") })
-                        DropdownMenuItem(onClick = { selectedFileType = "json"; isDropdownMenuExpanded = false}, text = { Text("GeoJSON") })
+                        DropdownMenuItem(onClick = { selectedFileType = "geojson"; isDropdownMenuExpanded = false}, text = { Text("GeoJSON") })
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))

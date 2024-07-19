@@ -61,7 +61,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
     // Method to set coordinates and calculated area
     fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double {
-        _coordinates.value = coordinates
+        _coordinates.value = coordinates!!
         val area = GeoCalculator.calculateArea(coordinates)
         _calculatedArea.value = area
         return area

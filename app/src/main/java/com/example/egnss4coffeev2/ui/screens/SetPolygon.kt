@@ -81,10 +81,6 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
  * This screen helps you to capture and visualize farm polygon.
  * When capturing, You are able to start, add point, clear map or remove a point on the map
  */
-/**
- * This screen helps you to capture and visualize farm polygon.
- * When capturing, You are able to start, add point, clear map or remove a point on the map
- */
 
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
 const val ENTERED_AREA_OPTION = "ENTERED_AREA"
