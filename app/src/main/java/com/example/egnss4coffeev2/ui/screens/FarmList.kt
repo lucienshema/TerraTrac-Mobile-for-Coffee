@@ -42,6 +42,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -435,6 +436,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                     onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
                     // onBackClicked = { navController.navigateUp() }, siteList
                     onBackClicked = { navController.navigate("siteList") },
+                    onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
                     onExportClicked = {
                         action = Action.Export
                         showFormatDialog = true
@@ -488,6 +490,7 @@ fun FarmList(navController: NavController, siteId: Long) {
             FarmListHeaderPlots(
                 title = stringResource(id = R.string.farm_list),
                 onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
                 onBackClicked = { navController.navigateUp() },
                 onExportClicked = {
                     action = Action.Export
@@ -697,10 +700,17 @@ fun DeleteAllDialogPresenter(
 @Composable
 fun FarmListHeader(
     title: String,
+    onSearchQueryChanged: (String) -> Unit,
     onAddFarmClicked: () -> Unit,
     onBackClicked: () -> Unit,
-    showAdd: Boolean
+    onBackSearchClicked: () -> Unit,
+    showAdd: Boolean,
+    showSearch: Boolean
 ) {
+    // State for holding the search query
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
     TopAppBar(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
@@ -725,6 +735,13 @@ fun FarmListHeader(
             )
         },
         actions = {
+            if (showSearch) {
+                IconButton(onClick = {
+                    isSearchVisible = !isSearchVisible
+                }) {
+                    Icon(Icons.Default.Search, contentDescription = "Search")
+                }
+            }
             if (showAdd) {
                 IconButton(onClick = onAddFarmClicked) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
@@ -732,6 +749,47 @@ fun FarmListHeader(
             }
         }
     )
+    // Conditional rendering of the search field
+    if (isSearchVisible && showSearch) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = {
+                    searchQuery = it
+                    onSearchQueryChanged(it)
+                },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                label = { Text("Search") },
+                leadingIcon = {
+                    IconButton(onClick = {
+                        onBackSearchClicked()
+                    }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        onSearchQueryChanged("")
+                    }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                },
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+    }
+
 }
 
 
@@ -745,6 +803,7 @@ fun FarmListHeaderPlots(
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
     showExport: Boolean,
     showShare: Boolean,
@@ -808,22 +867,43 @@ fun FarmListHeaderPlots(
 
     // Conditional rendering of the search field
     if (isSearchVisible && showSearch) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = {
-                searchQuery = it
-                onSearchQueryChanged(it)
-            },
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            label = { Text("Search") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                cursorColor = MaterialTheme.colorScheme.onSurface
+                .fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = {
+                    searchQuery = it
+                    onSearchQueryChanged(it)
+                },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                label = { Text("Search") },
+                leadingIcon = {
+                    IconButton(onClick = {
+                        onBackSearchClicked()
+                    }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        onSearchQueryChanged("")
+                    }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                },
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface
+                )
             )
-        )
+        }
     }
 }
 
@@ -1181,9 +1261,12 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.update_farm),
+            onSearchQueryChanged = {},
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
-            showAdd = false
+            onBackSearchClicked = {},
+            showAdd = false,
+            showSearch = false
         )
         TextField(
             singleLine = true,

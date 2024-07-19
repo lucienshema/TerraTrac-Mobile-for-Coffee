@@ -2,6 +2,7 @@
 package com.example.egnss4coffeev2.ui.screens
 
 import android.app.Application
+import android.os.Bundle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +60,8 @@ fun CollectionSiteList(navController: NavController) {
 
     val listItems by farmViewModel.readAllSites.observeAsState(listOf())
 
+    val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
         toDelete.addAll(selectedIds)
@@ -91,15 +94,20 @@ fun CollectionSiteList(navController: NavController) {
             item {
                 FarmListHeader(
                     title = stringResource(id = R.string.collection_site_list),
+                    onSearchQueryChanged = setSearchQuery,
                     onAddFarmClicked = { navController.navigate("addSite") },
+                    onBackSearchClicked = { navController.navigate("siteList") },
                     //  onBackClicked = { navController.navigateUp() }
                     onBackClicked = { navController.navigate("home") },
-                    showAdd = true
+                    showAdd = true,
+                    showSearch = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            items(listItems) { site ->
+            items(listItems.filter {
+                it.name.contains(searchQuery, ignoreCase = true)
+            }) { site ->
                 SiteCard(site = site, onCardClick = {
                     // When a SiteCard is clicked, show the dialog
                     navController.navigate("farmList/${site.siteId}")
@@ -123,8 +131,11 @@ fun CollectionSiteList(navController: NavController) {
             FarmListHeader(
                 title = stringResource(id = R.string.collection_site_list),
                 onAddFarmClicked = { navController.navigate("addSite") },
+                onSearchQueryChanged = {},
                 onBackClicked = { navController.navigateUp() },
-                showAdd = true
+                onBackSearchClicked = {},
+                showAdd = true,
+                showSearch = false,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Image(

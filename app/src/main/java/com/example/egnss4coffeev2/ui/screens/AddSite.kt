@@ -56,9 +56,12 @@ fun AddSite(navController: NavController) {
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_site),
+            onSearchQueryChanged = {},
             onAddFarmClicked = { /* Handle adding a farm here */ },
+            onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
-            showAdd = false
+            showAdd = false,
+            showSearch = true
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)
