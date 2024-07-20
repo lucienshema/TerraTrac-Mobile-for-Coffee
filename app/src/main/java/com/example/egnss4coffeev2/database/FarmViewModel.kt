@@ -64,7 +64,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addFarm(farm: Farm, siteId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (!isDuplicateFarm(farm, siteId)) {
+            if (!repository.isFarmDuplicate(farm)) {
                 repository.addFarm(farm)
                 FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
@@ -141,7 +141,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         return dateFormatter.parse(dateString).time
     }
 
-    private fun parseGeoJson(geoJsonString: String,siteId: Long): List<Farm> {
+    private suspend fun parseGeoJson(geoJsonString: String, siteId: Long): List<Farm> {
         val farms = mutableListOf<Farm>()
 
         try {
@@ -168,7 +168,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
                     // Handle Point geometry
-                    val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0).getJSONArray(0)
+                    val coordArray = geometry.getJSONArray("coordinates")
                     val lon = coordArray.getDouble(1)
                     val lat = coordArray.getDouble(0)
                     coordinates = listOf(Pair(lon, lat))
@@ -201,12 +201,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     createdAt = createdAt,
                     updatedAt = updatedAt
                 )
-
-                if (!isDuplicateFarm(newFarm, siteId)) {
-                    farms.add(newFarm)
-                } else {
-                    println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                }
+                farms.add(newFarm)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -218,16 +213,17 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     @RequiresApi(Build.VERSION_CODES.N)
     suspend fun importFile(context: Context, uri: Uri, siteId: Long): ImportResult = withContext(Dispatchers.IO) {
-        var message = "Import failed"
+        var message = ""
         var success = false
         val importedFarms = mutableListOf<Farm>()
         val duplicateFarms = mutableListOf<String>()
         val farmsNeedingUpdate = mutableListOf<Farm>()
 
+
         try {
             // Check file extension before proceeding
             val fileName = uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
-            if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".json", true)) {
+            if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
                 message = "Unsupported file format. Please upload a CSV or GeoJSON file."
                 return@withContext ImportResult(success, message, importedFarms)
             }
@@ -248,7 +244,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val newFarms = parseGeoJson(content.toString(), siteId)
                 println("Parsed farms from GeoJSON: $newFarms")
                 for (newFarm in newFarms) {
-                    if (!isDuplicateFarm(newFarm, siteId)) {
+                    if (!repository.isFarmDuplicate(newFarm)) {
                         println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                         addFarm(newFarm, newFarm.siteId)
                         importedFarms.add(newFarm)
@@ -311,7 +307,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             createdAt = createdAt,
                             updatedAt = updatedAt
                         )
-                        if (!isDuplicateFarm(newFarm, siteId)) {
+                        if (!repository.isFarmDuplicate(newFarm)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                             farms.add(newFarm)
                             importedFarms.add(newFarm)
@@ -344,21 +340,20 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 Toast.makeText(context, "Duplicate farms already exist and need updates", Toast.LENGTH_LONG).show()
             }
         }
+        // Show a toast message for farms that needs updates
+        withContext(Dispatchers.Main) {
+            if (farmsNeedingUpdate.isNotEmpty()) {
+                Toast.makeText(context, "${farmsNeedingUpdate.size} farms need to be updated", Toast.LENGTH_LONG).show()
+            }
+        }
 
-        return@withContext ImportResult(success, message, importedFarms, duplicateFarms)
-    }
-
-
-    private fun isDuplicateFarm(farm: Farm,siteId: Long): Boolean {
-        val existingFarms = repository.readAllFarms(siteId).value ?: return false
-        println("Existing farms $existingFarms")
-        return existingFarms.any { it.remoteId == farm.remoteId }
+        return@withContext ImportResult(success, message, importedFarms, duplicateFarms,farmsNeedingUpdate)
     }
 
     fun getTemplateContent(fileType: String): String {
         return when (fileType) {
             "csv" -> "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n"
-            "json" -> """{
+            "geojson" -> """{
                         "type": "FeatureCollection",
                         "features": [
                             {
@@ -400,7 +395,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                                 },
                                 "geometry": {
                                     "type": "Polygon",
-                                    "coordinates": [["longitude","latitude"], ["longitude","latitude"],["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"]]
+                                    "coordinates": [[["longitude","latitude"], ["longitude","latitude"],["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"]]]
                                 }
                             }
                         ]
@@ -428,25 +423,9 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>) {
-        withContext(Dispatchers.IO) {
-            val existingFarms = repository.readAllFarms(siteId).value
-
-            // Create a map of existing farms by their remoteId for quick lookup
-            val existingFarmMap = existingFarms?.associateBy { it.remoteId } ?: emptyMap()
-
-            // Iterate through imported farms and check for updates
-            for (importedFarm in importedFarms) {
-                val existingFarm = existingFarmMap[importedFarm.remoteId]
-
-                // If the farm is new or has different details, flag it for update
-                if (existingFarm == null || existingFarm != importedFarm) {
-                    importedFarm.needsUpdate = true
-                }
-            }
-
-            // Update farms that need updates
-            importedFarms.filter { it.needsUpdate }.forEach { updateFarm(it) }
+    suspend fun getExistingFarms(siteId: Long): List<Farm> {
+        return withContext(Dispatchers.IO) {
+            repository.readAllFarmsSync(siteId)
         }
     }
 

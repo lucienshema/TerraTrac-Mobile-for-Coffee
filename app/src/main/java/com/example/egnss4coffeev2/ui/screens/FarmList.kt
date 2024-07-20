@@ -106,7 +106,9 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.joda.time.Instant
 import java.io.BufferedWriter
 import java.io.File
@@ -127,6 +129,37 @@ enum class Action {
     Export,
     Share
 }
+
+suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>, farmViewModel: FarmViewModel) {
+    withContext(Dispatchers.IO) {
+        val existingFarms = farmViewModel.getExistingFarms(siteId)
+        println("Existing farms count: ${existingFarms.size}")
+
+        // Create a map of existing farms by their remoteId for quick lookup
+        val existingFarmMap = existingFarms.associateBy { it.remoteId }
+
+        // Iterate through imported farms and check for updates
+        for (importedFarm in importedFarms) {
+            val existingFarm = existingFarmMap[importedFarm.remoteId]
+
+            // If the farm is new or has different details, flag the existing farm for update
+            if (existingFarm == null || existingFarm != importedFarm) {
+                if (existingFarm != null) {
+                    existingFarm.needsUpdate = true
+                    println("Flagging farm for update: ${existingFarm.farmerName}, Site ID: ${existingFarm.siteId}")
+                }
+            }
+        }
+
+        // Update farms that need updates and show a message for each updated farm
+        importedFarms.filter { it.needsUpdate }.forEach { farm ->
+            farmViewModel.updateFarm(farm)
+            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
+        }
+    }
+}
+
+
 
 @Composable
 fun FormatSelectionDialog(
@@ -242,12 +275,11 @@ fun FarmList(navController: NavController, siteId: Long) {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
-
 
         try {
             file.bufferedWriter().use { writer ->
@@ -293,7 +325,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                                 },
                                 "geometry": {
                                     "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                    "coordinates": [${if (farm.coordinates?.isEmpty() == true) "[${farm.longitude}, ${farm.latitude}]" else geoJsonCoordinates}]
+                                    "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
                                 }
                             }${if (index == listItems.size - 1) "" else ","}
                         """.trimIndent())
@@ -309,12 +341,14 @@ fun FarmList(navController: NavController, siteId: Long) {
             return null
         }
     }
+
     fun createFile(context: Context, uri: Uri): Boolean {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val filename =
+            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
 
         try {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -328,7 +362,10 @@ fun FarmList(navController: NavController, siteId: Long) {
                                 val (lat, lon) = match.destructured
                                 "[$lon, $lat]"
                             }.joinToString(", ", prefix = "[", postfix = "]")
-                            val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(farm.createdAt)},${Date(farm.updatedAt)}\n"
+                            val line =
+                                "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                    Date(farm.createdAt)
+                                },${Date(farm.updatedAt)}\n"
                             writer.write(line)
                         }
                     } else {
@@ -341,29 +378,31 @@ fun FarmList(navController: NavController, siteId: Long) {
                                     val (lat, lon) = match.destructured
                                     "[$lon, $lat]"
                                 }.joinToString(", ", prefix = "[", postfix = "]")
-                                append("""
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "remote_id": "${farm.remoteId}",
-                                    "farmer_name": "${farm.farmerName}",
-                                    "member_id": "${farm.memberId}",
-                                    "collection_site": "${getSiteById?.name}",
-                                    "agent_name": "${getSiteById?.agentName}",
-                                    "farm_village": "${farm.village}",
-                                    "farm_district": "${farm.district}",
-                                    "farm_size": ${farm.size},
-                                    "latitude": ${farm.latitude},
-                                    "longitude": ${farm.longitude},
-                                    "created_at": "${Date(farm.createdAt)}",
-                                    "updated_at": "${Date(farm.updatedAt)}"
-                                },
-                                "geometry": {
-                                    "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                    "coordinates": [${if (farm.coordinates?.isEmpty() == true) "[${farm.longitude}, ${farm.latitude}]" else geoJsonCoordinates}]
-                                }
-                            }${if (index == listItems.size - 1) "" else ","}
-                        """.trimIndent())
+                                append(
+                                    """
+                                {
+                                    "type": "Feature",
+                                    "properties": {
+                                        "remote_id": "${farm.remoteId}",
+                                        "farmer_name": "${farm.farmerName}",
+                                        "member_id": "${farm.memberId}",
+                                        "collection_site": "${getSiteById?.name}",
+                                        "agent_name": "${getSiteById?.agentName}",
+                                        "farm_village": "${farm.village}",
+                                        "farm_district": "${farm.district}",
+                                        "farm_size": ${farm.size},
+                                        "latitude": ${farm.latitude},
+                                        "longitude": ${farm.longitude},
+                                        "created_at": "${Date(farm.createdAt)}",
+                                        "updated_at": "${Date(farm.updatedAt)}"
+                                    },
+                                    "geometry": {
+                                        "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
+                                        "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
+                                    }
+                                }${if (index == listItems.size - 1) "" else ","}
+                            """.trimIndent()
+                                )
                             }
                             append("]}")
                         }
@@ -377,6 +416,9 @@ fun FarmList(navController: NavController, siteId: Long) {
             return false
         }
     }
+
+
+
 
     val createDocumentLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -392,7 +434,7 @@ fun FarmList(navController: NavController, siteId: Long) {
 
 
     fun initiateFileCreation(activity: Activity) {
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = mimeType
@@ -415,7 +457,7 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
 
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (exportFormat == "CSV") "text/csv" else "application/json"
+            type = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
             putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
             putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
             putExtra(Intent.EXTRA_STREAM, fileURI)
@@ -588,6 +630,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
     val farmViewModel: FarmViewModel = viewModel()
     var selectedFileType by remember { mutableStateOf("") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
+    var importCompleted by remember { mutableStateOf(false) }
 
     // Create a launcher to handle the file picker result
     val importLauncher = rememberLauncherForActivityResult(
@@ -607,19 +650,32 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                     }
                     // Handle farms needing updates
                     if (result.farmsNeedingUpdate.isNotEmpty()) {
-                        println("Farms that needs to be updated found:")
+                        println("Farms that needs to be updated found:" + result.farmsNeedingUpdate)
                         // Update the UI to mark farms that need updates
                         // markFarmsNeedingUpdate(result.farmsNeedingUpdate)
                     }
                     // Retrieve imported farms and flag those without plot info
                     val importedFarms = result.importedFarms // Adjust to your actual data
+
                     println("Imported farms now: $importedFarms")
-                    farmViewModel.flagFarmersWithNewPlotInfo(siteId, importedFarms)
-                    onDismiss()
+                    println("farms needed to be updated: $result.farmsNeedingUpdate")
+
+                    flagFarmersWithNewPlotInfo(siteId, result.farmsNeedingUpdate,farmViewModel)
+//                    onDismiss()
+                    importCompleted = true
                 } catch (e: Exception) {
                     Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+    // Use LaunchedEffect to react to import completion
+    LaunchedEffect(importCompleted) {
+        if (importCompleted) {
+            // Reload your data here
+            farmViewModel.getExistingFarms(siteId)
+            onDismiss()
+            importCompleted = false // Reset the flag if needed
         }
     }
 
@@ -980,7 +1036,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
-                .background(Color.White)
+                .background(if (farm.needsUpdate) Color(0xFFFFA500) else Color.White)
                 .fillMaxWidth() // 90% of the screen width
                 .padding(8.dp),
             onClick = {
@@ -989,7 +1045,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(if (farm.needsUpdate) Color(0xFFFFA500) else Color.White)
                     .padding(16.dp)
             ) {
                 Row(

@@ -10,6 +10,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getAll(siteId)
     }
 
+    fun readAllFarmsSync(siteId: Long): List<Farm> {
+        return farmDAO.getAllSync(siteId)
+    }
+
     fun readFarm(farmId: Long): LiveData<List<Farm>> {
         return farmDAO.getFarmById(farmId)
     }
@@ -65,7 +69,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteListSite(ids)
     }
 
-    private suspend fun isFarmDuplicate(farm: Farm): Boolean {
+    suspend fun isFarmDuplicate(farm: Farm): Boolean {
         return farmDAO.getFarmByRemoteId(farm.remoteId) != null
     }
 

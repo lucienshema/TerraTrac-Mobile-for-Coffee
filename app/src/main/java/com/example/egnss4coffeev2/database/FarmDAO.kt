@@ -18,6 +18,10 @@ interface FarmDAO {
     fun getAll(siteId: Long): LiveData<List<Farm>>
 
     @Transaction
+    @Query("SELECT * FROM Farms WHERE siteId = :siteId ORDER BY createdAt DESC")
+    fun getAllSync(siteId: Long): List<Farm>
+
+    @Transaction
     @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
     fun getSites(): LiveData<List<CollectionSite>>
 
