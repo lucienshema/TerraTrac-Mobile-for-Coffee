@@ -251,16 +251,40 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 reader.close()
                 val newFarms = parseGeoJson(content.toString(), siteId)
                 println("Parsed farms from GeoJSON: $newFarms")
+//                for (newFarm in newFarms) {
+//                    if (!repository.isFarmDuplicateBoolean(newFarm)) {
+//                        println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+//                        addFarm(newFarm, newFarm.siteId)
+//                        importedFarms.add(newFarm)
+//                    } else {
+//                        val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+//                        println(duplicateMessage)
+//                        duplicateFarms.add(duplicateMessage)
+//                        farmsNeedingUpdate.add(newFarm)
+//                    }
+//                }
                 for (newFarm in newFarms) {
                     if (!repository.isFarmDuplicateBoolean(newFarm)) {
                         println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                         addFarm(newFarm, newFarm.siteId)
                         importedFarms.add(newFarm)
+                    }
+                    val existingFarm = repository.getFarmByRemoteId(newFarm.remoteId)
+                    if (existingFarm != null) {
+                        if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+                            // Farm needs an update
+                            println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                            farmsNeedingUpdate.add(newFarm)
+                        } else {
+                            // Farm is a duplicate but does not need an update
+                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                            println(duplicateMessage)
+                            duplicateFarms.add(duplicateMessage)
+                        }
                     } else {
-                        val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-                        println(duplicateMessage)
-                        duplicateFarms.add(duplicateMessage)
-                        farmsNeedingUpdate.add(newFarm)
+                        // Handle case where farm exists in the system but not in the repository
+                        val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+                        println(unknownFarmMessage)
                     }
                 }
                 message = "GeoJSON import successful"
@@ -315,17 +339,40 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             createdAt = createdAt,
                             updatedAt = updatedAt
                         )
-                        if (!repository.isFarmDuplicateBoolean(newFarm)) {
-                            println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                            addFarm(newFarm, newFarm.siteId)
-                            //farms.add(newFarm)
-                            importedFarms.add(newFarm)
-                        } else {
-                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-                            println(duplicateMessage)
-                            duplicateFarms.add(duplicateMessage)
-                            farmsNeedingUpdate.add(newFarm)
-                        }
+//                        if (!repository.isFarmDuplicateBoolean(newFarm)) {
+//                            println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+//                            addFarm(newFarm, newFarm.siteId)
+//                            //farms.add(newFarm)
+//                            importedFarms.add(newFarm)
+//                        } else {
+//                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+//                            println(duplicateMessage)
+//                            duplicateFarms.add(duplicateMessage)
+//                            farmsNeedingUpdate.add(newFarm)
+//                        }
+                            if (!repository.isFarmDuplicateBoolean(newFarm)) {
+                                println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                addFarm(newFarm, newFarm.siteId)
+                                importedFarms.add(newFarm)
+                            }
+
+                            val existingFarm = repository.getFarmByRemoteId(newFarm.remoteId)
+                            if (existingFarm != null) {
+                                if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+                                    // Farm needs an update
+                                    println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                    farmsNeedingUpdate.add(newFarm)
+                                } else {
+                                    // Farm is a duplicate but does not need an update
+                                    val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                                    println(duplicateMessage)
+                                    duplicateFarms.add(duplicateMessage)
+                                }
+                            } else {
+                                // Handle case where farm exists in the system but not in the repository
+                                val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+                                println(unknownFarmMessage)
+                            }
                     }
                     line = reader.readLine()
                 }
@@ -446,9 +493,6 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
             _farms.postValue(getExistingFarms(siteId))
         }
     }
-
-
-
 
 }
 
