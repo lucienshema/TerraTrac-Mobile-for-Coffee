@@ -136,6 +136,13 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun refreshData(siteId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Logic to refresh data, typically re-fetching from the database or repository
+            repository.readAllFarms(siteId)
+        }
+    }
+
 
     private fun parseDateStringToTimestamp(dateString: String): Long {
         val dateFormatter = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US)

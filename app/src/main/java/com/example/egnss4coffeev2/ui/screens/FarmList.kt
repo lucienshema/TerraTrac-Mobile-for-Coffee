@@ -60,6 +60,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -269,9 +271,21 @@ fun FarmList(navController: NavController, siteId: Long) {
 
     var showImportDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
-
     // Inside your composable function
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("All", "Needs Update","No Update Needed")
+
+    // State to track if a refresh is needed
+    var refreshTrigger by remember { mutableStateOf(false) }
+    // Trigger a reload when refreshTrigger changes
+    LaunchedEffect(refreshTrigger) {
+        withContext(Dispatchers.IO) {
+            // Logic to refresh data, such as triggering a reload in the ViewModel
+            farmViewModel.refreshData(siteId)
+        }
+    }
 
     fun createFileForSharing(): File? {
         // Get the current date and time
@@ -514,7 +528,7 @@ fun FarmList(navController: NavController, siteId: Long) {
     }
     if (showImportDialog) {
         println("site ID am Using: $siteId")
-        ImportFileDialog( siteId,onDismiss = { showImportDialog = false })
+        ImportFileDialog( siteId,onDismiss = { showImportDialog = false ; refreshTrigger = !refreshTrigger},navController = navController)
     }
 
 
@@ -526,98 +540,195 @@ fun FarmList(navController: NavController, siteId: Long) {
         showDeleteDialog.value = false
     }
 
-    if (listItems.isNotEmpty()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            item {
-                FarmListHeaderPlots(
-                    title = stringResource(id = R.string.farm_list),
-                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                    // onBackClicked = { navController.navigateUp() }, siteList
-                    onBackClicked = { navController.navigate("siteList") },
-                    onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-                    onExportClicked = {
-                        action = Action.Export
-                        showFormatDialog = true
-                    },
-                    onShareClicked = {
-                        action = Action.Share
-                        showFormatDialog = true
-                    },
-                    onSearchQueryChanged = setSearchQuery,
-                    onImportClicked = { showImportDialog = true },
-                    showAdd = true,
-                    showExport = listItems.isNotEmpty(),
-                    showShare = listItems.isNotEmpty(),
-                    showSearch= listItems.isNotEmpty()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            items(listItems.filter {
-                it.farmerName.contains(searchQuery, ignoreCase = true)
-                // Adjust filtering based on your farm data structure
-            }) { farm ->
-                FarmCard(
-                    farm = farm,
-                    onCardClick = {
-                        Bundle().apply {
-                            putSerializable("coordinates",
-                                farm.coordinates?.let { ArrayList(it) })
-                        }
+//    if (listItems.isNotEmpty()) {
+//        LazyColumn(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(16.dp)
+//        ) {
+//            item {
+//                FarmListHeaderPlots(
+//                    title = stringResource(id = R.string.farm_list),
+//                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+//                    // onBackClicked = { navController.navigateUp() }, siteList
+//                    onBackClicked = { navController.navigate("siteList") },
+//                    onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+//                    onExportClicked = {
+//                        action = Action.Export
+//                        showFormatDialog = true
+//                    },
+//                    onShareClicked = {
+//                        action = Action.Share
+//                        showFormatDialog = true
+//                    },
+//                    onSearchQueryChanged = setSearchQuery,
+//                    onImportClicked = { showImportDialog = true },
+//                    showAdd = true,
+//                    showExport = listItems.isNotEmpty(),
+//                    showShare = listItems.isNotEmpty(),
+//                    showSearch= listItems.isNotEmpty()
+//                )
+//                Spacer(modifier = Modifier.height(8.dp))
+//            }
+//            items(listItems.filter {
+//                it.farmerName.contains(searchQuery, ignoreCase = true)
+//                // Adjust filtering based on your farm data structure
+//            }) { farm ->
+//                FarmCard(
+//                    farm = farm,
+//                    onCardClick = {
+//                        Bundle().apply {
+//                            putSerializable("coordinates",
+//                                farm.coordinates?.let { ArrayList(it) })
+//                        }
+//
+//                        navController.currentBackStackEntry?.arguments?.apply {
+//                            putSerializable("farmData", Pair(farm, "view"))
+//                        }
+//                        navController.navigate(route = "setPolygon")
+//                    },
+//                    onDeleteClick = {
+//                        selectedIds.add(farm.id)
+//                        showDeleteDialog.value = true
+//                    }
+//                )
+//                Spacer(modifier = Modifier.height(16.dp))
+//            }
+//        }
+//        if (showDeleteDialog.value) {
+//            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+//        }
+//    } else {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//        ) {
+//            FarmListHeaderPlots(
+//                title = stringResource(id = R.string.farm_list),
+//                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+//                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+//                onBackClicked = { navController.navigateUp() },
+//                onExportClicked = {
+//                    action = Action.Export
+//                    showFormatDialog = true
+//                },
+//                onShareClicked = {
+//                    action = Action.Share
+//                    showFormatDialog = true
+//                },
+//                onSearchQueryChanged = setSearchQuery,
+//                onImportClicked = { showImportDialog = true },
+//                showAdd = true,
+//                showExport = listItems.isNotEmpty(),
+//                showShare = listItems.isNotEmpty(),
+//                showSearch = listItems.isNotEmpty(),
+//            )
+//            Spacer(modifier = Modifier.height(8.dp))
+//            Image(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .align(Alignment.CenterHorizontally)
+//                    .padding(16.dp, 8.dp),
+//                painter = painterResource(id = R.drawable.no_data2),
+//                contentDescription = null
+//            )
+//        }
+//    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        FarmListHeaderPlots(
+            title = stringResource(id = R.string.farm_list),
+            onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+            onBackClicked = { navController.navigate("siteList") },
+            onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+            onExportClicked = {
+                action = Action.Export
+                showFormatDialog = true
+            },
+            onShareClicked = {
+                action = Action.Share
+                showFormatDialog = true
+            },
+            onSearchQueryChanged = setSearchQuery,
+            onImportClicked = { showImportDialog = true },
+            showAdd = true,
+            showExport = listItems.isNotEmpty(),
+            showShare = listItems.isNotEmpty(),
+            showSearch = listItems.isNotEmpty()
+        )
 
-                        navController.currentBackStackEntry?.arguments?.apply {
-                            putSerializable("farmData", Pair(farm, "view"))
-                        }
-                        navController.navigate(route = "setPolygon")
-                    },
-                    onDeleteClick = {
-                        selectedIds.add(farm.id)
-                        showDeleteDialog.value = true
-                    }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(title) }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val filteredListItems = when (selectedTabIndex) {
+            1 -> listItems.filter { it.needsUpdate } // Assuming you have a `needsUpdate` property
+            2 -> listItems.filter { !it.needsUpdate }
+            else -> listItems
+        }
+
+        if (filteredListItems.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredListItems.filter {
+                    it.farmerName.contains(searchQuery, ignoreCase = true)
+                }) { farm ->
+                    FarmCard(
+                        farm = farm,
+                        onCardClick = {
+                            Bundle().apply {
+                                putSerializable("coordinates",
+                                    farm.coordinates?.let { ArrayList(it) })
+                            }
+
+                            navController.currentBackStackEntry?.arguments?.apply {
+                                putSerializable("farmData", Pair(farm, "view"))
+                            }
+                            navController.navigate(route = "setPolygon")
+                        },
+                        onDeleteClick = {
+                            selectedIds.add(farm.id)
+                            showDeleteDialog.value = true
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp, 8.dp),
+                    painter = painterResource(id = R.drawable.no_data2),
+                    contentDescription = null
+                )
+            }
+        }
+
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            FarmListHeaderPlots(
-                title = stringResource(id = R.string.farm_list),
-                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-                onBackClicked = { navController.navigateUp() },
-                onExportClicked = {
-                    action = Action.Export
-                    showFormatDialog = true
-                },
-                onShareClicked = {
-                    action = Action.Share
-                    showFormatDialog = true
-                },
-                onSearchQueryChanged = setSearchQuery,
-                onImportClicked = { showImportDialog = true },
-                showAdd = true,
-                showExport = listItems.isNotEmpty(),
-                showShare = listItems.isNotEmpty(),
-                showSearch = listItems.isNotEmpty(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp, 8.dp),
-                painter = painterResource(id = R.drawable.no_data2),
-                contentDescription = null
-            )
         }
     }
 }
@@ -625,7 +736,7 @@ fun FarmList(navController: NavController, siteId: Long) {
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
+fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavController) {
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -633,7 +744,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
     val farmViewModel: FarmViewModel = viewModel()
     var selectedFileType by remember { mutableStateOf("") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
-    var importCompleted by remember { mutableStateOf(false) }
+    //var importCompleted by remember { mutableStateOf(false) }
 
     // Create a launcher to handle the file picker result
     val importLauncher = rememberLauncherForActivityResult(
@@ -664,23 +775,24 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                     println("farms needed to be updated: $result.farmsNeedingUpdate")
 
                     flagFarmersWithNewPlotInfo(siteId, result.farmsNeedingUpdate,farmViewModel)
-//                    onDismiss()
-                    importCompleted = true
+                    //importCompleted = true
+                    onDismiss() // Dismiss the dialog after import is complete
+                    navController.navigate("farmList/${siteId}") // Navigate to the refreshed farm list
                 } catch (e: Exception) {
                     Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
-    // Use LaunchedEffect to react to import completion
-    LaunchedEffect(importCompleted) {
-        if (importCompleted) {
-            // Reload your data here
-            farmViewModel.getExistingFarms(siteId)
-            onDismiss()
-            importCompleted = false // Reset the flag if needed
-        }
-    }
+//    // Use LaunchedEffect to react to import completion
+//    LaunchedEffect(importCompleted) {
+//        if (importCompleted) {
+//            // Reload your data here
+//            farmViewModel.getExistingFarms(siteId)
+//            onDismiss()
+//            importCompleted = false // Reset the flag if needed
+//        }
+//    }
 
     // Create a launcher to handle the file creation result
     val createDocumentLauncher = rememberLauncherForActivityResult(
@@ -778,8 +890,6 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
             }
         }
     )
-
-
 }
 
 @Composable
