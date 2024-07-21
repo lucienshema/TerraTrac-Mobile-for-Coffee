@@ -143,23 +143,26 @@ suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>, 
             val existingFarm = existingFarmMap[importedFarm.remoteId]
 
             // If the farm is new or has different details, flag the existing farm for update
-            if (existingFarm == null || existingFarm != importedFarm) {
-                if (existingFarm != null) {
-                    existingFarm.needsUpdate = true
-                    println("Flagging farm for update: ${existingFarm.farmerName}, Site ID: ${existingFarm.siteId}")
-                }
+            if (existingFarm != null && existingFarm != importedFarm) {
+                existingFarm.needsUpdate = true
+                val updatedFarm = existingFarm.copy(needsUpdate = true)
+                farmViewModel.updateFarm(updatedFarm)
+                println("Flagging farm for update: ${updatedFarm.farmerName}, Site ID: ${updatedFarm.siteId}")
+            } else if (existingFarm == null) {
+                // Handle the case where the farm is new
+                importedFarm.needsUpdate = true
+                println("New farm detected, flagging for update: ${importedFarm.farmerName}, Site ID: ${importedFarm.siteId}")
             }
         }
 
-        // Update farms that need updates and show a message for each updated farm
-        importedFarms.filter { it.needsUpdate }.forEach { farm ->
+        // Update farms that need updates
+        val farmsNeedingUpdate = existingFarms.filter { it.needsUpdate }
+        farmsNeedingUpdate.forEach { farm ->
             farmViewModel.updateFarm(farm)
-            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
+            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId},needsUpdate: ${farm.needsUpdate}")
         }
     }
 }
-
-
 
 @Composable
 fun FormatSelectionDialog(
@@ -1024,6 +1027,9 @@ fun FarmListHeaderPlots(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
+    println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
+    val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1036,16 +1042,15 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
-                .background(if (farm.needsUpdate) Color(0xFFFFA500) else Color.White)
                 .fillMaxWidth() // 90% of the screen width
-                .padding(8.dp),
+                .padding(8.dp)
+                .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
             onClick = {
                 onCardClick()
             }
         ) {
             Column(
                 modifier = Modifier
-                    .background(if (farm.needsUpdate) Color(0xFFFFA500) else Color.White)
                     .padding(16.dp)
             ) {
                 Row(
@@ -1065,9 +1070,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                     )
                     Text(
                         text = "${stringResource(id = R.string.size)}: ${farm.size} ${
-                            stringResource(
-                                id = R.string.ha
-                            )
+                            stringResource(id = R.string.ha)
                         }",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier
@@ -1103,12 +1106,12 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f)
                     )
-
                 }
             }
         }
     }
 }
+
 
 fun OutputStream.writeCsv(farms: List<Farm>) {
     val writer = bufferedWriter()

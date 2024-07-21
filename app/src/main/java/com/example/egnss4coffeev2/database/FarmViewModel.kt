@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.egnss4coffeev2.R
+import com.example.egnss4coffeev2.ui.screens.flagFarmersWithNewPlotInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,7 +65,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addFarm(farm: Farm, siteId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (!repository.isFarmDuplicate(farm)) {
+            if (!repository.isFarmDuplicateBoolean(farm)) {
                 repository.addFarm(farm)
                 FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
@@ -244,7 +245,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val newFarms = parseGeoJson(content.toString(), siteId)
                 println("Parsed farms from GeoJSON: $newFarms")
                 for (newFarm in newFarms) {
-                    if (!repository.isFarmDuplicate(newFarm)) {
+                    if (!repository.isFarmDuplicateBoolean(newFarm)) {
                         println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                         addFarm(newFarm, newFarm.siteId)
                         importedFarms.add(newFarm)
@@ -307,9 +308,10 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             createdAt = createdAt,
                             updatedAt = updatedAt
                         )
-                        if (!repository.isFarmDuplicate(newFarm)) {
+                        if (!repository.isFarmDuplicateBoolean(newFarm)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                            farms.add(newFarm)
+                            addFarm(newFarm, newFarm.siteId)
+                            //farms.add(newFarm)
                             importedFarms.add(newFarm)
                         } else {
                             val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
@@ -322,7 +324,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 reader.close()
                 println("Parsed farms from CSV: $farms")
-                repository.importFarms(farms)
+                //repository.importFarms(farms)
+                //importFarms(siteId,farms)
 
                 message = "CSV import successful"
                 success = true
@@ -428,6 +431,17 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
             repository.readAllFarmsSync(siteId)
         }
     }
+
+    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
+        viewModelScope.launch {
+            flagFarmersWithNewPlotInfo(siteId, importedFarms, this@FarmViewModel)
+            // Update the farms LiveData after importing
+            _farms.postValue(getExistingFarms(siteId))
+        }
+    }
+
+
+
 
 }
 
