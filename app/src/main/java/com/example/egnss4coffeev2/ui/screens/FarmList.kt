@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -62,6 +64,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+//import com.google.accompanist.pager.*
+//import com.google.accompanist.pager.indicators.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -251,6 +255,7 @@ fun ConfirmationDialog(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(navController: NavController, siteId: Long) {
@@ -275,17 +280,23 @@ fun FarmList(navController: NavController, siteId: Long) {
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("All", "Needs Update","No Update Needed")
+    val tabs = listOf(
+        stringResource(id = R.string.all),
+        stringResource(id = R.string.needs_update),
+        stringResource(id = R.string.no_update_needed)
+    )
+//    val pagerState = rememberPagerState(pageCount = { 0 })
+//    val coroutineScope = rememberCoroutineScope()
 
     // State to track if a refresh is needed
     var refreshTrigger by remember { mutableStateOf(false) }
     // Trigger a reload when refreshTrigger changes
-    LaunchedEffect(refreshTrigger) {
-        withContext(Dispatchers.IO) {
-            // Logic to refresh data, such as triggering a reload in the ViewModel
-            farmViewModel.refreshData(siteId)
-        }
-    }
+//    LaunchedEffect(refreshTrigger) {
+//        withContext(Dispatchers.IO) {
+//            // Logic to refresh data, such as triggering a reload in the ViewModel
+//            farmViewModel.refreshData(siteId)
+//        }
+//    }
 
     fun createFileForSharing(): File? {
         // Get the current date and time
@@ -669,6 +680,13 @@ fun FarmList(navController: NavController, siteId: Long) {
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
+//                    selected = pagerState.currentPage == index,
+//                    onClick = {
+//                        coroutineScope.launch {
+//                            pagerState.animateScrollToPage(index)
+//                        }
+//                    },
+//                    text = { Text(title) }
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
                     text = { Text(title) }
@@ -961,16 +979,16 @@ fun FarmListHeader(
             )
         },
         actions = {
+            if (showAdd) {
+                IconButton(onClick = onAddFarmClicked) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+                }
+            }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
                 }) {
                     Icon(Icons.Default.Search, contentDescription = "Search")
-                }
-            }
-            if (showAdd) {
-                IconButton(onClick = onAddFarmClicked) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                 }
             }
         }
@@ -992,18 +1010,22 @@ fun FarmListHeader(
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .weight(1f),
-                label = { Text("Search") },
-                leadingIcon = {
-                    IconButton(onClick = {
-                        onBackSearchClicked()
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+                label = { Text(stringResource(R.string.search)) },
+//                leadingIcon = {
+//                    IconButton(onClick = {
+//                       // onBackSearchClicked()
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                },
                 trailingIcon = {
                     IconButton(onClick = {
                         searchQuery = ""
                         onSearchQueryChanged("")
+                        isSearchVisible = !isSearchVisible
                     }) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
@@ -1050,31 +1072,29 @@ fun FarmListHeaderPlots(
         },
         actions = {
             if (showExport) {
-                IconButton(onClick = onExportClicked) {
+                IconButton(onClick = onExportClicked,modifier = Modifier.size(36.dp) ) {
                     Icon(
                         painter = painterResource(id = R.drawable.save),
-                        contentDescription = "Export"
+                        contentDescription = "Export",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+                Spacer(modifier = Modifier.width(1.dp))
             }
             if (showShare) {
-                IconButton(onClick = onShareClicked) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
                 }
+                Spacer(modifier = Modifier.width(1.dp))
             }
-            IconButton(onClick = onImportClicked) {
+            IconButton(onClick = onImportClicked,modifier = Modifier.size(36.dp) ) {
                 Icon(
                     painter = painterResource(id = R.drawable.import_icon),
-                    contentDescription = "Import"
+                    contentDescription = "Import",
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            if (showSearch) {
-                IconButton(onClick = {
-                    isSearchVisible = !isSearchVisible
-                }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
-                }
-            }
+            Spacer(modifier = Modifier.width(1.dp))
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
@@ -1084,8 +1104,16 @@ fun FarmListHeaderPlots(
                     }
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                },modifier = Modifier.size(36.dp) ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add",modifier = Modifier.size(24.dp) )
+                }
+                Spacer(modifier = Modifier.width(1.dp))
+            }
+            if (showSearch) {
+                IconButton(onClick = {
+                    isSearchVisible = !isSearchVisible
+                },modifier = Modifier.size(36.dp) ) {
+                    Icon(Icons.Default.Search, contentDescription = "Search",modifier = Modifier.size(24.dp) )
                 }
             }
         }
@@ -1108,18 +1136,22 @@ fun FarmListHeaderPlots(
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .weight(1f),
-                label = { Text("Search") },
-                leadingIcon = {
-                    IconButton(onClick = {
-                        onBackSearchClicked()
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+                label = { Text(stringResource(R.string.search)) },
+//                leadingIcon = {
+//                    IconButton(onClick = {
+//                        //onBackSearchClicked()
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                },
                 trailingIcon = {
                     IconButton(onClick = {
                         searchQuery = ""
                         onSearchQueryChanged("")
+                        isSearchVisible = !isSearchVisible
                     }) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
@@ -1152,6 +1184,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
+                .background(Color.White)
                 .fillMaxWidth() // 90% of the screen width
                 .padding(8.dp)
                 .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
@@ -1161,6 +1194,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
         ) {
             Column(
                 modifier = Modifier
+                    .background(Color.White)
                     .padding(16.dp)
             ) {
                 Row(
@@ -1221,6 +1255,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
         }
     }
 }
+
 
 
 fun OutputStream.writeCsv(farms: List<Farm>) {

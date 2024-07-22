@@ -88,6 +88,10 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     kapt(libs.androidx.room.compiler)
+//
+//    implementation(libs.google.accompanist.pager)
+//    implementation(libs.accompanist.pager.indicators)
+
 
     //ksp(libs.androidx.room.compiler)  // Correctly added KSP dependency
 

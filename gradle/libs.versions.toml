@@ -1,4 +1,5 @@
 [versions]
+accompanistPager = "0.26.3-alpha"
 accompanistPermissionsVersion = "0.14.0"
 agp = "8.6.0-alpha05"
 converterGsonVersion = "2.9.0"
@@ -33,10 +34,12 @@ workRuntimeKtxVersion = "2.9.0"
 ksp = "2.0.0-1.0.21"
 
 [libraries]
+accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompilerVersion" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
 gms-play-services-ads-identifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAdsIdentifier" }
+google-accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 google-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroidVersion" }
