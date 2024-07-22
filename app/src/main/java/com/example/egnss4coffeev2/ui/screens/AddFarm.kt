@@ -433,10 +433,18 @@ fun FarmForm(
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -448,11 +456,16 @@ fun FarmForm(
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name) + " (*)") },
+            label = { Text(stringResource(id = R.string.farm_name) + " (*)",color = inputLabelColor)},
             supportingText = { if (!isValid && farmerName.isBlank()) Text("Farmer Name should not be empty") },
             isError = !isValid && farmerName.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -472,7 +485,7 @@ fun FarmForm(
             ),
             value = memberId,
             onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id)) },
+            label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -491,11 +504,16 @@ fun FarmForm(
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village) + " (*)") },
+            label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester1)
@@ -510,11 +528,16 @@ fun FarmForm(
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district) + " (*)") },
+            label = { Text(stringResource(id = R.string.district) + " (*)", color =inputLabelColor) },
             supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester2)
@@ -540,11 +563,16 @@ fun FarmForm(
                     keyboardType = KeyboardType.Number,
                 ),
 
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
+                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
                 supportingText = { if (!isValid && size.isBlank()) Text("Farm Size should not be empty") },
                 isError = !isValid && size.isBlank(),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
@@ -612,7 +640,7 @@ fun FarmForm(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    label = { Text(stringResource(id = R.string.latitude) + " (*)") },
+                    label = { Text(stringResource(id = R.string.latitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && latitude.split(".").last().length < 6) Text(
                             "Latitude must have at least 6 decimal places"
@@ -638,7 +666,7 @@ fun FarmForm(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    label = { Text(stringResource(id = R.string.longitude) + " (*)") },
+                    label = { Text(stringResource(id = R.string.longitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && longitude.split(".").last().length < 6) Text(
                             "Longitude must have at least 6 decimal places"
@@ -711,6 +739,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
+                .background(buttonColor)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
@@ -747,6 +776,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
+                .background(buttonColor)
                 .fillMaxWidth()
                 .height(50.dp)
         ) {

@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -128,6 +129,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.Objects
 
+
 var siteID = 0L
 
 
@@ -136,39 +138,47 @@ enum class Action {
     Share
 }
 
-suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>, farmViewModel: FarmViewModel) {
-    withContext(Dispatchers.IO) {
-        val existingFarms = farmViewModel.getExistingFarms(siteId)
-        println("Existing farms count: ${existingFarms.size}")
 
-        // Create a map of existing farms by their remoteId for quick lookup
-        val existingFarmMap = existingFarms.associateBy { it.remoteId }
-
-        // Iterate through imported farms and check for updates
-        for (importedFarm in importedFarms) {
-            val existingFarm = existingFarmMap[importedFarm.remoteId]
-
-            // If the farm is new or has different details, flag the existing farm for update
-            if (existingFarm != null && existingFarm != importedFarm) {
-                existingFarm.needsUpdate = true
-                val updatedFarm = existingFarm.copy(needsUpdate = true)
-                farmViewModel.updateFarm(updatedFarm)
-                println("Flagging farm for update: ${updatedFarm.farmerName}, Site ID: ${updatedFarm.siteId}")
-            } else if (existingFarm == null) {
-                // Handle the case where the farm is new
-                importedFarm.needsUpdate = true
-                println("New farm detected, flagging for update: ${importedFarm.farmerName}, Site ID: ${importedFarm.siteId}")
-            }
-        }
-
-        // Update farms that need updates
-        val farmsNeedingUpdate = existingFarms.filter { it.needsUpdate }
-        farmsNeedingUpdate.forEach { farm ->
-            farmViewModel.updateFarm(farm)
-            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId},needsUpdate: ${farm.needsUpdate}")
-        }
-    }
+@Composable
+fun isSystemInDarkTheme(): Boolean {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
+    return sharedPreferences.getBoolean("dark_mode", false)
 }
+
+//suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>, farmViewModel: FarmViewModel) {
+//    withContext(Dispatchers.IO) {
+//        val existingFarms = farmViewModel.getExistingFarms(siteId)
+//        println("Existing farms count: ${existingFarms.size}")
+//
+//        // Create a map of existing farms by their remoteId for quick lookup
+//        val existingFarmMap = existingFarms.associateBy { it.remoteId }
+//
+//        // Iterate through imported farms and check for updates
+//        for (importedFarm in importedFarms) {
+//            val existingFarm = existingFarmMap[importedFarm.remoteId]
+//
+//            // If the farm is new or has different details, flag the existing farm for update
+//            if (existingFarm != null && existingFarm != importedFarm) {
+//                existingFarm.needsUpdate = true
+//                val updatedFarm = existingFarm.copy(needsUpdate = true)
+//                farmViewModel.updateFarm(updatedFarm)
+//                println("Flagging farm for update: ${updatedFarm.farmerName}, Site ID: ${updatedFarm.siteId}")
+//            } else if (existingFarm == null) {
+//                // Handle the case where the farm is new
+//                importedFarm.needsUpdate = true
+//                println("New farm detected, flagging for update: ${importedFarm.farmerName}, Site ID: ${importedFarm.siteId}")
+//            }
+//        }
+//
+//        // Update farms that need updates
+//        val farmsNeedingUpdate = existingFarms.filter { it.needsUpdate }
+//        farmsNeedingUpdate.forEach { farm ->
+//            farmViewModel.updateFarm(farm)
+//            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId},needsUpdate: ${farm.needsUpdate}")
+//        }
+//    }
+//}
 
 @Composable
 fun FormatSelectionDialog(
@@ -265,6 +275,8 @@ fun FarmList(navController: NavController, siteId: Long) {
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
     val selectedIds = remember { mutableStateListOf<Long>() }
+    // Create a mutable state for the selected farm
+    val selectedFarm = remember { mutableStateOf<Farm?>(null) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
     val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
@@ -544,12 +556,18 @@ fun FarmList(navController: NavController, siteId: Long) {
 
 
     fun onDelete() {
-        val toDelete = mutableListOf<Long>()
-        toDelete.addAll(selectedIds)
-        farmViewModel.deleteList(toDelete)
-        selectedIds.removeAll(selectedIds)
-        showDeleteDialog.value = false
+        selectedFarm.value?.let { farm ->
+            val toDelete = mutableListOf<Long>().apply {
+                addAll(selectedIds)
+                add(farm.id)
+            }
+            farmViewModel.deleteList(toDelete)
+            farmViewModel.deleteFarm(farm)
+            selectedFarm.value = null
+            showDeleteDialog.value = false
+        }
     }
+
 
 //    if (listItems.isNotEmpty()) {
 //        LazyColumn(
@@ -724,6 +742,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                         },
                         onDeleteClick = {
                             selectedIds.add(farm.id)
+                            selectedFarm.value = farm
                             showDeleteDialog.value = true
                         }
                     )
@@ -792,7 +811,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavContro
                     println("Imported farms now: $importedFarms")
                     println("farms needed to be updated: $result.farmsNeedingUpdate")
 
-                    flagFarmersWithNewPlotInfo(siteId, result.farmsNeedingUpdate,farmViewModel)
+                    // flagFarmersWithNewPlotInfo(siteId, result.farmsNeedingUpdate,farmViewModel)
                     //importCompleted = true
                     onDismiss() // Dismiss the dialog after import is complete
                     navController.navigate("farmList/${siteId}") // Navigate to the refreshed farm list
@@ -1165,12 +1184,14 @@ fun FarmListHeaderPlots(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
     println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
     val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
 
     Column(
         modifier = Modifier
@@ -1184,7 +1205,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
-                .background(Color.White)
+                .background(backgroundColor)
                 .fillMaxWidth() // 90% of the screen width
                 .padding(8.dp)
                 .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
@@ -1194,7 +1215,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(backgroundColor)
                     .padding(16.dp)
             ) {
                 Row(
@@ -1206,7 +1227,8 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                         text = farm.farmerName,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = textColor
                         ),
                         modifier = Modifier
                             .weight(1.1f)
@@ -1216,7 +1238,7 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                         text = "${stringResource(id = R.string.size)}: ${farm.size} ${
                             stringResource(id = R.string.ha)
                         }",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(color=textColor),
                         modifier = Modifier
                             .weight(0.9f)
                             .padding(bottom = 4.dp)
@@ -1242,12 +1264,12 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 ) {
                     Text(
                         text = "${stringResource(id = R.string.village)}: ${farm.village}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = "${stringResource(id = R.string.district)}: ${farm.district}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -1454,6 +1476,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             item.purchases = 0.toFloat()
             item.updatedAt = Instant.now().millis
             updateFarm(farmViewModel, item)
+            item.needsUpdate = false
             val returnIntent = Intent()
             context.setResult(Activity.RESULT_OK, returnIntent)
             navController.navigate("farmList/${siteID}")
@@ -1496,6 +1519,13 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     if (showPermissionRequest.value) {
         LocationPermissionRequest(
             onLocationEnabled = {
@@ -1516,7 +1546,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -1537,7 +1567,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name)) },
+            label = { Text(stringResource(id = R.string.farm_name),color = inputLabelColor) },
             isError = farmerName.isBlank(),
             modifier = Modifier
                 .fillMaxWidth()
@@ -1558,7 +1588,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = memberId,
             onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id)) },
+            label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -1577,7 +1607,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village)) },
+            label = { Text(stringResource(id = R.string.village),color = inputLabelColor) },
             modifier = Modifier
                 .focusRequester(focusRequester1)
                 .fillMaxWidth()
@@ -1591,7 +1621,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district)) },
+            label = { Text(stringResource(id = R.string.district),color = inputLabelColor) },
             modifier = Modifier
                 .focusRequester(focusRequester2)
                 .fillMaxWidth()
@@ -1611,10 +1641,15 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     keyboardType = KeyboardType.Number,
                 ),
 
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
+                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)",color = inputLabelColor) },
                 isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
@@ -1673,7 +1708,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     readOnly = true,
                     value = latitude,
                     onValueChange = { latitude = it },
-                    label = { Text(stringResource(id = R.string.latitude)) },
+                    label = { Text(stringResource(id = R.string.latitude),color = inputLabelColor) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(bottom = 16.dp)
@@ -1683,7 +1718,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     readOnly = true,
                     value = longitude,
                     onValueChange = { longitude = it },
-                    label = { Text(stringResource(id = R.string.longitude)) },
+                    label = { Text(stringResource(id = R.string.longitude),color = inputLabelColor) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(bottom = 16.dp)

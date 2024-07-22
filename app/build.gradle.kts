@@ -81,6 +81,8 @@ dependencies {
     implementation(libs.net.android.joda)
     implementation(libs.hilt.android)
     implementation(libs.androidx.work.runtime.ktx)
+//    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.constraintlayout.compose)
     kapt(libs.hilt.compiler)
     implementation(libs.gms.play.services.ads.identifier)
     implementation(libs.maps.ktx)

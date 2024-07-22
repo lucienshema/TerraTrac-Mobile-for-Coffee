@@ -286,6 +286,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             })
     }
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -307,7 +311,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         }
         Column(
             modifier = Modifier
-                .background(Color.White)
+                .background(backgroundColor)
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
@@ -339,7 +343,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                     Row {
                         if (farmInfo != null) {
                             Column(
-                                modifier = Modifier.padding(5.dp)
+                                modifier = Modifier
+                                    .background(backgroundColor)
+                                    .padding(5.dp)
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.farm_info),
@@ -357,13 +363,17 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 )
                                 Text(
                                     text = "${stringResource(id = R.string.farm_name)}: ${farmInfo.farmerName}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                     modifier = Modifier.padding(top = 5.dp)
                                 )
-                                Text(text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}")
+                                Text(text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
                                 Text(
                                     text = "${stringResource(id = R.string.village)}: ${farmInfo.village}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                Text(text = "${stringResource(id = R.string.district)}: ${farmInfo.district}")
+                                Text(text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
                                 if (farmInfo.coordinates?.isEmpty() == true) {
                                     Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
                                     Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
@@ -373,7 +383,8 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                         stringResource(
                                             id = R.string.ha
                                         )
-                                    }"
+                                    }",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
                             }
                         }

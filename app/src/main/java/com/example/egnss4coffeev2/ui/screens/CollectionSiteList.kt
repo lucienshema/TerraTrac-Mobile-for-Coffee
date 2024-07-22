@@ -166,6 +166,11 @@ fun SiteCard(
             farmViewModel = farmViewModel
         )
     }
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+    val iconColor = if (isDarkTheme) Color.White else Color.Black
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -178,7 +183,7 @@ fun SiteCard(
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
-                .background(Color.White)
+                .background(backgroundColor)
                 .fillMaxWidth() // 90% of the screen width
                 .padding(8.dp),
             onClick = {
@@ -187,7 +192,7 @@ fun SiteCard(
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(backgroundColor)
                     .padding(16.dp)
             ) {
                 Row(
@@ -204,21 +209,22 @@ fun SiteCard(
                             text = site.name,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
                             ),
                             modifier = Modifier
                                 .padding(bottom = 1.dp)
                         )
                         Text(
                             text = "${stringResource(id = R.string.agent_name)}: ${site.agentName}",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             modifier = Modifier
                                 .padding(bottom = 1.dp)
                         )
                         if (site.phoneNumber.isNotEmpty()) {
                             Text(
                                 text = "${stringResource(id = R.string.phone_number)}: ${site.phoneNumber}",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             )
                         }
                     }
@@ -234,7 +240,7 @@ fun SiteCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Update",
-                            tint = Color.Black
+                            tint = iconColor
                         )
                     }
                     Spacer(modifier = Modifier.padding(10.dp))

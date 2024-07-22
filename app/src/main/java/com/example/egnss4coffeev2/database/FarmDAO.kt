@@ -58,7 +58,7 @@ interface FarmDAO {
     fun update(farm: Farm)
 
     @Delete
-    fun delete(farm: Farm)
+    suspend fun delete(farm: Farm)
 
     @Query("DELETE FROM Farms")
     fun deleteAll()

@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.egnss4coffeev2.R
-import com.example.egnss4coffeev2.ui.screens.flagFarmersWithNewPlotInfo
+//import com.example.egnss4coffeev2.ui.screens.flagFarmersWithNewPlotInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -87,9 +87,19 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         return repository.getLastFarm()
     }
 
+//    fun updateFarm(farm: Farm) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            repository.updateFarm(farm)
+//        }
+//    }
+// Updates an existing farm in the repository and updates the LiveData list
     fun updateFarm(farm: Farm) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateFarm(farm)
+
+            // Fetch the updated list and post the value to LiveData
+            val updatedFarms = repository.readAllFarms(farm.siteId).value ?: emptyList()
+            _farms.postValue(updatedFarms)
         }
     }
 
@@ -350,7 +360,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 //                            duplicateFarms.add(duplicateMessage)
 //                            farmsNeedingUpdate.add(newFarm)
 //                        }
-                            if (!repository.isFarmDuplicateBoolean(newFarm)) {
+                        if (!repository.isFarmDuplicateBoolean(newFarm)) {
                                 println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                                 addFarm(newFarm, newFarm.siteId)
                                 importedFarms.add(newFarm)
@@ -403,8 +413,36 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 Toast.makeText(context, "${farmsNeedingUpdate.size} farms need to be updated", Toast.LENGTH_LONG).show()
             }
         }
+        // Flag farmers with new plot info
+        flagFarmersWithNewPlotInfo(siteId, farmsNeedingUpdate, this@FarmViewModel)
 
         return@withContext ImportResult(success, message, importedFarms, duplicateFarms,farmsNeedingUpdate)
+    }
+
+    private suspend fun flagFarmersWithNewPlotInfo(siteId: Long, farmsNeedingUpdate: List<Farm>, farmViewModel: FarmViewModel) = withContext(Dispatchers.IO) {
+        val existingFarms = farmViewModel.getExistingFarms(siteId)
+        val existingFarmMap = existingFarms.associateBy { it.remoteId }
+
+        for (farmNeedingUpdate in farmsNeedingUpdate) {
+            val existingFarm = existingFarmMap[farmNeedingUpdate.remoteId]
+
+            if (existingFarm != null && existingFarm != farmNeedingUpdate) {
+                existingFarm.needsUpdate = true
+                farmViewModel.updateFarm(existingFarm)
+                println("Flagging farm for update: ${existingFarm.farmerName}, Site ID: ${existingFarm.siteId}, NeedsUpdate:${existingFarm.needsUpdate}")
+                repository.updateFarm(existingFarm)
+                println("Farm updated successfully")
+            } else if (existingFarm == null) {
+                farmNeedingUpdate.needsUpdate = false
+                println("New farm detected, flagging for update: ${farmNeedingUpdate.farmerName}, Site ID: ${farmNeedingUpdate.siteId}")
+            }
+        }
+
+        //val farmsNeedingUpdate = existingFarms.filter { it.needsUpdate }
+        farmsNeedingUpdate.forEach { farm ->
+            farmViewModel.updateFarm(farm)
+            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId}, needsUpdate: ${farm.needsUpdate}")
+        }
     }
 
     fun getTemplateContent(fileType: String): String {
@@ -486,13 +524,13 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
-        viewModelScope.launch {
-            flagFarmersWithNewPlotInfo(siteId, importedFarms, this@FarmViewModel)
-            // Update the farms LiveData after importing
-            _farms.postValue(getExistingFarms(siteId))
-        }
-    }
+//    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
+//        viewModelScope.launch {
+//            flagFarmersWithNewPlotInfo(siteId, importedFarms, this@FarmViewModel)
+//            // Update the farms LiveData after importing
+//            _farms.postValue(getExistingFarms(siteId))
+//        }
+//    }
 
 }
 
