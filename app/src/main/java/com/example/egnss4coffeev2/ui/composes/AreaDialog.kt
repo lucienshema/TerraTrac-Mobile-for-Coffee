@@ -24,21 +24,24 @@ fun AreaDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
     calculatedArea: Double,
-    enteredArea: Double
+    enteredArea: Double,
 ) {
     if (showDialog) {
-        val calculatedAreaString = stringResource(
-            id = R.string.calculated_area,
-            String.format("%.6f", calculatedArea)
-        )
-        val enteredAreaString = stringResource(
-            id = R.string.entered_size,
-            String.format("%.2f", enteredArea)
-        )
-        val options = listOf(
-            CALCULATED_AREA_OPTION to calculatedAreaString,
-            ENTERED_AREA_OPTION to enteredAreaString
-        )
+        val calculatedAreaString =
+            stringResource(
+                id = R.string.calculated_area,
+                String.format("%.9f", calculatedArea),
+            )
+        val enteredAreaString =
+            stringResource(
+                id = R.string.entered_size,
+                String.format("%.2f", enteredArea),
+            )
+        val options =
+            listOf(
+                CALCULATED_AREA_OPTION to calculatedAreaString,
+                ENTERED_AREA_OPTION to enteredAreaString,
+            )
 
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -59,10 +62,10 @@ fun AreaDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss,modifier = Modifier.padding(top = 16.dp)) {
+                TextButton(onClick = onDismiss, modifier = Modifier.padding(top = 16.dp)) {
                     Text(stringResource(id = R.string.cancel))
                 }
-            }
+            },
         )
     }
 }

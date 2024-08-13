@@ -2,6 +2,7 @@
 accompanistPager = "0.26.3-alpha"
 accompanistPermissionsVersion = "0.14.0"
 agp = "8.6.0-alpha05"
+coilCompose = "2.4.0"
 constraintlayoutComposeVersion = "1.1.0-alpha13"
 converterGsonVersion = "2.9.0"
 gsonVersion = "2.10.1"
@@ -33,12 +34,15 @@ roomKtx = "2.6.1"
 secretsGradlePluginVersion = "2.0.1"
 workRuntimeKtxVersion = "2.9.0"
 ksp = "2.0.0-1.0.21"
+material = "1.12.0"
+lifecycleRuntimeComposeAndroid = "2.8.4"
 
 [libraries]
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
 androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutComposeVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompilerVersion" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
 gms-play-services-ads-identifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAdsIdentifier" }
 google-accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
@@ -76,6 +80,8 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

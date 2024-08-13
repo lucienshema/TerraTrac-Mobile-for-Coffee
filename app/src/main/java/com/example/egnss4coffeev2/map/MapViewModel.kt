@@ -42,11 +42,11 @@ class MapViewModel @Inject constructor() : ViewModel() {
     // Properties for coordinates and areas
     private val _coordinates = MutableLiveData<List<Pair<Double, Double>>>()
     val coordinates: LiveData<List<Pair<Double, Double>>>
-        get() = _coordinates
+    get() = _coordinates
 
     private val _calculatedArea = MutableLiveData<Double>()
     val calculatedArea: LiveData<Double>
-        get() = _calculatedArea
+    get() = _calculatedArea
 
     private val _size = MutableStateFlow("")
     val size: StateFlow<String> = _size.asStateFlow()
@@ -57,11 +57,11 @@ class MapViewModel @Inject constructor() : ViewModel() {
     // Property to store user's choice (0 for calculated, 1 for entered)
     private val _userChoice = MutableLiveData<Int>()
     val userChoice: LiveData<Int>
-        get() = _userChoice
+    get() = _userChoice
 
     // Method to set coordinates and calculated area
     fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double {
-        _coordinates.value = coordinates!!
+        _coordinates.value = coordinates
         val area = GeoCalculator.calculateArea(coordinates)
         _calculatedArea.value = area
         return area
@@ -182,7 +182,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         state.value = state.value.copy(clusterItems = currentClusterItems)
     }
 
-    fun addCoordinates(coordinates: List<Pair<Double, Double>>) {
+    fun addCoordinates(coordinates: List<Pair<Double?, Double?>>) {
         // Add coordinates on the map, this list of of LatLong form a polygons
         if (coordinates.isEmpty()) {
             return  // Return early without performing any further actions
@@ -193,7 +193,8 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
         val polygonOptions = polygonOptions {
             coordinates.forEach { (latitude, longitude) ->
-                add(LatLng(latitude, longitude))
+                if (latitude!= null && longitude!= null)
+                    add(LatLng(latitude, longitude))
             }
             fillColor(POLYGON_FILL_COLOR)
         }

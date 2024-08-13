@@ -1,6 +1,7 @@
 package com.example.egnss4coffeev2.database
 
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class FarmRepository(private val farmDAO: FarmDAO) {
@@ -42,6 +43,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     fun getLastFarm(): LiveData<List<Farm>> {
         return farmDAO.getLastFarm()
     }
+
     suspend fun getFarmBySiteId(siteId: Long): Farm? {
         return farmDAO.getFarmBySiteId(siteId)
     }
@@ -50,6 +52,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     suspend fun updateFarm(farm: Farm) {
         farmDAO.update(farm)
     }
+
     private suspend fun updateFarms(farms: List<Farm>) {
         farms.forEach { updateFarm(it) }
     }
@@ -62,6 +65,11 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     suspend fun deleteFarm(farm: Farm) {
         farmDAO.delete(farm)
     }
+
+    suspend fun deleteFarmById(farm: Farm) {
+        farmDAO.deleteFarmByRemoteId(farm.remoteId)
+    }
+
 
     suspend fun deleteAllFarms() {
         farmDAO.deleteAll()
@@ -83,18 +91,52 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteListSite(ids)
     }
 
+//    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
+//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) } != null
+//    }
+//
+//    suspend fun isFarmDuplicate(farm: Farm): Farm? {
+//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) }
+//    }
+//
+//    // Function to fetch a farm by remote ID
+//    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
+//        return farmDAO.getFarmByRemoteId(remoteId)
+//    }
+
     suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
-        return farmDAO.getFarmByRemoteId(farm.remoteId) != null
+        return farmDAO.getFarmByDetails(
+            farm.remoteId,
+            farm.farmerName,
+            farm.village,
+            farm.district
+        ) != null
     }
 
     suspend fun isFarmDuplicate(farm: Farm): Farm? {
-        return farmDAO.getFarmByRemoteId(farm.remoteId)
+        return farmDAO.getFarmByDetails(
+            farm.remoteId,
+            farm.farmerName,
+            farm.village,
+            farm.district
+        )
     }
 
-    // Function to fetch a farm by remote ID
-    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
-        return farmDAO.getFarmByRemoteId(remoteId)
+    // Function to fetch a farm by remote ID, farmer name, and address
+    suspend fun getFarmByDetails(farm: Farm): Farm? {
+        return farmDAO.getFarmByDetails(
+            farm.remoteId,
+            farm.farmerName,
+            farm.village,
+            farm.district
+        )
     }
+
+
+//    suspend fun deleteFarmByRemoteId(remoteId: UUID) {
+//        farmDAO.deleteFarmByRemoteId(remoteId)
+//    }
+//
 
 
     fun farmNeedsUpdate(existingFarm: Farm, newFarm: Farm): Boolean {
@@ -104,31 +146,44 @@ class FarmRepository(private val farmDAO: FarmDAO) {
                 existingFarm.district != newFarm.district
     }
 
-//    suspend fun importFarms(farms: List<Farm>): ImportResult {
-//        val nonDuplicateFarms = mutableListOf<Farm>()
-//        val duplicateFarms = mutableListOf<String>()
-//        val farmsNeedingUpdate = mutableListOf<Farm>()
-//
-//        for (farm in farms) {
-//            val existingFarm = isFarmDuplicate(farm)
-//            duplicateFarms.add("Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
-//            if (existingFarm?.let { farmNeedsUpdate(it, farm) } == true) {
-//                farmsNeedingUpdate.add(farm)
-//            }
-//        }
-//
-//        addFarms(nonDuplicateFarms)
-//        // Update farms that need updates
-//        updateFarms(farmsNeedingUpdate)
-//        return ImportResult(
-//            success = nonDuplicateFarms.isNotEmpty(),
-//            message = if (nonDuplicateFarms.isNotEmpty()) "Import successful" else "No farms were imported",
-//            importedFarms = nonDuplicateFarms,
-//            duplicateFarms = duplicateFarms,
-//            farmsNeedingUpdate = farmsNeedingUpdate
-//        )
-//    }
+    fun isDuplicateFarm(existingFarm: Farm, newFarm: Farm): Boolean {
+        return existingFarm.farmerName == newFarm.farmerName &&
+                existingFarm.size == newFarm.size &&
+                existingFarm.village == newFarm.village &&
+                existingFarm.district == newFarm.district
+    }
 
 
+    fun farmNeedsUpdateImport(newFarm: Farm): Boolean {
+        return newFarm.farmerName.isEmpty() ||
+                newFarm.district.isEmpty() ||
+                newFarm.village.isEmpty() ||
+                newFarm.latitude == "0.0" ||
+                newFarm.longitude == "0.0" ||
+                newFarm.size == 0.0f ||
+                newFarm.remoteId.toString().isEmpty() ||
+                newFarm.coordinates.isNullOrEmpty()
+    }
 
+
+    fun getAllBoughtItems(): Flow<List<BuyThroughAkrabi>> = farmDAO.getAllBoughtItems()
+
+
+    suspend fun insert(buyThroughAkrabi: BuyThroughAkrabi) {
+        farmDAO.insert(buyThroughAkrabi)
+    }
+
+    suspend fun insertDirectBuy(directBuy: DirectBuy) {
+        farmDAO.insertDirectBuy(directBuy)
+    }
+
+    fun getBoughtItemById(id: Long): Flow<BuyThroughAkrabi?> = farmDAO.getBoughtItemById(id)
+
+    // Function to get bought items by date range
+    suspend fun getBoughtItemsByDateRange(startDate: String, endDate: String): List<BuyThroughAkrabi> {
+        return farmDAO.getBoughtItemsByDateRange(startDate, endDate)
+    }
 }
+
+
+

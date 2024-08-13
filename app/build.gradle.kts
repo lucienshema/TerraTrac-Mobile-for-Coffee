@@ -4,8 +4,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-
-
+    id("kotlin-parcelize")
     //id("com.google.devtools.ksp")
     // alias(libs.plugins.ksp)
 }
@@ -83,6 +82,9 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 //    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.material)
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
+    implementation(libs.coil.compose)
     kapt(libs.hilt.compiler)
     implementation(libs.gms.play.services.ads.identifier)
     implementation(libs.maps.ktx)

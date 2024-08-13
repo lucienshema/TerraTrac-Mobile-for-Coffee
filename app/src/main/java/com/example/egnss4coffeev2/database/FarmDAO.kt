@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Dao
@@ -90,13 +91,33 @@ interface FarmDAO {
     @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
     suspend fun getFarmBySiteId(siteId: Long): Farm?
 
+    @Query("DELETE FROM farms WHERE remote_id = :remoteId")
+    suspend fun deleteFarmByRemoteId(remoteId: UUID)
+
+    @Query("SELECT * FROM farms WHERE remote_id = :remoteId OR (farmerName = :farmerName AND village = :village AND district = :district) LIMIT 1")
+    suspend fun getFarmByDetails(remoteId: UUID, farmerName: String, village: String, district: String): Farm?
+
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {
         farms.forEach { farm ->
-            if (getFarmByRemoteId(farm.remoteId) == null) {
+            if (farm.remoteId?.let { getFarmByRemoteId(it) } == null) {
                 insertAll(listOf(farm))
             }
         }
     }
+    @Query("SELECT * FROM BuyThroughAkrabi ORDER BY date DESC, time DESC")
+    fun getAllBoughtItems(): Flow<List<BuyThroughAkrabi>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(buyThroughAkrabi: BuyThroughAkrabi)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDirectBuy(directBuy: DirectBuy)
+
+    @Query("SELECT * FROM BuyThroughAkrabi WHERE id = :id")
+    fun getBoughtItemById(id: Long): Flow<BuyThroughAkrabi>
+
+    @Query("SELECT * FROM BuyThroughAkrabi WHERE date BETWEEN :startDate AND :endDate")
+    suspend fun getBoughtItemsByDateRange(startDate: String, endDate: String): List<BuyThroughAkrabi>
 
 }

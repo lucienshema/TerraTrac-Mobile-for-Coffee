@@ -13,6 +13,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
+import android.os.Parcel
+import android.os.Parcelable
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,6 +39,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,9 +53,11 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -65,8 +71,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-//import com.google.accompanist.pager.*
-//import com.google.accompanist.pager.indicators.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -98,11 +102,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.egnss4coffeev2.R
+import com.example.egnss4coffeev2.database.Akrabi
 import com.example.egnss4coffeev2.database.CollectionSite
 import com.example.egnss4coffeev2.database.Farm
 import com.example.egnss4coffeev2.database.FarmViewModel
@@ -113,9 +117,8 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.joda.time.Instant
 import java.io.BufferedWriter
 import java.io.File
@@ -123,19 +126,67 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
-import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Objects
-
+import java.util.regex.Pattern
 
 var siteID = 0L
 
-
 enum class Action {
     Export,
-    Share
+    Share,
+}
+
+data class ParcelablePair(val first: Double, val second: Double) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readDouble(),
+        parcel.readDouble()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeDouble(first)
+        parcel.writeDouble(second)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<ParcelablePair> {
+        override fun createFromParcel(parcel: Parcel): ParcelablePair {
+            return ParcelablePair(parcel)
+        }
+
+        override fun newArray(size: Int): Array<ParcelablePair?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
+
+data class ParcelableFarmData(val farm: Farm, val view: String) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readParcelable(Farm::class.java.classLoader)!!,
+        parcel.readString()!!
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeParcelable(farm, flags)
+        parcel.writeString(view)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<ParcelableFarmData> {
+        override fun createFromParcel(parcel: Parcel): ParcelableFarmData {
+            return ParcelableFarmData(parcel)
+        }
+
+        override fun newArray(size: Int): Array<ParcelableFarmData?> {
+            return arrayOfNulls(size)
+        }
+    }
 }
 
 
@@ -146,44 +197,10 @@ fun isSystemInDarkTheme(): Boolean {
     return sharedPreferences.getBoolean("dark_mode", false)
 }
 
-//suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>, farmViewModel: FarmViewModel) {
-//    withContext(Dispatchers.IO) {
-//        val existingFarms = farmViewModel.getExistingFarms(siteId)
-//        println("Existing farms count: ${existingFarms.size}")
-//
-//        // Create a map of existing farms by their remoteId for quick lookup
-//        val existingFarmMap = existingFarms.associateBy { it.remoteId }
-//
-//        // Iterate through imported farms and check for updates
-//        for (importedFarm in importedFarms) {
-//            val existingFarm = existingFarmMap[importedFarm.remoteId]
-//
-//            // If the farm is new or has different details, flag the existing farm for update
-//            if (existingFarm != null && existingFarm != importedFarm) {
-//                existingFarm.needsUpdate = true
-//                val updatedFarm = existingFarm.copy(needsUpdate = true)
-//                farmViewModel.updateFarm(updatedFarm)
-//                println("Flagging farm for update: ${updatedFarm.farmerName}, Site ID: ${updatedFarm.siteId}")
-//            } else if (existingFarm == null) {
-//                // Handle the case where the farm is new
-//                importedFarm.needsUpdate = true
-//                println("New farm detected, flagging for update: ${importedFarm.farmerName}, Site ID: ${importedFarm.siteId}")
-//            }
-//        }
-//
-//        // Update farms that need updates
-//        val farmsNeedingUpdate = existingFarms.filter { it.needsUpdate }
-//        farmsNeedingUpdate.forEach { farm ->
-//            farmViewModel.updateFarm(farm)
-//            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId},needsUpdate: ${farm.needsUpdate}")
-//        }
-//    }
-//}
-
 @Composable
 fun FormatSelectionDialog(
     onDismiss: () -> Unit,
-    onFormatSelected: (String) -> Unit
+    onFormatSelected: (String) -> Unit,
 ) {
     var selectedFormat by remember { mutableStateOf("CSV") }
 
@@ -195,14 +212,14 @@ fun FormatSelectionDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = selectedFormat == "CSV",
-                        onClick = { selectedFormat = "CSV" }
+                        onClick = { selectedFormat = "CSV" },
                     )
                     Text(stringResource(R.string.csv))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = selectedFormat == "GeoJSON",
-                        onClick = { selectedFormat = "GeoJSON" }
+                        onClick = { selectedFormat = "GeoJSON" },
                     )
                     Text(stringResource(R.string.geojson))
                 }
@@ -213,7 +230,7 @@ fun FormatSelectionDialog(
                 onClick = {
                     onFormatSelected(selectedFormat)
                     onDismiss()
-                }
+                },
             ) {
                 Text(stringResource(R.string.confirm))
             }
@@ -222,29 +239,36 @@ fun FormatSelectionDialog(
             Button(onClick = { onDismiss() }) {
                 Text(stringResource(R.string.cancel))
             }
-        }
+        },
     )
 }
-
 
 @Composable
 fun ConfirmationDialog(
     listItems: List<Farm>,
     action: Action,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
-        val incompleteFarms = farms.filter { farm ->
-            farm.farmerName.isEmpty() || farm.coordinates.isNullOrEmpty() || farm.latitude.isEmpty() || farm.longitude.isEmpty() || farm.memberId.isEmpty()
-        }
+        val incompleteFarms =
+            farms.filter { farm ->
+                farm.farmerName.isEmpty() ||
+                        farm.district.isEmpty()||
+                        farm.village.isEmpty() ||
+                        farm.latitude == "0.0" ||
+                        farm.longitude == "0.0" ||
+                        farm.size == 0.0f ||
+                        farm.remoteId.toString().isEmpty()
+            }
         return Pair(farms.size, incompleteFarms)
     }
     val (totalFarms, incompleteFarms) = validateFarms(listItems)
-    val message = when (action) {
-        Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
-        Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
-    }
+    val message =
+        when (action) {
+            Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
+            Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
+        }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = stringResource(R.string.confirm)) },
@@ -261,19 +285,23 @@ fun ConfirmationDialog(
             Button(onClick = { onDismiss() }) {
                 Text(text = stringResource(R.string.no))
             }
-        }
+        },
     )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun FarmList(navController: NavController, siteId: Long) {
+fun FarmList(
+    navController: NavController,
+    siteId: Long,
+) {
     siteID = siteId
     val context = LocalContext.current
-    val farmViewModel: FarmViewModel = viewModel(
-        factory = FarmViewModelFactory(context.applicationContext as Application)
-    )
+    val farmViewModel: FarmViewModel =
+        viewModel(
+            factory = FarmViewModelFactory(context.applicationContext as Application),
+        )
     val selectedIds = remember { mutableStateListOf<Long>() }
     // Create a mutable state for the selected farm
     val selectedFarm = remember { mutableStateOf<Farm?>(null) }
@@ -288,90 +316,185 @@ fun FarmList(navController: NavController, siteId: Long) {
 
     var showImportDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    // Inside your composable function
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf(
-        stringResource(id = R.string.all),
-        stringResource(id = R.string.needs_update),
-        stringResource(id = R.string.no_update_needed)
-    )
-//    val pagerState = rememberPagerState(pageCount = { 0 })
-//    val coroutineScope = rememberCoroutineScope()
+    val tabs =
+        listOf(
+            stringResource(id = R.string.all),
+            stringResource(id = R.string.needs_update),
+//            stringResource(id = R.string.no_update_needed),
+        )
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val coroutineScope = rememberCoroutineScope()
 
-    // State to track if a refresh is needed
-    var refreshTrigger by remember { mutableStateOf(false) }
-    // Trigger a reload when refreshTrigger changes
-//    LaunchedEffect(refreshTrigger) {
-//        withContext(Dispatchers.IO) {
-//            // Logic to refresh data, such as triggering a reload in the ViewModel
-//            farmViewModel.refreshData(siteId)
-//        }
-//    }
+
+    // State to manage the loading status
+    val isLoading = remember { mutableStateOf(true) }
+
+    // State to control the visibility of BuyThroughAkrabiForm
+    var isFormVisible by remember { mutableStateOf(false) }
+
+//    val collectionSites = listOf(
+//        CollectionSite(
+//            name = "Site 1",
+//            agentName = "Agent A",
+//            phoneNumber = "123-456-7890",
+//            email = "agentA@example.com",
+//            village = "Village A",
+//            district = "District A",
+//            updatedAt = 1263773,
+//            createdAt =126783
+//        ),
+//        CollectionSite(
+//            name = "Site 2",
+//            agentName = "Agent B",
+//            phoneNumber = "098-765-4321",
+//            email = "agentB@example.com",
+//            village = "Village B",
+//            district = "District B",
+//            updatedAt = 1263773,
+//            createdAt =126783
+//        ),
+//        CollectionSite(
+//            name = "Site 3",
+//            agentName = "Agent C",
+//            phoneNumber = "456-789-0123",
+//            email = "agentC@example.com",
+//            village = "Village C",
+//            district = "District C",
+//            updatedAt = 1263773,
+//            createdAt =126783
+//        )
+//    )
+    val collectionSites by farmViewModel.readAllSites.observeAsState(emptyList())
+    var akrabis by remember { mutableStateOf(listOf<Akrabi>()) }
+
+
+    // Simulate a network request or data loading
+    LaunchedEffect(Unit) {
+        // Simulate a delay for loading
+        delay(2000) // Adjust the delay as needed
+        // After loading data, set isLoading to false
+        isLoading.value = false
+    }
 
     fun createFileForSharing(): File? {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val filename =
+            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadsDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
 
         try {
             file.bufferedWriter().use { writer ->
                 if (exportFormat == "CSV") {
-                    writer.write("remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n")
+                    writer.write(
+                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                    )
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
-                        // Reverse the coordinates and format with brackets
-                        val reversedCoordinates = matches.map { match ->
-                            val (lat, lon) = match.destructured
-                            "[$lon, $lat]"
-                        }.joinToString(", ", prefix = "[", postfix = "]")
-                        val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(farm.createdAt)},${Date(farm.updatedAt)}\n"
+//                        val reversedCoordinates =
+//                            matches
+//                                .map { match ->
+//                                    val (lat, lon) = match.destructured
+//                                    "[$lon, $lat]"
+//                                }.toList() // Convert Sequence to List for easy handling
+//                                .let { coordinates ->
+//                                    if (coordinates.isNotEmpty()) {
+//                                        if (coordinates.size == 1) {
+//                                            // Single point, return without additional brackets
+//                                            coordinates.first()
+//                                        } else {
+//                                            // Multiple points, add enclosing brackets
+//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                        }
+//                                    } else {
+//                                        "" // Return an empty string if there are no coordinates
+//                                    }
+//                                }
+
+
+                        val reversedCoordinates =
+                            matches
+                                .map { match ->
+                                    val (lat, lon) = match.destructured
+                                    "[$lon, $lat]"
+                                }.toList()
+                                .let { coordinates ->
+                                    if (coordinates.isNotEmpty()) {
+                                        // Always include brackets, even for a single point
+                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                    } else {
+                                        val lon = farm.longitude ?: "0.0"
+                                        val lat = farm.latitude ?: "0.0"
+                                        "[$lon, $lat]"
+                                    }
+                                }
+
+                        val line =
+                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                Date(
+                                    farm.createdAt,
+                                )
+                            },${Date(farm.updatedAt)}\n"
                         writer.write(line)
                     }
                 } else {
-                    val geoJson = buildString {
-                        append("{\"type\": \"FeatureCollection\", \"features\": [")
-                        listItems.forEachIndexed { index, farm ->
-                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                            val matches = regex.findAll(farm.coordinates.toString())
-                            val geoJsonCoordinates = matches.map { match ->
-                                val (lat, lon) = match.destructured
-                                "[$lon, $lat]"
-                            }.joinToString(", ", prefix = "[", postfix = "]")
-                            append("""
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "remote_id": "${farm.remoteId}",
-                                    "farmer_name": "${farm.farmerName}",
-                                    "member_id": "${farm.memberId}",
-                                    "collection_site": "${getSiteById?.name}",
-                                    "agent_name": "${getSiteById?.agentName}",
-                                    "farm_village": "${farm.village}",
-                                    "farm_district": "${farm.district}",
-                                    "farm_size": ${farm.size},
-                                    "latitude": ${farm.latitude},
-                                    "longitude": ${farm.longitude},
-                                    "created_at": "${Date(farm.createdAt)}",
-                                    "updated_at": "${Date(farm.updatedAt)}"
-                                },
-                                "geometry": {
-                                    "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                    "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
-                                }
-                            }${if (index == listItems.size - 1) "" else ","}
-                        """.trimIndent())
+                    val geoJson =
+                        buildString {
+                            append("{\"type\": \"FeatureCollection\", \"features\": [")
+                            listItems.forEachIndexed { index, farm ->
+                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                val matches = regex.findAll(farm.coordinates.toString())
+                                val geoJsonCoordinates =
+                                    matches
+                                        .map { match ->
+                                            val (lat, lon) = match.destructured
+                                            "[$lon, $lat]"
+                                        }.joinToString(", ", prefix = "[", postfix = "]")
+                                val latitude =
+                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                val longitude =
+                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+
+                                val feature =
+                                    """
+                                    {
+                                        "type": "Feature",
+                                        "properties": {
+                                            "remote_id": "${farm.remoteId ?: ""}",
+                                            "farmer_name": "${farm.farmerName ?: ""}",
+                                            "member_id": "${farm.memberId ?: ""}",
+                                            "collection_site": "${getSiteById?.name ?: ""}",
+                                            "agent_name": "${getSiteById?.agentName ?: ""}",
+                                            "farm_village": "${farm.village ?: ""}",
+                                            "farm_district": "${farm.district ?: ""}",
+                                             "farm_size": ${farm.size ?: 0.0},
+                                            "latitude": $latitude,
+                                            "longitude": $longitude,
+                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+                                            
+                                        },
+                                        "geometry": {
+                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                        }
+                                    }
+                                    """.trimIndent()
+                                append(feature)
+                                if (index < listItems.size - 1) append(",")
+                            }
+                            append("]}")
                         }
-                        append("]}")
-                    }
                     writer.write(geoJson)
                 }
             }
@@ -382,7 +505,10 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 
-    fun createFile(context: Context, uri: Uri): Boolean {
+    fun createFile(
+        context: Context,
+        uri: Uri,
+    ): Boolean {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
@@ -394,14 +520,53 @@ fun FarmList(navController: NavController, siteId: Long) {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
                     if (exportFormat == "CSV") {
-                        writer.write("remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n")
+                        writer.write(
+                            "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                        )
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-                            val reversedCoordinates = matches.map { match ->
-                                val (lat, lon) = match.destructured
-                                "[$lon, $lat]"
-                            }.joinToString(", ", prefix = "[", postfix = "]")
+//                            val reversedCoordinates =
+//                                matches
+//                                    .map { match ->
+//                                        val (lat, lon) = match.destructured
+//                                        "[$lon, $lat]"
+//                                    }.toList() // Convert Sequence to List for easy handling
+//                                    .let { coordinates ->
+//                                        if (coordinates.isNotEmpty()) {
+//                                            if (coordinates.size == 1) {
+//                                                // Single point, return without additional brackets
+//                                                coordinates.first()
+//                                            } else {
+//                                                // Multiple points, add enclosing brackets
+//                                                coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                            }
+//                                        } else {
+//                                            "" // Return an empty string if here are no coordinates
+//                                        }
+//                                    }
+
+                            val reversedCoordinates =
+                                matches
+                                    .map { match ->
+                                        val (lat, lon) = match.destructured
+                                        "[$lon, $lat]"
+                                    }.toList()
+                                    .let { coordinates ->
+                                        if (coordinates.isNotEmpty()) {
+                                            // Always include brackets, even for a single point
+                                            coordinates.joinToString(
+                                                ", ",
+                                                prefix = "[",
+                                                postfix = "]"
+                                            )
+                                        } else {
+                                            val lon = farm.longitude ?: "0.0"
+                                            val lat = farm.latitude ?: "0.0"
+                                            "[$lon, $lat]"
+                                        }
+                                    }
+
                             val line =
                                 "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
                                     Date(farm.createdAt)
@@ -409,43 +574,54 @@ fun FarmList(navController: NavController, siteId: Long) {
                             writer.write(line)
                         }
                     } else {
-                        val geoJson = buildString {
-                            append("{\"type\": \"FeatureCollection\", \"features\": [")
-                            listItems.forEachIndexed { index, farm ->
-                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                val matches = regex.findAll(farm.coordinates.toString())
-                                val geoJsonCoordinates = matches.map { match ->
-                                    val (lat, lon) = match.destructured
-                                    "[$lon, $lat]"
-                                }.joinToString(", ", prefix = "[", postfix = "]")
-                                append(
-                                    """
-                                {
-                                    "type": "Feature",
-                                    "properties": {
-                                        "remote_id": "${farm.remoteId}",
-                                        "farmer_name": "${farm.farmerName}",
-                                        "member_id": "${farm.memberId}",
-                                        "collection_site": "${getSiteById?.name}",
-                                        "agent_name": "${getSiteById?.agentName}",
-                                        "farm_village": "${farm.village}",
-                                        "farm_district": "${farm.district}",
-                                        "farm_size": ${farm.size},
-                                        "latitude": ${farm.latitude},
-                                        "longitude": ${farm.longitude},
-                                        "created_at": "${Date(farm.createdAt)}",
-                                        "updated_at": "${Date(farm.updatedAt)}"
-                                    },
-                                    "geometry": {
-                                        "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                        "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
-                                    }
-                                }${if (index == listItems.size - 1) "" else ","}
-                            """.trimIndent()
-                                )
+                        val geoJson =
+                            buildString {
+                                append("{\"type\": \"FeatureCollection\", \"features\": [")
+                                listItems.forEachIndexed { index, farm ->
+                                    val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                    val matches = regex.findAll(farm.coordinates.toString())
+                                    val geoJsonCoordinates =
+                                        matches
+                                            .map { match ->
+                                                val (lat, lon) = match.destructured
+                                                "[$lon, $lat]"
+                                            }.joinToString(", ", prefix = "[", postfix = "]")
+                                    // Ensure latitude and longitude are not null
+                                    val latitude =
+                                        farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                    val longitude =
+                                        farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+
+                                    val feature =
+                                        """
+                                        {
+                                            "type": "Feature",
+                                            "properties": {
+                                                "remote_id": "${farm.remoteId ?: ""}",
+                                                "farmer_name": "${farm.farmerName ?: ""}",
+                                                "member_id": "${farm.memberId ?: ""}",
+                                                "collection_site": "${getSiteById?.name ?: ""}",
+                                                "agent_name": "${getSiteById?.agentName ?: ""}",
+                                                "farm_village": "${farm.village ?: ""}",
+                                                "farm_district": "${farm.district ?: ""}",
+                                                 "farm_size": ${farm.size ?: 0.0},
+                                                "latitude": $latitude,
+                                                "longitude": $longitude,
+                                                "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+                                                "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+                                                
+                                            },
+                                            "geometry": {
+                                                "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+                                                "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                            }
+                                        }
+                                        """.trimIndent()
+                                    append(feature)
+                                    if (index < listItems.size - 1) append(",")
+                                }
+                                append("]}")
                             }
-                            append("]}")
-                        }
                         writer.write(geoJson)
                     }
                 }
@@ -457,59 +633,62 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 
-
-
-
     val createDocumentLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
                     val context = activity?.applicationContext
                     if (context != null && createFile(context, uri)) {
-                        Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             }
         }
 
-
     fun initiateFileCreation(activity: Activity) {
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = mimeType
-            val getSiteById = cwsListItems.find { it.siteId == siteID }
-            val siteName = getSiteById?.name ?: "SiteName"
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-            putExtra(Intent.EXTRA_TITLE, filename)
-        }
+        val intent =
+            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = mimeType
+                val getSiteById = cwsListItems.find { it.siteId == siteID }
+                val siteName = getSiteById?.name ?: "SiteName"
+                val timestamp =
+                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val filename =
+                    if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+                putExtra(Intent.EXTRA_TITLE, filename)
+            }
         createDocumentLauncher.launch(intent)
     }
+
     // Function to share the file
     fun shareFile(file: File) {
-        val fileURI: Uri = context.let {
-            FileProvider.getUriForFile(
-                it,
-                context.applicationContext.packageName.toString() + ".provider",
-                file
-            )
-        }
+        val fileURI: Uri =
+            context.let {
+                FileProvider.getUriForFile(
+                    it,
+                    context.applicationContext.packageName.toString() + ".provider",
+                    file,
+                )
+            }
 
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-            putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
-            putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
-            putExtra(Intent.EXTRA_STREAM, fileURI)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
+        val shareIntent =
+            Intent(Intent.ACTION_SEND).apply {
+                type = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
+                putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
+                putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
+                putExtra(Intent.EXTRA_STREAM, fileURI)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
         val chooserIntent = Intent.createChooser(shareIntent, "Share file")
         activity.startActivity(chooserIntent)
     }
+
     fun exportFile(activity: Activity) {
         showConfirmationDialog = true
     }
-
 
     // Function to handle the share action
     fun shareFileAction() {
@@ -527,7 +706,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                     Action.Share -> shareFileAction()
                     else -> {}
                 }
-            }
+            },
         )
     }
     if (showConfirmationDialog) {
@@ -543,126 +722,47 @@ fun FarmList(navController: NavController, siteId: Long) {
                             shareFile(file)
                         }
                     }
+
                     else -> {}
                 }
             },
-            onDismiss = { showConfirmationDialog = false }
+            onDismiss = { showConfirmationDialog = false },
         )
     }
     if (showImportDialog) {
         println("site ID am Using: $siteId")
-        ImportFileDialog( siteId,onDismiss = { showImportDialog = false ; refreshTrigger = !refreshTrigger},navController = navController)
+        // ImportFileDialog( siteId,onDismiss = { showImportDialog = false ; refreshTrigger = !refreshTrigger},navController = navController)
+        ImportFileDialog(
+            siteId,
+            onDismiss = { showImportDialog = false },
+            navController = navController
+        )
     }
-
 
     fun onDelete() {
         selectedFarm.value?.let { farm ->
-            val toDelete = mutableListOf<Long>().apply {
-                addAll(selectedIds)
-                add(farm.id)
-            }
+            val toDelete =
+                mutableListOf<Long>().apply {
+                    addAll(selectedIds)
+                    add(farm.id)
+                }
             farmViewModel.deleteList(toDelete)
-            farmViewModel.deleteFarm(farm)
+            selectedIds.removeAll(selectedIds)
+            farmViewModel.deleteFarmById(farm)
             selectedFarm.value = null
+            selectedIds.removeAll(selectedIds)
             showDeleteDialog.value = false
         }
     }
 
-
-//    if (listItems.isNotEmpty()) {
-//        LazyColumn(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(16.dp)
-//        ) {
-//            item {
-//                FarmListHeaderPlots(
-//                    title = stringResource(id = R.string.farm_list),
-//                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-//                    // onBackClicked = { navController.navigateUp() }, siteList
-//                    onBackClicked = { navController.navigate("siteList") },
-//                    onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-//                    onExportClicked = {
-//                        action = Action.Export
-//                        showFormatDialog = true
-//                    },
-//                    onShareClicked = {
-//                        action = Action.Share
-//                        showFormatDialog = true
-//                    },
-//                    onSearchQueryChanged = setSearchQuery,
-//                    onImportClicked = { showImportDialog = true },
-//                    showAdd = true,
-//                    showExport = listItems.isNotEmpty(),
-//                    showShare = listItems.isNotEmpty(),
-//                    showSearch= listItems.isNotEmpty()
-//                )
-//                Spacer(modifier = Modifier.height(8.dp))
-//            }
-//            items(listItems.filter {
-//                it.farmerName.contains(searchQuery, ignoreCase = true)
-//                // Adjust filtering based on your farm data structure
-//            }) { farm ->
-//                FarmCard(
-//                    farm = farm,
-//                    onCardClick = {
-//                        Bundle().apply {
-//                            putSerializable("coordinates",
-//                                farm.coordinates?.let { ArrayList(it) })
-//                        }
-//
-//                        navController.currentBackStackEntry?.arguments?.apply {
-//                            putSerializable("farmData", Pair(farm, "view"))
-//                        }
-//                        navController.navigate(route = "setPolygon")
-//                    },
-//                    onDeleteClick = {
-//                        selectedIds.add(farm.id)
-//                        showDeleteDialog.value = true
-//                    }
-//                )
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//        }
-//        if (showDeleteDialog.value) {
-//            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-//        }
-//    } else {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//        ) {
-//            FarmListHeaderPlots(
-//                title = stringResource(id = R.string.farm_list),
-//                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-//                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-//                onBackClicked = { navController.navigateUp() },
-//                onExportClicked = {
-//                    action = Action.Export
-//                    showFormatDialog = true
-//                },
-//                onShareClicked = {
-//                    action = Action.Share
-//                    showFormatDialog = true
-//                },
-//                onSearchQueryChanged = setSearchQuery,
-//                onImportClicked = { showImportDialog = true },
-//                showAdd = true,
-//                showExport = listItems.isNotEmpty(),
-//                showShare = listItems.isNotEmpty(),
-//                showSearch = listItems.isNotEmpty(),
-//            )
-//            Spacer(modifier = Modifier.height(8.dp))
-//            Image(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .align(Alignment.CenterHorizontally)
-//                    .padding(16.dp, 8.dp),
-//                painter = painterResource(id = R.drawable.no_data2),
-//                contentDescription = null
-//            )
-//        }
+//    fun onDelete() {
+//        val toDelete = mutableListOf<Long>()
+//        toDelete.addAll(selectedIds)
+//        farmViewModel.deleteList(toDelete)
+//        selectedIds.removeAll(selectedIds)
+//        showDeleteDialog.value = false
 //    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -682,77 +782,166 @@ fun FarmList(navController: NavController, siteId: Long) {
                 showFormatDialog = true
             },
             onSearchQueryChanged = setSearchQuery,
+            onBuyThroughAkrabiClicked = {
+//                isFormVisible = true
+                navController.navigate("shopping")
+            },
             onImportClicked = { showImportDialog = true },
             showAdd = true,
             showExport = listItems.isNotEmpty(),
             showShare = listItems.isNotEmpty(),
-            showSearch = listItems.isNotEmpty()
+            showSearch = listItems.isNotEmpty(),
+            showBuyThroughAkrabi = listItems.isNotEmpty(),
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-//                    selected = pagerState.currentPage == index,
-//                    onClick = {
-//                        coroutineScope.launch {
-//                            pagerState.animateScrollToPage(index)
-//                        }
-//                    },
-//                    text = { Text(title) }
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(title) }
-                )
-            }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
 
-        val filteredListItems = when (selectedTabIndex) {
-            1 -> listItems.filter { it.needsUpdate } // Assuming you have a `needsUpdate` property
-            2 -> listItems.filter { !it.needsUpdate }
-            else -> listItems
-        }
-
-        if (filteredListItems.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
+        if (isLoading.value) {
+            // Show loader while data is loading
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                items(filteredListItems.filter {
-                    it.farmerName.contains(searchQuery, ignoreCase = true)
-                }) { farm ->
-                    FarmCard(
-                        farm = farm,
-                        onCardClick = {
-                            Bundle().apply {
-                                putSerializable("coordinates",
-                                    farm.coordinates?.let { ArrayList(it) })
-                            }
-
-                            navController.currentBackStackEntry?.arguments?.apply {
-                                putSerializable("farmData", Pair(farm, "view"))
-                            }
-                            navController.navigate(route = "setPolygon")
-                        },
-                        onDeleteClick = {
-                            selectedIds.add(farm.id)
-                            selectedFarm.value = farm
-                            showDeleteDialog.value = true
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                CircularProgressIndicator()
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            val hasData = listItems.isNotEmpty() // Check if there's data available
+
+            if (hasData) {
+                // Conditionally display BuyThroughAkrabiForm
+                if (isFormVisible) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        BuyThroughAkrabiForm(
+                            collectionSites = collectionSites,
+                            akrabis = akrabis,
+                            onCreateAkrabi = { newAkrabi ->
+                                // Navigate to CreateAkrabiForm
+                                navController.navigate("create_akrabi_form")
+                            },
+                            onSubmit = { buyThroughAkrabi ->
+                                farmViewModel.insertBoughtItem(buyThroughAkrabi)
+                                // Handle form submission
+                                Log.d("BuyThroughAkrabiForm", "Form submitted: $buyThroughAkrabi")
+                                // Hide the form after submission
+                                isFormVisible = false
+                            },
+                            navController
+                        )
+                    }
+                }
+                // Only show the TabRow and HorizontalPager if there is data
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            text = { Text(title) },
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.weight(1f),
+                ) { page ->
+                    val filteredListItems = when (page) {
+                        1 -> listItems.filter { it.needsUpdate }
+                        else -> listItems
+                    }.filter {
+                        it.farmerName.contains(searchQuery, ignoreCase = true)
+                    }
+                    if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
+                        // Show the list only when loading is complete
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            val filteredList = filteredListItems.filter {
+                                it.farmerName.contains(searchQuery, ignoreCase = true)
+                            }
+
+                            if (filteredList.isEmpty()) {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Top,
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.no_results_found),
+                                            modifier = Modifier
+                                                .padding(16.dp)
+                                                .fillMaxWidth(),
+                                            textAlign = TextAlign.Center,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                    }
+                                }
+                            } else {
+                                items(filteredList) { farm ->
+                                    FarmCard(
+                                        farm = farm,
+                                        onCardClick = {
+                                            navController.currentBackStackEntry?.arguments?.apply {
+                                                putParcelableArrayList(
+                                                    "coordinates",
+                                                    farm.coordinates?.map {
+                                                        it.first?.let { it1 ->
+                                                            it.second?.let { it2 ->
+                                                                ParcelablePair(
+                                                                    it1, it2
+                                                                )
+                                                            }
+                                                        }
+                                                    }?.let { ArrayList(it) }
+                                                )
+                                                putParcelable(
+                                                    "farmData",
+                                                    ParcelableFarmData(farm, "view")
+                                                )
+                                            }
+                                            navController.navigate(route = "setPolygon")
+                                        },
+                                        onDeleteClick = {
+                                            selectedIds.add(farm.id)
+                                            selectedFarm.value = farm
+                                            showDeleteDialog.value = true
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp, 8.dp),
+                            painter = painterResource(id = R.drawable.no_data2),
+                            contentDescription = null
+                        )
+                    }
+                }
+            } else {
+                // Display a message or image indicating no data available
+                Spacer(modifier = Modifier.height(8.dp))
                 Image(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -769,85 +958,59 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 }
-
-
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavController) {
-
+fun ImportFileDialog(
+    siteId: Long,
+    onDismiss: () -> Unit,
+    navController: NavController,
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     val farmViewModel: FarmViewModel = viewModel()
     var selectedFileType by remember { mutableStateOf("") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
-    //var importCompleted by remember { mutableStateOf(false) }
+    // var importCompleted by remember { mutableStateOf(false) }
 
     // Create a launcher to handle the file picker result
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            coroutineScope.launch {
-                try {
-                    val result = farmViewModel.importFile(context, it, siteId)
-                    println("site ID am Using in import dialog: $siteId")
-                    println("Import result: ${result.success}")
-                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-                    if (result.duplicateFarms.isNotEmpty()) {
-                        Toast.makeText(context, "Duplicate farms found", Toast.LENGTH_SHORT).show()
-                        println("Duplicate farms found:")
-                        result.duplicateFarms.forEach { println(it) }
+    val importLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent(),
+        ) { uri: Uri? ->
+            uri?.let {
+                coroutineScope.launch {
+                    try {
+                        val result = farmViewModel.importFile(context, it, siteId)
+                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                        navController.navigate("farmList/$siteId") // Navigate to the refreshed farm list
+                        onDismiss() // Dismiss the dialog after import is complete
+                    } catch (e: Exception) {
+                        Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
                     }
-                    // Handle farms needing updates
-                    if (result.farmsNeedingUpdate.isNotEmpty()) {
-                        println("Farms that needs to be updated found:" + result.farmsNeedingUpdate)
-                        // Update the UI to mark farms that need updates
-                        // markFarmsNeedingUpdate(result.farmsNeedingUpdate)
-                    }
-                    // Retrieve imported farms and flag those without plot info
-                    val importedFarms = result.importedFarms // Adjust to your actual data
-
-                    println("Imported farms now: $importedFarms")
-                    println("farms needed to be updated: $result.farmsNeedingUpdate")
-
-                    // flagFarmersWithNewPlotInfo(siteId, result.farmsNeedingUpdate,farmViewModel)
-                    //importCompleted = true
-                    onDismiss() // Dismiss the dialog after import is complete
-                    navController.navigate("farmList/${siteId}") // Navigate to the refreshed farm list
-                } catch (e: Exception) {
-                    Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
-    }
-//    // Use LaunchedEffect to react to import completion
-//    LaunchedEffect(importCompleted) {
-//        if (importCompleted) {
-//            // Reload your data here
-//            farmViewModel.getExistingFarms(siteId)
-//            onDismiss()
-//            importCompleted = false // Reset the flag if needed
-//        }
-//    }
 
     // Create a launcher to handle the file creation result
-    val createDocumentLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument()
-    ) { uri: Uri? ->
-        uri?.let {
-            // Get the template content based on the selected file type
-            val templateContent = farmViewModel.getTemplateContent(selectedFileType)
-            // Save the template content to the created document
-            coroutineScope.launch {
-                try {
-                    farmViewModel.saveFileToUri(context, it, templateContent)
-                } catch (e: Exception) {
-                    Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+    val createDocumentLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument(),
+        ) { uri: Uri? ->
+            uri?.let {
+                // Get the template content based on the selected file type
+                val templateContent = farmViewModel.getTemplateContent(selectedFileType)
+                // Save the template content to the created document
+                coroutineScope.launch {
+                    try {
+                        farmViewModel.saveFileToUri(context, it, templateContent)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+                    }
+                    onDismiss() // Dismiss the dialog
                 }
             }
         }
-    }
 
     // Function to download the template file
     fun downloadTemplate() {
@@ -859,7 +1022,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavContro
                         "csv" -> "farm_template.csv"
                         "geojson" -> "farm_template.geojson"
                         else -> throw IllegalArgumentException("Unsupported file type: $selectedFileType")
-                    }
+                    },
                 )
             } catch (e: Exception) {
                 Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
@@ -872,45 +1035,53 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavContro
         title = { Text(text = stringResource(R.string.import_file)) },
         text = {
             Column(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .padding(8.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) {
                 Text(
                     text = stringResource(R.string.select_file_type),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
                 Box(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
                         .clickable { isDropdownMenuExpanded = true }
-                        .padding(16.dp)
+                        .padding(16.dp),
                 ) {
                     Text(
                         text = if (selectedFileType.isNotEmpty()) selectedFileType else stringResource(R.string.select_file_type),
-                        color = if (selectedFileType.isNotEmpty()) Color.Black else Color.Gray
+                        color = if (selectedFileType.isNotEmpty()) Color.Black else Color.Gray,
                     )
                     DropdownMenu(
                         expanded = isDropdownMenuExpanded,
-                        onDismissRequest = { isDropdownMenuExpanded = false }
+                        onDismissRequest = { isDropdownMenuExpanded = false },
                     ) {
-                        DropdownMenuItem(onClick = { selectedFileType = "csv";isDropdownMenuExpanded = false }, text = { Text("CSV") })
-                        DropdownMenuItem(onClick = { selectedFileType = "geojson"; isDropdownMenuExpanded = false}, text = { Text("GeoJSON") })
+                        DropdownMenuItem(onClick = {
+                            selectedFileType = "csv"
+                            isDropdownMenuExpanded = false
+                        }, text = { Text("CSV") })
+                        DropdownMenuItem(onClick = {
+                            selectedFileType = "geojson"
+                            isDropdownMenuExpanded = false
+                        }, text = { Text("GeoJSON") })
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { downloadTemplate()},
+                    onClick = { downloadTemplate() },
                     enabled = selectedFileType.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
                 ) {
                     Text(stringResource(R.string.download_template))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.select_file_to_import),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
         },
@@ -925,14 +1096,14 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavContro
             Button(onClick = { onDismiss() }) {
                 Text(stringResource(R.string.cancel))
             }
-        }
+        },
     )
 }
 
 @Composable
 fun DeleteAllDialogPresenter(
     showDeleteDialog: MutableState<Boolean>,
-    onProceedFn: () -> Unit
+    onProceedFn: () -> Unit,
 ) {
     if (showDeleteDialog.value) {
         AlertDialog(
@@ -954,12 +1125,12 @@ fun DeleteAllDialogPresenter(
                 TextButton(onClick = { showDeleteDialog.value = false }) {
                     Text(text = stringResource(id = R.string.no))
                 }
-            }
+            },
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FarmListHeader(
     title: String,
@@ -968,14 +1139,16 @@ fun FarmListHeader(
     onBackClicked: () -> Unit,
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
-    showSearch: Boolean
+    showSearch: Boolean,
 ) {
     // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
+
     var isSearchVisible by remember { mutableStateOf(false) }
 
     TopAppBar(
-        modifier = Modifier
+        modifier =
+        Modifier
             .background(MaterialTheme.colorScheme.primary)
             .fillMaxWidth(),
         navigationIcon = {
@@ -986,15 +1159,17 @@ fun FarmListHeader(
         title = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodySmall.copy(
+                style =
+                MaterialTheme.typography.bodySmall.copy(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.secondary,
                 ),
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxWidth()
                     .padding(4.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         },
         actions = {
@@ -1010,15 +1185,16 @@ fun FarmListHeader(
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 }
             }
-        }
+        },
     )
     // Conditional rendering of the search field
     if (isSearchVisible && showSearch) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
+            modifier =
+            Modifier
                 .padding(horizontal = 16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             OutlinedTextField(
                 value = searchQuery,
@@ -1026,39 +1202,39 @@ fun FarmListHeader(
                     searchQuery = it
                     onSearchQueryChanged(it)
                 },
-                modifier = Modifier
+                modifier =
+                Modifier
                     .padding(start = 8.dp)
                     .weight(1f),
                 label = { Text(stringResource(R.string.search)) },
-//                leadingIcon = {
-//                    IconButton(onClick = {
-//                       // onBackSearchClicked()
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                },
-                trailingIcon = {
+                leadingIcon = {
                     IconButton(onClick = {
+                        // onBackSearchClicked()
                         searchQuery = ""
                         onSearchQueryChanged("")
                         isSearchVisible = !isSearchVisible
                     }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
+//                trailingIcon = {
+//                    IconButton(onClick = {
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.Close, contentDescription = "Close")
+//                    }
+//                },
                 singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors =
+                TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface,
+                ),
             )
         }
     }
-
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1066,15 +1242,17 @@ fun FarmListHeaderPlots(
     title: String,
     onAddFarmClicked: () -> Unit,
     onBackClicked: () -> Unit,
+    onBackSearchClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onBackSearchClicked: () -> Unit,
+    onBuyThroughAkrabiClicked: () -> Unit, // Added this
     showAdd: Boolean,
     showExport: Boolean,
     showShare: Boolean,
     showSearch: Boolean,
+    showBuyThroughAkrabi: Boolean // Added this
 ) {
     val context = LocalContext.current as Activity
 
@@ -1082,8 +1260,11 @@ fun FarmListHeaderPlots(
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
 
+    // State for tracking if import has been completed
+    var isImportDisabled by remember { mutableStateOf(false) }
+
     TopAppBar(
-        title = { Text(text=title,fontSize=18.sp) },
+        title = { Text(text = title, fontSize = 18.sp) },
         navigationIcon = {
             IconButton(onClick = onBackClicked) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -1091,29 +1272,48 @@ fun FarmListHeaderPlots(
         },
         actions = {
             if (showExport) {
-                IconButton(onClick = onExportClicked,modifier = Modifier.size(36.dp) ) {
+                IconButton(onClick = onExportClicked, modifier = Modifier.size(24.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.save),
                         contentDescription = "Export",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                 }
-                Spacer(modifier = Modifier.width(1.dp))
+                Spacer(modifier = Modifier.width(2.dp))
             }
             if (showShare) {
-                IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onShareClicked, modifier = Modifier.size(24.dp)) {
                     Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
                 }
-                Spacer(modifier = Modifier.width(1.dp))
+                Spacer(modifier = Modifier.width(2.dp))
             }
-            IconButton(onClick = onImportClicked,modifier = Modifier.size(36.dp) ) {
+            IconButton(
+                onClick = {
+                    if (!isImportDisabled) {
+                        onImportClicked()
+                        isImportDisabled = true // Disable the import icon after importing
+                    }
+                },
+                modifier = Modifier.size(24.dp),
+                enabled = !isImportDisabled // Disable the button if import is completed
+            ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.import_icon),
+                    painter = painterResource(id = R.drawable.icons8_import_file_48),
                     contentDescription = "Import",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             }
-            Spacer(modifier = Modifier.width(1.dp))
+            Spacer(modifier = Modifier.width(2.dp))
+            // New button for buying through Akrabi
+            if (showBuyThroughAkrabi) {
+                IconButton(onClick = onBuyThroughAkrabiClicked, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.ShoppingCart, contentDescription = "Buy Through Akrabi", modifier = Modifier.size(24.dp))
+                }
+                Spacer(modifier = Modifier.width(2.dp))
+            }
+
+            Spacer(modifier = Modifier.width(2.dp))
+
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
@@ -1121,30 +1321,34 @@ fun FarmListHeaderPlots(
                     if (sharedPref.contains("plot_size")) {
                         sharedPref.edit().remove("plot_size").apply()
                     }
+                    if (sharedPref.contains("selectedUnit")) {
+                        sharedPref.edit().remove("selectedUnit").apply()
+                    }
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
-                },modifier = Modifier.size(36.dp) ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add",modifier = Modifier.size(24.dp) )
+                }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
                 }
-                Spacer(modifier = Modifier.width(1.dp))
+                Spacer(modifier = Modifier.width(2.dp))
             }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
-                },modifier = Modifier.size(36.dp) ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search",modifier = Modifier.size(24.dp) )
+                }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
                 }
             }
-        }
+        },
     )
 
     // Conditional rendering of the search field
     if (isSearchVisible && showSearch) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
+            modifier =
+            Modifier
                 .padding(horizontal = 16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             OutlinedTextField(
                 value = searchQuery,
@@ -1152,132 +1356,143 @@ fun FarmListHeaderPlots(
                     searchQuery = it
                     onSearchQueryChanged(it)
                 },
-                modifier = Modifier
+                modifier =
+                Modifier
                     .padding(start = 8.dp)
                     .weight(1f),
                 label = { Text(stringResource(R.string.search)) },
-//                leadingIcon = {
-//                    IconButton(onClick = {
-//                        //onBackSearchClicked()
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                },
-                trailingIcon = {
+                leadingIcon = {
                     IconButton(onClick = {
+                        // onBackSearchClicked()
                         searchQuery = ""
                         onSearchQueryChanged("")
                         isSearchVisible = !isSearchVisible
                     }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors =
+                TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface,
+                ),
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
-    println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
-    val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
+fun FarmCard(
+    farm: Farm,
+    onCardClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
 
     Column(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxSize()
             .padding(top = 8.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ElevatedCard(
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 6.dp
+            elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 6.dp,
             ),
-            modifier = Modifier
+            modifier =
+            Modifier
                 .background(backgroundColor)
-                .fillMaxWidth() // 90% of the screen width
-                .padding(8.dp)
-                .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
+                .fillMaxWidth()
+                .padding(8.dp),
             onClick = {
                 onCardClick()
-            }
+            },
         ) {
             Column(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .background(backgroundColor)
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         text = farm.farmerName,
-                        style = MaterialTheme.typography.bodySmall.copy(
+                        style =
+                        MaterialTheme.typography.bodySmall.copy(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = textColor
+                            color = textColor,
                         ),
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .weight(1.1f)
-                            .padding(bottom = 4.dp)
+                            .padding(bottom = 4.dp),
                     )
                     Text(
-                        text = "${stringResource(id = R.string.size)}: ${farm.size} ${
+                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
                             stringResource(id = R.string.ha)
                         }",
-                        style = MaterialTheme.typography.bodySmall.copy(color=textColor),
-                        modifier = Modifier
+                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                        modifier =
+                        Modifier
                             .weight(0.9f)
-                            .padding(bottom = 4.dp)
+                            .padding(bottom = 4.dp),
                     )
                     IconButton(
                         onClick = {
                             onDeleteClick()
                         },
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .size(24.dp)
-                            .padding(4.dp)
+                            .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
-                            tint = Color.Red
+                            tint = Color.Red,
                         )
                     }
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         text = "${stringResource(id = R.string.village)}: ${farm.village}",
                         style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     Text(
                         text = "${stringResource(id = R.string.district)}: ${farm.district}",
                         style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                // Show the label if the farm needs an update
+                if (farm.needsUpdate) {
+                    Text(
+                        text = stringResource(id = R.string.needs_update),
+                        color = Color.Blue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,  // Adjust font size
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
         }
     }
 }
-
 
 
 fun OutputStream.writeCsv(farms: List<Farm>) {
@@ -1292,21 +1507,29 @@ fun OutputStream.writeCsv(farms: List<Farm>) {
 }
 
 // on below line creating a method to write data to txt file.
-private fun writeTextData(file: File, farms: List<Farm>, onDismiss: () -> Unit, format: String) {
+private fun writeTextData(
+    file: File,
+    farms: List<Farm>,
+    onDismiss: () -> Unit,
+    format: String,
+) {
     var fileOutputStream: FileOutputStream? = null
     try {
         fileOutputStream = FileOutputStream(file)
 
         fileOutputStream
-            .write(""""Farmer Name", "Village", "District", "Size in Ha", "Cherry harvested this year in Kgs", "latitude", "longitude" , "createdAt", "updatedAt" """.toByteArray())
+            .write(
+                """"Farmer Name", "Village", "District", "Size in Ha", "Cherry harvested this year in Kgs", "latitude", "longitude" , "createdAt", "updatedAt" """
+                    .toByteArray(),
+            )
         fileOutputStream.write(10)
         farms.forEach {
             fileOutputStream.write(
                 "${it.farmerName}, ${it.village},${it.district},${it.size},${it.purchases},${it.latitude},${it.longitude},${
                     Date(
-                        it.createdAt
+                        it.createdAt,
                     )
-                }, \"${Date(it.updatedAt)}\"".toByteArray()
+                }, \"${Date(it.updatedAt)}\"".toByteArray(),
             )
             fileOutputStream.write(10)
         }
@@ -1326,24 +1549,29 @@ private fun writeTextData(file: File, farms: List<Farm>, onDismiss: () -> Unit, 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<Farm>) {
+fun UpdateFarmForm(
+    navController: NavController,
+    farmId: Long?,
+    listItems: List<Farm>,
+) {
     val floatValue = 123.45f
-    val item = listItems.find { it.id == farmId } ?: Farm(
+    val item =
+        listItems.find { it.id == farmId } ?: Farm(
 //        id = 0,
-        siteId = 0L,
-        farmerName = "Default Farmer",
-        memberId = "",
-        farmerPhoto = "Default photo",
-        village = "Default Village",
-        district = "Default District",
-        latitude = "Default Village",
-        longitude = "Default Village",
-        coordinates = null,
-        size = floatValue,
-        purchases = floatValue,
-        createdAt = 1L,
-        updatedAt = 1L
-    )
+            siteId = 0L,
+            farmerName = "Default Farmer",
+            memberId = "",
+            farmerPhoto = "Default photo",
+            village = "Default Village",
+            district = "Default District",
+            latitude = "Default Village",
+            longitude = "Default Village",
+            coordinates = null,
+            size = floatValue,
+            purchases = floatValue,
+            createdAt = 1L,
+            updatedAt = 1L,
+        )
     val context = LocalContext.current as Activity
     var farmerName by remember { mutableStateOf(item.farmerName) }
     var memberId by remember { mutableStateOf(item.memberId) }
@@ -1355,22 +1583,26 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     var longitude by remember { mutableStateOf(item.longitude) }
     var coordinates by remember { mutableStateOf(item.coordinates) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    val farmViewModel: FarmViewModel = viewModel(
-        factory = FarmViewModelFactory(context.applicationContext as Application)
-    )
+    val farmViewModel: FarmViewModel =
+        viewModel(
+            factory = FarmViewModelFactory(context.applicationContext as Application),
+        )
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }
     val showPermissionRequest = remember { mutableStateOf(false) }
     val file = context.createImageFile()
-    val uri = FileProvider.getUriForFile(
-        Objects.requireNonNull(context),
-        context.packageName + ".provider", file
-    )
+    val uri =
+        FileProvider.getUriForFile(
+            Objects.requireNonNull(context),
+            context.packageName + ".provider",
+            file,
+        )
     var expanded by remember { mutableStateOf(false) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var selectedUnit by remember { mutableStateOf(items[0]) }
 
+    val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
 
     LaunchedEffect(Unit) {
         if (!isLocationEnabled(context)) {
@@ -1404,20 +1636,25 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 }) {
                     Text(stringResource(id = R.string.cancel))
                 }
-            }
-
+            },
         )
     }
 
-
-
+//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
+//        coordinates =
+//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+//                "coordinates",
+//            )
+//    }
 
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-        coordinates =
-            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-                "coordinates"
-            )
+        val parcelableCoordinates = navController.currentBackStackEntry!!
+            .savedStateHandle
+            .get<List<ParcelablePair>>("coordinates")
+
+        coordinates = parcelableCoordinates?.map { Pair(it.first, it.second) }
     }
+
 
     val fillForm = stringResource(id = R.string.fill_form)
 
@@ -1452,7 +1689,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
      * Before sending to the database
      */
 
-
     fun updateFarmInstance() {
         val isValid = validateForm()
         if (isValid) {
@@ -1465,21 +1701,26 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             item.longitude = longitude
             if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
                 if ((coordinates?.size ?: 0) < 3) {
-                    Toast.makeText(context, "Please capture at least 4 points for the polygon when the size is greater than 4 hectares.", Toast.LENGTH_SHORT).show()
+                    Toast
+                        .makeText(
+                            context,
+                            R.string.error_polygon_points,
+                            Toast.LENGTH_SHORT,
+                        ).show()
                     return
                 }
                 item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
             } else {
-                item.coordinates = listOf(Pair( item.longitude.toDoubleOrNull()?:0.0,item.latitude.toDoubleOrNull()?:0.0)) // Example default value
+                item.coordinates = listOf(Pair(item.longitude.toDoubleOrNull() ?: 0.0, item.latitude.toDoubleOrNull() ?: 0.0)) // Example default value
             }
-            item.size= convertSize(size.toDouble(), selectedUnit).toFloat()
+            item.size = convertSize(size.toDouble(), selectedUnit).toFloat()
             item.purchases = 0.toFloat()
             item.updatedAt = Instant.now().millis
             updateFarm(farmViewModel, item)
             item.needsUpdate = false
             val returnIntent = Intent()
             context.setResult(Activity.RESULT_OK, returnIntent)
-            navController.navigate("farmList/${siteID}")
+            navController.navigate("farmList/$siteID")
         } else {
             Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
         }
@@ -1503,14 +1744,16 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 }
             },
             dismissButton = {
-                TextButton(onClick =
-                {
-                    showDialog.value = false
-                    navController.navigate("setPolygon")
-                }) {
+                TextButton(
+                    onClick =
+                    {
+                        showDialog.value = false
+                        navController.navigate("setPolygon")
+                    },
+                ) {
                     Text(text = stringResource(id = R.string.set_polygon))
                 }
-            }
+            },
         )
     }
 
@@ -1539,16 +1782,17 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 // Show a message or take appropriate action
             },
             showLocationDialogNew = showLocationDialogNew,
-            hasToShowDialog = showLocationDialogNew.value
+            hasToShowDialog = showLocationDialogNew.value,
         )
     }
 
     Column(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .background(backgroundColor)
             .padding(16.dp)
-            .verticalScroll(state = scrollState)
+            .verticalScroll(state = scrollState),
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.update_farm),
@@ -1557,19 +1801,21 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             onBackClicked = { navController.popBackStack() },
             onBackSearchClicked = {},
             showAdd = false,
-            showSearch = false
+            showSearch = false,
         )
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester1.requestFocus() }
+            keyboardActions =
+            KeyboardActions(
+                onDone = { focusRequester1.requestFocus() },
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name),color = inputLabelColor) },
+            label = { Text(stringResource(id = R.string.farm_name), color = inputLabelColor) },
             isError = farmerName.isBlank(),
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
                 .onKeyEvent {
@@ -1578,18 +1824,20 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                         true
                     }
                     false
-                }
+                },
         )
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester1.requestFocus() }
+            keyboardActions =
+            KeyboardActions(
+                onDone = { focusRequester1.requestFocus() },
             ),
             value = memberId,
             onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
-            modifier = Modifier
+            label = { Text(stringResource(id = R.string.member_id), color = inputLabelColor) },
+            modifier =
+            Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
                 .onKeyEvent {
@@ -1597,64 +1845,84 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                         focusRequester1.requestFocus()
                     }
                     false
-                }
+                },
         )
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester2.requestFocus() }
+            keyboardActions =
+            KeyboardActions(
+                onDone = { focusRequester2.requestFocus() },
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village),color = inputLabelColor) },
-            modifier = Modifier
+            label = { Text(stringResource(id = R.string.village), color = inputLabelColor) },
+            modifier =
+            Modifier
                 .focusRequester(focusRequester1)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp),
         )
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester3.requestFocus() }
+            keyboardActions =
+            KeyboardActions(
+                onDone = { focusRequester3.requestFocus() },
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district),color = inputLabelColor) },
-            modifier = Modifier
+            label = { Text(stringResource(id = R.string.district), color = inputLabelColor) },
+            modifier =
+            Modifier
                 .focusRequester(focusRequester2)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             TextField(
                 singleLine = true,
-                value = size,
+                value = truncateToDecimalPlaces(size,9),
                 onValueChange = {
                     size = it
                 },
-                keyboardOptions = KeyboardOptions.Default.copy(
+//                value =  truncateToDecimalPlaces(formatInput(size),9),
+//                onValueChange = { inputValue ->
+//                    val formattedValue = when {
+//                        validateSize(inputValue) -> inputValue
+//                        // Check if the input is in scientific notation
+//                        scientificNotationPattern.matcher(inputValue).matches() -> {
+//                            truncateToDecimalPlaces(formatInput(inputValue),9)
+//                        }
+//                        else -> inputValue
+//                    }
+//
+//                    // Update the size state with the formatted value
+//                    size = formattedValue
+//                },
+                keyboardOptions =
+                KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
                 ),
-
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)",color = inputLabelColor) },
+                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
                 isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
-                colors = TextFieldDefaults.textFieldColors(
+                colors =
+                TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
                     focusedIndicatorColor = inputBorder,
                     unfocusedIndicatorColor = inputBorder,
-                    errorIndicatorColor = Color.Red
+                    errorIndicatorColor = Color.Red,
                 ),
-                modifier = Modifier
+                modifier =
+                Modifier
                     .focusRequester(focusRequester3)
                     .weight(1f)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -1664,7 +1932,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 onExpandedChange = {
                     expanded = !expanded
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 TextField(
                     readOnly = true,
@@ -1673,17 +1941,17 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     label = { Text(stringResource(R.string.unit)) },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = expanded
+                            expanded = expanded,
                         )
                     },
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                    modifier = Modifier.menuAnchor()
+                    modifier = Modifier.menuAnchor(),
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = {
                         expanded = false
-                    }
+                    },
                 ) {
                     items.forEach { selectionOption ->
                         DropdownMenuItem(
@@ -1691,7 +1959,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                             onClick = {
                                 selectedUnit = selectionOption
                                 expanded = false
-                            }
+                            },
                         )
                     }
                 }
@@ -1702,26 +1970,28 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 TextField(
                     readOnly = true,
                     value = latitude,
                     onValueChange = { latitude = it },
-                    label = { Text(stringResource(id = R.string.latitude),color = inputLabelColor) },
-                    modifier = Modifier
+                    label = { Text(stringResource(id = R.string.latitude), color = inputLabelColor) },
+                    modifier =
+                    Modifier
                         .weight(1f)
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 16.dp),
                 )
                 Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
                 TextField(
                     readOnly = true,
                     value = longitude,
                     onValueChange = { longitude = it },
-                    label = { Text(stringResource(id = R.string.longitude),color = inputLabelColor) },
-                    modifier = Modifier
+                    label = { Text(stringResource(id = R.string.longitude), color = inputLabelColor) },
+                    modifier =
+                    Modifier
                         .weight(1f)
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 16.dp),
                 )
             }
         }
@@ -1736,12 +2006,13 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                         if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) {
                             // Simulate collecting latitude and longitude
                             if (context.hasLocationPermission()) {
-                                val locationRequest = LocationRequest.create().apply {
-                                    priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                                    interval = 10000 // Update interval in milliseconds
-                                    fastestInterval =
-                                        5000 // Fastest update interval in milliseconds
-                                }
+                                val locationRequest =
+                                    LocationRequest.create().apply {
+                                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                                        interval = 10000 // Update interval in milliseconds
+                                        fastestInterval =
+                                            5000 // Fastest update interval in milliseconds
+                                    }
 
                                 fusedLocationClient.requestLocationUpdates(
                                     locationRequest,
@@ -1755,7 +2026,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                                             }
                                         }
                                     },
-                                    Looper.getMainLooper()
+                                    Looper.getMainLooper(),
                                 )
                             }
                         } else {
@@ -1769,19 +2040,26 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     }
                 }
             },
-
-            modifier = Modifier
+            modifier =
+            Modifier
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
                 .height(50.dp),
-            enabled = size.toFloatOrNull() != null
+            enabled = size.toFloatOrNull() != null,
         ) {
             Text(
-                //text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
-                text = if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) stringResource(id = R.string.get_coordinates) else stringResource(
-                    id = R.string.set_new_polygon
-                )
+                // text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
+                text =
+                if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } ==
+                    true
+                ) {
+                    stringResource(id = R.string.get_coordinates)
+                } else {
+                    stringResource(
+                        id = R.string.set_new_polygon,
+                    )
+                },
             )
         }
         Button(
@@ -1792,9 +2070,10 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
                 }
             },
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(50.dp),
         ) {
             Text(text = stringResource(id = R.string.update_farm))
         }
@@ -1803,7 +2082,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
 fun updateFarm(
     farmViewModel: FarmViewModel,
-    item: Farm
+    item: Farm,
 ) {
     farmViewModel.updateFarm(item)
 }

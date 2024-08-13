@@ -40,9 +40,9 @@ fun validateForm(
     phoneNumber: String,
     email: String,
     village: String,
-    district: String
+    district: String,
 ): Boolean {
-    var isValid = true  // Reset isValid to true before starting validation
+    var isValid = true // Reset isValid to true before starting validation
 
     if (name.isBlank()) {
         isValid = false
@@ -71,12 +71,12 @@ fun validateForm(
     return isValid
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdateCollectionDialog(
-    site: CollectionSite, showDialog: MutableState<Boolean>,
-    farmViewModel: FarmViewModel
+    site: CollectionSite,
+    showDialog: MutableState<Boolean>,
+    farmViewModel: FarmViewModel,
 ) {
     val context = LocalContext.current as Activity
     var name by rememberSaveable { mutableStateOf(site.name) }
@@ -101,14 +101,14 @@ fun UpdateCollectionDialog(
                         value = name,
                         onValueChange = { name = it },
                         label = { Text(stringResource(id = R.string.site_name)) },
-                        isError = name.isBlank()
+                        isError = name.isBlank(),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     TextField(
                         value = agentName,
                         onValueChange = { agentName = it },
                         label = { Text(stringResource(id = R.string.agent_name)) },
-                        isError = agentName.isBlank()
+                        isError = agentName.isBlank(),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     TextField(
@@ -116,12 +116,13 @@ fun UpdateCollectionDialog(
                         onValueChange = { phoneNumber = it },
                         label = { Text(stringResource(id = R.string.phone_number)) },
                         supportingText = {
-                            if (!isValidPhoneNumber(phoneNumber) && phoneNumber.isNotBlank()) Text("Invalid Phone Number")
+                            if (!isValidPhoneNumber(phoneNumber) && phoneNumber.isNotBlank()) Text(stringResource(id = R.string.invalid_phone_number))
                         },
                         isError = phoneNumber.isNotBlank() && !isValidPhoneNumber(phoneNumber),
-                        colors = TextFieldDefaults.textFieldColors(
+                        colors =
+                        TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
-                        )
+                        ),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     TextField(
@@ -129,26 +130,27 @@ fun UpdateCollectionDialog(
                         onValueChange = { email = it },
                         label = { Text(stringResource(id = R.string.email)) },
                         supportingText = {
-                            if (email.isNotBlank() && !email.contains("@")) Text("Invalid Email")
+                            if (email.isNotBlank() && !email.contains("@")) Text(stringResource(id=R.string.error_invalid_email_address))
                         },
                         isError = email.isNotBlank() && !email.contains("@"),
-                        colors = TextFieldDefaults.textFieldColors(
+                        colors =
+                        TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
-                        )
+                        ),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     TextField(
                         value = village,
                         onValueChange = { village = it },
                         label = { Text(stringResource(id = R.string.village)) },
-                        isError = village.isBlank()
+                        isError = village.isBlank(),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     TextField(
                         value = district,
                         onValueChange = { district = it },
                         label = { Text(stringResource(id = R.string.district)) },
-                        isError = district.isBlank()
+                        isError = district.isBlank(),
                     )
                 }
             },
@@ -156,8 +158,7 @@ fun UpdateCollectionDialog(
                 TextButton(onClick = {
                     if (validateForm(name, agentName, phoneNumber, email, village, district)) {
                         showConfirmDialog = true
-                    }
-                    else {
+                    } else {
                         Toast.makeText(context, R.string.fill_form, Toast.LENGTH_SHORT).show()
                     }
                 }) {
@@ -168,7 +169,7 @@ fun UpdateCollectionDialog(
                 TextButton(onClick = { showDialog.value = false }) {
                     Text(text = stringResource(id = R.string.no))
                 }
-            }
+            },
         )
     }
 
@@ -196,7 +197,7 @@ fun UpdateCollectionDialog(
                 TextButton(onClick = { showConfirmDialog = false }) {
                     Text(text = stringResource(id = R.string.no))
                 }
-            }
+            },
         )
     }
 }
