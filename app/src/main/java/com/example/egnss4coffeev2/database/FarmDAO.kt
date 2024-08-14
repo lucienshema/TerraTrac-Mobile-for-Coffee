@@ -111,13 +111,28 @@ interface FarmDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(buyThroughAkrabi: BuyThroughAkrabi)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertDirectBuy(directBuy: DirectBuy)
-
     @Query("SELECT * FROM BuyThroughAkrabi WHERE id = :id")
     fun getBoughtItemById(id: Long): Flow<BuyThroughAkrabi>
 
     @Query("SELECT * FROM BuyThroughAkrabi WHERE date BETWEEN :startDate AND :endDate")
     suspend fun getBoughtItemsByDateRange(startDate: String, endDate: String): List<BuyThroughAkrabi>
+
+    @Query("SELECT * FROM DirectBuy ORDER BY date DESC, time DESC")
+    fun getAllBoughtItemsDirectBuy(): Flow<List<DirectBuy>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDirectBuy(directBuy: DirectBuy)
+
+    @Update
+    suspend fun updateDirectBuy(directBuy: DirectBuy)
+
+    @Delete
+    suspend fun deleteDirectBuy(directBuy: DirectBuy)
+
+    @Query("SELECT * FROM DirectBuy WHERE id = :id")
+    fun getDirectBuyById(id: Long): Flow<DirectBuy>
+
+    @Query("SELECT * FROM DirectBuy WHERE date BETWEEN :startDate AND :endDate")
+    suspend fun getDirectBuysByDateRange(startDate: String, endDate: String): List<DirectBuy>
 
 }

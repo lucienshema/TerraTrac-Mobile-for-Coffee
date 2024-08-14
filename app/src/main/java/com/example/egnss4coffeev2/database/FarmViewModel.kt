@@ -25,6 +25,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.UUID
 
@@ -63,6 +65,9 @@ class FarmViewModel(
     private val _boughtItems = MutableStateFlow<List<BuyThroughAkrabi>>(emptyList())
     val boughtItems: StateFlow<List<BuyThroughAkrabi>> get() = _boughtItems
 
+    private val _boughtItemsDirectBuy = MutableStateFlow<List<DirectBuy>>(emptyList())
+    val boughtItemsDirectBuy: StateFlow<List<DirectBuy>> get() = _boughtItemsDirectBuy
+
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
         repository = FarmRepository(farmDAO)
@@ -71,6 +76,8 @@ class FarmViewModel(
 
         viewModelScope.launch {
             _boughtItems.value = repository.getBoughtItemsByDateRange("2024-01-01", "2024-12-31")
+            _boughtItemsDirectBuy.value = repository.getDirectBuysByDateRange("2024-01-01", "2024-12-31")
+
         }
     }
 
@@ -83,15 +90,73 @@ class FarmViewModel(
 
     fun getBoughtItemById(id: Long): Flow<BuyThroughAkrabi?> = repository.getBoughtItemById(id)
 
+    fun getBoughtItemDirectBuyById(id: Long): Flow<DirectBuy?> = repository.getDirectBuyById(id)
+
     fun insertBoughtItemDirect(directBuy: DirectBuy) = viewModelScope.launch {
         repository.insertDirectBuy(directBuy)
     }
-
-    fun filterBoughtItems(startDate: String, endDate: String) {
-        viewModelScope.launch {
-            _boughtItems.value = repository.getBoughtItemsByDateRange(startDate, endDate)
-        }
+    fun updateDirectBuy(directBuy: DirectBuy) = viewModelScope.launch {
+        repository.updateDirectBuy(directBuy)
     }
+
+    fun deleteBoughtItemDirectBuy(directBuy: DirectBuy) = viewModelScope.launch {
+        repository.deleteDirectBuy(directBuy)
+    }
+
+    fun normalizeDate(dateString: String): String {
+        return dateString.split("-").map { it.padStart(2, '0') }.joinToString("-")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun filterBoughtItems(startDate: String, endDate: String) {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        // Normalize date strings
+        val normalizedStartDate = normalizeDate(startDate)
+        val normalizedEndDate = normalizeDate(endDate)
+
+        val start = LocalDate.parse(normalizedStartDate, dateFormatter)
+        val end = LocalDate.parse(normalizedEndDate, dateFormatter)
+
+        // Access the current list of bought items
+        val currentItems = _boughtItems.value
+
+        // Filter the items based on the date range
+        val filteredItems = currentItems.filter { item ->
+            val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
+            itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
+        }
+
+        // Update the _boughtItems with the filtered list
+        _boughtItems.value = filteredItems
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun filterBoughtItemsDirectBuy(startDate: String, endDate: String) {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        // Normalize date strings
+        val normalizedStartDate = normalizeDate(startDate)
+        val normalizedEndDate = normalizeDate(endDate)
+
+        val start = LocalDate.parse(normalizedStartDate, dateFormatter)
+        val end = LocalDate.parse(normalizedEndDate, dateFormatter)
+
+        // Access the current list of bought items
+        val currentItems = _boughtItemsDirectBuy.value
+
+        // Filter the items based on the date range
+        val filteredItems = currentItems.filter { item ->
+            val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
+            itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
+        }
+
+        // Update the _boughtItems with the filtered list
+        _boughtItemsDirectBuy.value = filteredItems
+    }
+
+
+
 
 
 

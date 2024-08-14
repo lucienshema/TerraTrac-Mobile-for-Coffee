@@ -168,13 +168,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
 
     fun getAllBoughtItems(): Flow<List<BuyThroughAkrabi>> = farmDAO.getAllBoughtItems()
 
+    fun getAllBoughtItemsDirectBuy(): Flow<List<DirectBuy>> = farmDAO.getAllBoughtItemsDirectBuy()
 
     suspend fun insert(buyThroughAkrabi: BuyThroughAkrabi) {
         farmDAO.insert(buyThroughAkrabi)
-    }
-
-    suspend fun insertDirectBuy(directBuy: DirectBuy) {
-        farmDAO.insertDirectBuy(directBuy)
     }
 
     fun getBoughtItemById(id: Long): Flow<BuyThroughAkrabi?> = farmDAO.getBoughtItemById(id)
@@ -182,6 +179,24 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     // Function to get bought items by date range
     suspend fun getBoughtItemsByDateRange(startDate: String, endDate: String): List<BuyThroughAkrabi> {
         return farmDAO.getBoughtItemsByDateRange(startDate, endDate)
+    }
+
+    suspend fun insertDirectBuy(directBuy: DirectBuy) {
+        farmDAO.insertDirectBuy(directBuy)
+    }
+
+    suspend fun updateDirectBuy(directBuy: DirectBuy) {
+       farmDAO.updateDirectBuy(directBuy)
+    }
+
+    suspend fun deleteDirectBuy(directBuy: DirectBuy) {
+        farmDAO.deleteDirectBuy(directBuy)
+    }
+
+    fun getDirectBuyById(id: Long): Flow<DirectBuy?> = farmDAO.getDirectBuyById(id)
+
+    suspend fun getDirectBuysByDateRange(startDate: String, endDate: String): List<DirectBuy> {
+        return farmDAO.getDirectBuysByDateRange(startDate, endDate)
     }
 }
 

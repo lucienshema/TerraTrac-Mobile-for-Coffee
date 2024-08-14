@@ -3,8 +3,6 @@ package com.example.egnss4coffeev2
 
 
 import BottomNavBar
-import BuyThroughAkrabiScreen
-import DirectBuyScreen
 import ShoppingScreen
 import android.Manifest
 import android.app.Application
@@ -54,12 +52,15 @@ import com.example.egnss4coffeev2.ui.screens.AddFarm
 import com.example.egnss4coffeev2.ui.screens.AddSite
 import com.example.egnss4coffeev2.ui.screens.AkrabiListScreenScreen
 import com.example.egnss4coffeev2.ui.screens.BoughtItemDetailScreen
+import com.example.egnss4coffeev2.ui.screens.BoughtItemDetailScreenDirectBuy
 import com.example.egnss4coffeev2.ui.screens.BoughtItemsList
+import com.example.egnss4coffeev2.ui.screens.BoughtItemsListDirectBuy
 import com.example.egnss4coffeev2.ui.screens.BuyThroughAkrabiForm
 import com.example.egnss4coffeev2.ui.screens.CollectionSiteList
 import com.example.egnss4coffeev2.ui.screens.CreateAkrabiFormScreen
 import com.example.egnss4coffeev2.ui.screens.DirectBuyForm
 import com.example.egnss4coffeev2.ui.screens.EditAkrabiScreen
+import com.example.egnss4coffeev2.ui.screens.EditDirectBuyForm
 import com.example.egnss4coffeev2.ui.screens.FarmList
 import com.example.egnss4coffeev2.ui.screens.Home
 import com.example.egnss4coffeev2.ui.screens.ScreenWithSidebar
@@ -165,7 +166,7 @@ class MainActivity : ComponentActivity() {
 
 
                     val collectionSites by farmViewModel.readAllSites.observeAsState(emptyList())
-                    var akrabis by remember { mutableStateOf(listOf<Akrabi>()) }
+                    val akrabis by akrabiViewModel.akrabis.observeAsState(emptyList())
 
                     Scaffold(
                         bottomBar = {
@@ -235,6 +236,15 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable(BottomNavItem.DirectBuy.route) {
+                                BoughtItemsListDirectBuy( farmViewModel = farmViewModel,
+                                    onItemClick = { selectedItem ->
+                                        navController.navigate("bought_item_detail/${selectedItem.id}")
+                                    },
+                                    navController
+                                )
+                            }
+
+                            composable("${BottomNavItem.DirectBuy.route}/add") {
                                 //DirectBuyScreen()
                                 DirectBuyForm(
                                     collectionSites = collectionSites, // List of CollectionSite objects
@@ -247,7 +257,15 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(BottomNavItem.BuyThroughAkrabi.route) {
-                                //BuyThroughAkrabiScreen()
+                                BoughtItemsList( farmViewModel = farmViewModel,
+                                    onItemClick = { selectedItem ->
+                                        navController.navigate("bought_item_detail/${selectedItem.id}")
+                                    },
+                                    navController
+                                )
+                            }
+
+                            composable("${BottomNavItem.BuyThroughAkrabi.route}/add") {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     BuyThroughAkrabiForm(
                                         collectionSites = collectionSites,
@@ -271,14 +289,40 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            composable("bought_items") {
+                            composable("bought_items_direct_buy") {
+                                BoughtItemsListDirectBuy(
+                                    farmViewModel = farmViewModel,
+                                    onItemClick = { selectedItem ->
+                                        navController.navigate("bought_item_detail_direct_buy/${selectedItem.id}")
+                                    },
+                                    navController
+                                )
+                            }
+
+                            composable(
+                                "direct_buy/edit/{id}",
+                                arguments = listOf(navArgument("id") { type = NavType.LongType })
+                            ) { backStackEntry ->
+                                val itemId = backStackEntry.arguments?.getLong("id")
+                                if (itemId != null) {
+                                    EditDirectBuyForm(
+                                        itemId = itemId,
+                                        farmViewModel = farmViewModel,
+                                        navController = navController
+                                    )
+                                }
+                            }
+
+                            composable("bought_items_buy_through_Akrabi") {
                                 BoughtItemsList(
                                     farmViewModel = farmViewModel,
                                     onItemClick = { selectedItem ->
                                         navController.navigate("bought_item_detail/${selectedItem.id}")
-                                    }
+                                    },
+                                    navController
                                 )
                             }
+
 
                             composable(
                                 route = "bought_item_detail/{id}",
@@ -287,6 +331,23 @@ class MainActivity : ComponentActivity() {
                                 val id = backStackEntry.arguments?.getLong("id")
                                 if (id != null) {
                                     BoughtItemDetailScreen(
+                                        itemId = id,
+                                        farmViewModel = farmViewModel,
+                                        onNavigateBack = { navController.popBackStack() }
+                                    )
+                                } else {
+                                    // Handle error case, perhaps navigate back or show an error message
+                                    Text("Error: Invalid item ID")
+                                }
+                            }
+
+                            composable(
+                                route = "bought_item_detail_direct_buy/{id}",
+                                arguments = listOf(navArgument("id") { type = NavType.LongType })
+                            ) { backStackEntry ->
+                                val id = backStackEntry.arguments?.getLong("id")
+                                if (id != null) {
+                                    BoughtItemDetailScreenDirectBuy(
                                         itemId = id,
                                         farmViewModel = farmViewModel,
                                         onNavigateBack = { navController.popBackStack() }
