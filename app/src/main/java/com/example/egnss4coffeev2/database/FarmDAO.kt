@@ -129,6 +129,13 @@ interface FarmDAO {
     @Delete
     suspend fun deleteDirectBuy(directBuy: DirectBuy)
 
+    @Update
+    suspend fun updateBuyThroughAkrabi(akrabi: BuyThroughAkrabi)
+
+    @Delete
+    suspend fun deleteBuyThroughAkrabi(akrabi: BuyThroughAkrabi)
+
+
     @Query("SELECT * FROM DirectBuy WHERE id = :id")
     fun getDirectBuyById(id: Long): Flow<DirectBuy>
 

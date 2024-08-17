@@ -237,7 +237,9 @@ data class BuyThroughAkrabi(
     @ColumnInfo(name = "paid")
     val paid: Double,
     @ColumnInfo(name="photo")
-    val photo: String // Assuming photo is stored as a file path or URL
+    val photo: String, // Assuming photo is stored as a file path or URL
+    @ColumnInfo(name="photoUri")
+    val photoUri: String ?
 )
 
 
@@ -267,7 +269,9 @@ data class DirectBuy(
     @ColumnInfo(name = "paid")
     val paid: Double,
     @ColumnInfo(name="photo")
-    val photo: String // Assuming photo is stored as a file path or URL
+    val photo: String,// Assuming photo is stored as a file path or URL
+    @ColumnInfo(name="photoUri")
+    val photoUri: String ?
 )
 
 @Entity(tableName = "Akrabis")

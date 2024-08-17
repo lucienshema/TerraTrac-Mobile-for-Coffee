@@ -512,7 +512,8 @@ fun BuyThroughAkrabiForm(
                         cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
                         pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
                         paid = paid.toDoubleOrNull() ?: 0.0,
-                        photo = photo
+                        photo = photo,
+                        photoUri = photoUri.toString()
                     )
                     onSubmit(buyThroughAkrabi)
 
@@ -782,7 +783,8 @@ fun DirectBuyForm(
                     cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
                     pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
                     paid = paid.toDoubleOrNull() ?: 0.0,
-                    photo = photo
+                    photo = photo,
+                    photoUri = photoUri.toString()
                 )
                 onSubmit(directBuy)
 

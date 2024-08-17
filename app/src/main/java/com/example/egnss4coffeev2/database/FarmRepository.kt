@@ -193,6 +193,14 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteDirectBuy(directBuy)
     }
 
+    suspend fun updateBuyThroughAkrabi(akrabi: BuyThroughAkrabi) {
+        farmDAO.updateBuyThroughAkrabi(akrabi)
+    }
+
+    suspend fun deleteBuyThroughAkrabi(akrabi: BuyThroughAkrabi) {
+        farmDAO.deleteBuyThroughAkrabi(akrabi)
+    }
+
     fun getDirectBuyById(id: Long): Flow<DirectBuy?> = farmDAO.getDirectBuyById(id)
 
     suspend fun getDirectBuysByDateRange(startDate: String, endDate: String): List<DirectBuy> {

@@ -11,7 +11,7 @@ import com.example.egnss4coffeev2.database.converters.BitmapConverter
 import com.example.egnss4coffeev2.database.converters.DateConverter
 
 
-@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 6, exportSchema = true)
+@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 7, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -123,6 +123,46 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // SQL statement to create the new table with photoUri column
+                db.execSQL("""
+            CREATE TABLE IF NOT EXISTS BuyThroughAkrabi (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                date TEXT NOT NULL,
+                time TEXT NOT NULL,
+                location TEXT NOT NULL,
+                siteName TEXT NOT NULL,
+                akrabiSearch TEXT NOT NULL,
+                akrabiNumber TEXT NOT NULL,
+                akrabiName TEXT NOT NULL,
+                cherrySold REAL NOT NULL,
+                cherryPricePerKg REAL NOT NULL,
+                paid REAL NOT NULL,
+                photo TEXT,
+                photoUri TEXT
+            )
+        """.trimIndent())
+
+                db.execSQL("""
+            CREATE TABLE IF NOT EXISTS DirectBuy (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                date TEXT NOT NULL,
+                time TEXT NOT NULL,
+                location TEXT NOT NULL,
+                siteName TEXT NOT NULL,
+                farmerSearch TEXT NOT NULL,
+                farmerNumber TEXT NOT NULL,
+                farmerName TEXT NOT NULL,
+                cherrySold REAL NOT NULL,
+                cherryPricePerKg REAL NOT NULL,
+                paid REAL NOT NULL,
+                photo TEXT,
+                photoUri TEXT
+            )
+        """.trimIndent())
+            }
+        }
 
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
@@ -132,8 +172,8 @@ abstract class AppDatabase : RoomDatabase() {
                     instance = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
-                        "farm_collector_database_for_coffee_v2"
-                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6)
+                        "farm_collector_database_for_coffee"
+                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7)
                         .build()
 
                     INSTANCE = instance

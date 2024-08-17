@@ -60,6 +60,7 @@ import com.example.egnss4coffeev2.ui.screens.CollectionSiteList
 import com.example.egnss4coffeev2.ui.screens.CreateAkrabiFormScreen
 import com.example.egnss4coffeev2.ui.screens.DirectBuyForm
 import com.example.egnss4coffeev2.ui.screens.EditAkrabiScreen
+import com.example.egnss4coffeev2.ui.screens.EditBuyThroughAkrabiForm
 import com.example.egnss4coffeev2.ui.screens.EditDirectBuyForm
 import com.example.egnss4coffeev2.ui.screens.FarmList
 import com.example.egnss4coffeev2.ui.screens.Home
@@ -306,6 +307,20 @@ class MainActivity : ComponentActivity() {
                                 val itemId = backStackEntry.arguments?.getLong("id")
                                 if (itemId != null) {
                                     EditDirectBuyForm(
+                                        itemId = itemId,
+                                        farmViewModel = farmViewModel,
+                                        navController = navController
+                                    )
+                                }
+                            }
+
+                            composable(
+                                "buy_through_akrabi/edit/{id}",
+                                arguments = listOf(navArgument("id") { type = NavType.LongType })
+                            ) { backStackEntry ->
+                                val itemId = backStackEntry.arguments?.getLong("id")
+                                if (itemId != null) {
+                                    EditBuyThroughAkrabiForm(
                                         itemId = itemId,
                                         farmViewModel = farmViewModel,
                                         navController = navController

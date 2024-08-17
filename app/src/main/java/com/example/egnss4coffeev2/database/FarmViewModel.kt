@@ -66,7 +66,10 @@ class FarmViewModel(
     val boughtItems: StateFlow<List<BuyThroughAkrabi>> get() = _boughtItems
 
     private val _boughtItemsDirectBuy = MutableStateFlow<List<DirectBuy>>(emptyList())
-    val boughtItemsDirectBuy: StateFlow<List<DirectBuy>> get() = _boughtItemsDirectBuy
+    val boughtItemsDirectBuy: StateFlow<List<DirectBuy>> = _boughtItemsDirectBuy
+
+    private val _originalBoughtItems = MutableStateFlow<List<BuyThroughAkrabi>>(emptyList())
+    private val _originalBoughtDirectItems = MutableStateFlow<List<DirectBuy>>(emptyList())
 
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
@@ -74,10 +77,19 @@ class FarmViewModel(
         readAllSites = RefreshableLiveData { repository.readAllSites }
         readData = RefreshableLiveData { repository.readData }
 
+        // Load initial data
+        loadBoughtItemsDirectBuy()
+
+    }
+
+    private fun loadBoughtItemsDirectBuy() {
+        // Load data from data source (e.g., database)
+        // Update the StateFlow with the loaded data
         viewModelScope.launch {
             _boughtItems.value = repository.getBoughtItemsByDateRange("2024-01-01", "2024-12-31")
             _boughtItemsDirectBuy.value = repository.getDirectBuysByDateRange("2024-01-01", "2024-12-31")
-
+            _originalBoughtItems.value = repository.getBoughtItemsByDateRange("2024-01-01", "2024-12-31")
+            _originalBoughtDirectItems.value = repository.getDirectBuysByDateRange("2024-01-01", "2024-12-31")
         }
     }
 
@@ -86,6 +98,8 @@ class FarmViewModel(
 
     fun insertBoughtItem(buyThroughAkrabi: BuyThroughAkrabi) = viewModelScope.launch {
         repository.insert(buyThroughAkrabi)
+        // Refresh the list
+        loadBoughtItemsDirectBuy()
     }
 
     fun getBoughtItemById(id: Long): Flow<BuyThroughAkrabi?> = repository.getBoughtItemById(id)
@@ -94,13 +108,31 @@ class FarmViewModel(
 
     fun insertBoughtItemDirect(directBuy: DirectBuy) = viewModelScope.launch {
         repository.insertDirectBuy(directBuy)
+        // Refresh the list
+        loadBoughtItemsDirectBuy()
     }
     fun updateDirectBuy(directBuy: DirectBuy) = viewModelScope.launch {
         repository.updateDirectBuy(directBuy)
+        // Refresh the list
+        loadBoughtItemsDirectBuy()
     }
 
     fun deleteBoughtItemDirectBuy(directBuy: DirectBuy) = viewModelScope.launch {
         repository.deleteDirectBuy(directBuy)
+        // Refresh the list
+        loadBoughtItemsDirectBuy()
+    }
+
+    fun updateBuyThroughAkrabi(akrabi: BuyThroughAkrabi) = viewModelScope.launch {
+        repository.updateBuyThroughAkrabi(akrabi)
+        // Refresh the list
+        loadBoughtItemsDirectBuy()
+    }
+
+    fun deleteBoughtItemBuyThroughAkrabi(buyThroughAkrabi: BuyThroughAkrabi) = viewModelScope.launch {
+        repository.deleteBuyThroughAkrabi(buyThroughAkrabi)
+        // Refresh the list
+        loadBoughtItemsDirectBuy()
     }
 
     fun normalizeDate(dateString: String): String {
@@ -109,50 +141,61 @@ class FarmViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun filterBoughtItems(startDate: String, endDate: String) {
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        viewModelScope.launch {
+            val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-        // Normalize date strings
-        val normalizedStartDate = normalizeDate(startDate)
-        val normalizedEndDate = normalizeDate(endDate)
+            // Normalize date strings
+            val normalizedStartDate = normalizeDate(startDate)
+            val normalizedEndDate = normalizeDate(endDate)
 
-        val start = LocalDate.parse(normalizedStartDate, dateFormatter)
-        val end = LocalDate.parse(normalizedEndDate, dateFormatter)
+            val start = LocalDate.parse(normalizedStartDate, dateFormatter)
+            val end = LocalDate.parse(normalizedEndDate, dateFormatter)
 
-        // Access the current list of bought items
-        val currentItems = _boughtItems.value
+            // Access the current list of bought items
+            val currentItems = _boughtItems.value
 
-        // Filter the items based on the date range
-        val filteredItems = currentItems.filter { item ->
-            val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
-            itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
+            // Filter the items based on the date range
+            val filteredItems = currentItems.filter { item ->
+                val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
+                itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
+            }
+
+            // Update the _boughtItems with the filtered list
+            _boughtItems.value = filteredItems
         }
-
-        // Update the _boughtItems with the filtered list
-        _boughtItems.value = filteredItems
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun filterBoughtItemsDirectBuy(startDate: String, endDate: String) {
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        viewModelScope.launch {
+            val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-        // Normalize date strings
-        val normalizedStartDate = normalizeDate(startDate)
-        val normalizedEndDate = normalizeDate(endDate)
+            // Normalize date strings
+            val normalizedStartDate = normalizeDate(startDate)
+            val normalizedEndDate = normalizeDate(endDate)
 
-        val start = LocalDate.parse(normalizedStartDate, dateFormatter)
-        val end = LocalDate.parse(normalizedEndDate, dateFormatter)
+            val start = LocalDate.parse(normalizedStartDate, dateFormatter)
+            val end = LocalDate.parse(normalizedEndDate, dateFormatter)
 
-        // Access the current list of bought items
-        val currentItems = _boughtItemsDirectBuy.value
+            // Access the original list of bought items
+            val originalItems = _boughtItemsDirectBuy.value
 
-        // Filter the items based on the date range
-        val filteredItems = currentItems.filter { item ->
-            val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
-            itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
+            // Filter the items based on the date range
+            val filteredItems = originalItems.filter { item ->
+                val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
+                itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
+            }
+
+            // Update the _boughtItems with the filtered list
+            _boughtItemsDirectBuy.value = filteredItems
         }
+    }
 
-        // Update the _boughtItems with the filtered list
-        _boughtItemsDirectBuy.value = filteredItems
+    fun clearFilter() {
+        viewModelScope.launch {
+            // Restore the original list
+            _boughtItemsDirectBuy.value = _originalBoughtDirectItems.value
+        }
     }
 
 
