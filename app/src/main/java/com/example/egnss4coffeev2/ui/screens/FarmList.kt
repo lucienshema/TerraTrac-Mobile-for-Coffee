@@ -1303,14 +1303,14 @@ fun FarmListHeaderPlots(
                     modifier = Modifier.size(24.dp),
                 )
             }
-            Spacer(modifier = Modifier.width(2.dp))
-            // New button for buying through Akrabi
-            if (showBuyThroughAkrabi) {
-                IconButton(onClick = onBuyThroughAkrabiClicked, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = "Buy Through Akrabi", modifier = Modifier.size(24.dp))
-                }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
+//            Spacer(modifier = Modifier.width(2.dp))
+//            // New button for buying through Akrabi
+//            if (showBuyThroughAkrabi) {
+//                IconButton(onClick = onBuyThroughAkrabiClicked, modifier = Modifier.size(24.dp)) {
+//                    Icon(Icons.Default.ShoppingCart, contentDescription = "Buy Through Akrabi", modifier = Modifier.size(24.dp))
+//                }
+//                Spacer(modifier = Modifier.width(2.dp))
+//            }
 
             Spacer(modifier = Modifier.width(2.dp))
 

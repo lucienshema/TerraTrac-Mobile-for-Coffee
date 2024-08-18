@@ -1,17 +1,21 @@
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -47,10 +51,10 @@ fun BottomNavBar(navController: NavHostController) {
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.label,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 },
-                label = { Text(item.label) },
+                label = { Text(item.label,  fontSize = 10.sp, fontWeight = FontWeight.Bold ) },
                 selected = currentRoute == item.route,
                 onClick = {
                     if (currentRoute != item.route) {
@@ -70,7 +74,8 @@ fun BottomNavBar(navController: NavHostController) {
                     unselectedIconColor = Color.Gray,
                     selectedTextColor = Color.White,
                     indicatorColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                modifier = Modifier.padding(2.dp)
             )
         }
     }
@@ -79,29 +84,38 @@ fun BottomNavBar(navController: NavHostController) {
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ShoppingScreen(navController: NavHostController,farmViewModel: FarmViewModel) {
+fun ShoppingScreen(navController: NavHostController, farmViewModel: FarmViewModel) {
     val nestedNavController = rememberNavController()
-    NavHost(
-        navController = nestedNavController,
-        startDestination = BottomNavItem.DirectBuy.route
-    ) {
-        composable(BottomNavItem.DirectBuy.route) {
-            // DirectBuyScreen()
-            BoughtItemsListDirectBuy( farmViewModel = farmViewModel,
-                onItemClick = { selectedItem ->
-                    navController.navigate("bought_item_detail/${selectedItem.id}")
-                },
-                navController
-            )
+
+    Scaffold(
+        bottomBar = {
+            BottomNavBar(navController = nestedNavController)
         }
-        composable(BottomNavItem.BuyThroughAkrabi.route) {
-//            BuyThroughAkrabiScreen()
-            BoughtItemsList( farmViewModel = farmViewModel,
-                onItemClick = { selectedItem ->
-                    navController.navigate("bought_item_detail/${selectedItem.id}")
-                },
-                navController
-            )
+    ) {
+        NavHost(
+            navController = nestedNavController,
+            startDestination = BottomNavItem.DirectBuy.route
+        ) {
+            composable(BottomNavItem.DirectBuy.route) {
+                // DirectBuyScreen()
+                BoughtItemsListDirectBuy(
+                    farmViewModel = farmViewModel,
+                    onItemClick = { selectedItem ->
+                        navController.navigate("bought_item_detail/${selectedItem.id}")
+                    },
+                    navController
+                )
+            }
+            composable(BottomNavItem.BuyThroughAkrabi.route) {
+                // BuyThroughAkrabiScreen()
+                BoughtItemsList(
+                    farmViewModel = farmViewModel,
+                    onItemClick = { selectedItem ->
+                        navController.navigate("bought_item_detail/${selectedItem.id}")
+                    },
+                    navController
+                )
+            }
         }
     }
 }

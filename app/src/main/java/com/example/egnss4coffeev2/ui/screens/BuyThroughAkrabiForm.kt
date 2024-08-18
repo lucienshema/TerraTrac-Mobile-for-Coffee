@@ -2,24 +2,24 @@ package com.example.egnss4coffeev2.ui.screens
 
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
@@ -45,7 +44,6 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,50 +65,110 @@ import java.util.Locale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.egnss4coffeev2.database.Akrabi
 import com.example.egnss4coffeev2.database.AkrabiViewModel
 import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.database.Farm
+import kotlinx.coroutines.delay
 
 
 @Composable
 fun ImagePicker(
     onImagePicked: (Uri?) -> Unit
 ) {
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        onImagePicked(uri)
+    // State to hold the picked photo URI
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Launcher for picking images from the gallery
+    val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        photoUri = uri
+        onImagePicked(uri) // Notify the parent composable of the selected image URI
     }
 
-    Button(
-        onClick = { launcher.launch("image/*") },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text("Pick Image")
+    // Function to initiate the photo picker
+    fun pickPhoto() {
+        pickImageLauncher.launch("image/*")
+    }
+
+    Column(modifier = Modifier
+        .fillMaxSize()) {
+
+        // Display the image if one is selected
+        if (photoUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(photoUri),
+                contentDescription = "Selected Photo",
+                modifier = Modifier
+                    .size(200.dp) // Increased the size for better visibility
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(4.dp),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Button to remove the photo
+            IconButton(
+                onClick = {
+                    photoUri = null
+                    onImagePicked(null) // Notify that the photo was removed
+                }
+            ) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove Photo")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // OutlinedTextField acting as the photo selection button
+            OutlinedTextField(
+                value = "Select a Photo",
+                onValueChange = {}, // No-op since the field is read-only
+                label = { Text("Photo") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { pickPhoto() }) {
+                        Icon(imageVector = Icons.Default.Person, contentDescription = "Pick Photo")
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { pickPhoto() } // Allow clicking anywhere on the text field to pick a photo
+            )
     }
 }
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -285,54 +343,383 @@ fun BuyThroughAkrabiForm(
         )
     }
 
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Buy Through Akrabi") }
+                    )
+                }
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
+                ) {
+
+
+//                    // Date input
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .clickable { showDatePicker = true }
+//                    ) {
+//                        OutlinedTextField(
+//                            value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+//                            onValueChange = { },
+//                            label = { Text("Date") },
+//                            modifier = Modifier.fillMaxWidth(),
+//                            readOnly = true,
+//                            enabled = false
+//                        )
+//                    }
+//                    Spacer(modifier = Modifier.height(8.dp))
+//
+//                    // Time input
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .clickable { showTimePicker = true }
+//                    ) {
+//                        OutlinedTextField(
+//                            value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+//                            onValueChange = { },
+//                            label = { Text("Time") },
+//                            modifier = Modifier.fillMaxWidth(),
+//                            readOnly = true,
+//                            enabled = false
+//                        )
+//                    }
+//                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Location input
+                    OutlinedTextField(
+                        value = location,
+                        onValueChange = { location = it },
+                        label = { Text("Location") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Dropdown for selecting site name
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = selectedSiteName,
+                            onValueChange = { selectedSiteName = it },
+                            label = { Text("Select or Create a new Site") },
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { expandedSites = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Select Site Name"
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        DropdownMenu(
+                            expanded = expandedSites,
+                            onDismissRequest = { expandedSites = false }
+                        ) {
+                            // Existing site names
+                            collectionSites.forEach { site ->
+                                DropdownMenuItem(
+                                    text = { Text(site.name) },
+                                    onClick = {
+                                        selectedSiteName = site.name
+                                        expandedSites = false
+                                    }
+                                )
+                            }
+
+                            // Option to create a new site name
+                            DropdownMenuItem(
+                                text = { Text("Create New Site") },
+                                onClick = {
+                                    expandedSites = false
+                                    selectedSiteName = "" // Clear the selected site name
+                                    navController.navigate("addSite") // Navigate to the add site screen
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ExposedDropdownMenuBox(
+                        expanded = expandedAkrabis,
+                        onExpandedChange = { expandedAkrabis = !expandedAkrabis }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedAkrabi?.akrabiName ?: "Select or Create Akrabi",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Akrabi") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAkrabis) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedAkrabis,
+                            onDismissRequest = { expandedAkrabis = false }
+                        ) {
+                            // Show existing Akrabi items
+                            akrabis.forEach { akrabi ->
+                                DropdownMenuItem(
+                                    text = { Text(akrabi.akrabiName) },
+                                    onClick = {
+                                        selectedAkrabi = akrabi
+                                        akrabiNumber = akrabi.akrabiNumber
+                                        akrabiName = akrabi.akrabiName
+                                        expandedAkrabis = false
+                                    }
+                                )
+                            }
+
+                            // Add option to create new Akrabi
+                            DropdownMenuItem(
+                                text = { Text("Create New Akrabi") },
+                                onClick = {
+                                    // Handle navigation to the CreateAkrabiForm
+                                    navController.navigate("akrabi_list_screen")
+                                    expandedAkrabis = false
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Akrabi Number input (for new Akrabi)
+                    if (selectedAkrabi == null) {
+                        OutlinedTextField(
+                            value = akrabiNumber,
+                            onValueChange = { akrabiNumber = it },
+                            label = { Text("Akrabi Number") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Akrabi Name input (for new Akrabi)
+                    if (selectedAkrabi == null) {
+                        OutlinedTextField(
+                            value = akrabiName,
+                            onValueChange = { akrabiName = it },
+                            label = { Text("Akrabi Name") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Cherry sold input
+                    OutlinedTextField(
+                        value = cherrySold,
+                        onValueChange = { cherrySold = it },
+                        label = { Text("Cherry Sold (kg)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Price per kg input
+                    OutlinedTextField(
+                        value = pricePerKg,
+                        onValueChange = { pricePerKg = it },
+                        label = { Text("Price per kg") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Paid input
+                    OutlinedTextField(
+                        value = paid,
+                        onValueChange = { paid = it },
+                        label = { Text("Paid") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Pick Image Button
+                    ImagePicker { uri ->
+                        photoUri = uri
+                        photo = uri?.toString() ?: ""
+                    }
+
+                    // Display selected image
+                    photoUri?.let {
+                        Image(
+                            painter = rememberImagePainter(it),
+                            contentDescription = "Selected image",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Submit button
+                    Button(
+                        onClick = {
+                            if (selectedAkrabi == null) {
+                                val newAkrabi = Akrabi(
+                                    akrabiNumber = akrabiNumber,
+                                    akrabiName = akrabiName,
+                                    siteName = selectedSiteName
+                                )
+                                onCreateAkrabi(newAkrabi)
+                            }
+                            val buyThroughAkrabi = BuyThroughAkrabi(
+                                date = date,
+                                time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                location = location,
+                                siteName = selectedSiteName,
+                                akrabiSearch = akrabiSearch,
+                                akrabiNumber = selectedAkrabi?.akrabiNumber ?: akrabiNumber,
+                                akrabiName = selectedAkrabi?.akrabiName ?: akrabiName,
+                                cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
+                                pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
+                                paid = paid.toDoubleOrNull() ?: 0.0,
+                                photo = photo,
+                                photoUri = photoUri.toString()
+                            )
+                            onSubmit(buyThroughAkrabi)
+
+                            navController.navigate("bought_items_buy_through_Akrabi")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Submit")
+                    }
+                }
+            }
+}
+
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun DirectBuyForm(
+    collectionSites: List<CollectionSite>,
+    farmers: List<Farm>,
+    onSubmit: (DirectBuy) -> Unit,
+    navController: NavController,
+) {
+    var date by remember { mutableStateOf(LocalDate.now()) }
+    var time by remember { mutableStateOf(LocalTime.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var location by remember { mutableStateOf("") }
+    var selectedSiteName by remember { mutableStateOf("") }
+    var selectedSiteId by remember { mutableLongStateOf(0L) } // Store selected site ID
+    var farmerSearch by remember { mutableStateOf("") }
+    var farmerNumber by remember { mutableStateOf("") }
+    var farmerName by remember { mutableStateOf("") }
+    var cherrySold by remember { mutableStateOf("") }
+    var pricePerKg by remember { mutableStateOf("") }
+    var paid by remember { mutableStateOf("") }
+    var photo by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+
+    var expandedSites by remember { mutableStateOf(false) }
+    var expandedFarmers by remember { mutableStateOf(false) }
+    var showCreateFarmerDialog by remember { mutableStateOf(false) }
+
+    // State for managing the filtered farmers based on the selected site
+    var filteredFarmers by remember { mutableStateOf<List<Farm>>(emptyList()) }
+
+    // Update the filteredFarmers whenever the selected site changes
+    LaunchedEffect(selectedSiteName) {
+        filteredFarmers = farmers.filter { it.siteId == selectedSiteId }
+    }
+
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDateSelected = { selectedDate ->
+                date = selectedDate
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            onTimeSelected = { selectedTime ->
+                time = selectedTime
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
+
+    if (showCreateFarmerDialog) {
+        CreateFarmerDialog(
+            navController = navController,
+            siteId = selectedSiteId, // Pass the selected site ID
+            onDismiss = { showCreateFarmerDialog = false }
+        )
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Direct Buy") }
+            )
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
+                .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Header
-            Text(
-                text = "Buy Through Akrabi",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
 
-            // Date input
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showDatePicker = true }
-            ) {
-                OutlinedTextField(
-                    value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    onValueChange = { },
-                    label = { Text("Date") },
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    enabled = false
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Time input
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showTimePicker = true }
-            ) {
-                OutlinedTextField(
-                    value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
-                    onValueChange = { },
-                    label = { Text("Time") },
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    enabled = false
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+//            // Date input
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { showDatePicker = true }
+//            ) {
+//                OutlinedTextField(
+//                    value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+//                    onValueChange = { },
+//                    label = { Text("Date") },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    readOnly = true,
+//                    enabled = false
+//                )
+//            }
+//            Spacer(modifier = Modifier.height(8.dp))
+//
+//            // Time input
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { showTimePicker = true }
+//            ) {
+//                OutlinedTextField(
+//                    value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+//                    onValueChange = { },
+//                    label = { Text("Time") },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    readOnly = true,
+//                    enabled = false
+//                )
+//            }
+//            Spacer(modifier = Modifier.height(8.dp))
 
             // Location input
             OutlinedTextField(
@@ -344,77 +731,51 @@ fun BuyThroughAkrabiForm(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Dropdown for site name
-            ExposedDropdownMenuBox(
-                expanded = expandedSites,
-                onExpandedChange = { expandedSites = !expandedSites }
-            ) {
+            // Dropdown for selecting site name
+            Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = selectedSiteName,
-                    onValueChange = {},
+                    onValueChange = { selectedSiteName = it },
+                    label = { Text("Select or Create a new Site") },
                     readOnly = true,
-                    label = { Text("Site Name") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSites) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    trailingIcon = {
+                        IconButton(onClick = { expandedSites = true }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Select Site Name"
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
-                ExposedDropdownMenu(
+
+                DropdownMenu(
                     expanded = expandedSites,
                     onDismissRequest = { expandedSites = false }
                 ) {
+                    // Existing site names
                     collectionSites.forEach { site ->
                         DropdownMenuItem(
                             text = { Text(site.name) },
                             onClick = {
                                 selectedSiteName = site.name
+                                selectedSiteId = site.siteId
                                 expandedSites = false
-                            }
-                        )
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                                // Filter farmers based on the selected site
+                                filteredFarmers = farmers.filter { it.siteId == site.siteId }
 
-            ExposedDropdownMenuBox(
-                expanded = expandedAkrabis,
-                onExpandedChange = { expandedAkrabis = !expandedAkrabis }
-            ) {
-                OutlinedTextField(
-                    value = selectedAkrabi?.akrabiName ?: "Select or Create Akrabi",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Akrabi") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAkrabis) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expandedAkrabis,
-                    onDismissRequest = { expandedAkrabis = false }
-                ) {
-                    // Show existing Akrabi items
-                    akrabis.forEach { akrabi ->
-                        DropdownMenuItem(
-                            text = { Text(akrabi.akrabiName) },
-                            onClick = {
-                                selectedAkrabi = akrabi
-                                akrabiNumber = akrabi.akrabiNumber
-                                akrabiName = akrabi.akrabiName
-                                expandedAkrabis = false
                             }
                         )
                     }
 
-                    // Add option to create new Akrabi
+                    // Option to create a new site name
                     DropdownMenuItem(
-                        text = { Text("Create New Akrabi") },
+                        text = { Text("Create New Site") },
                         onClick = {
-                            // Handle navigation to the CreateAkrabiForm
-                            navController.navigate("akrabi_list_screen")
-                            expandedAkrabis = false
+                            expandedSites = false
+                            selectedSiteName = "" // Clear the selected site name
+                            navController.navigate("addSite") // Navigate to the add site screen
                         }
                     )
                 }
@@ -422,27 +783,45 @@ fun BuyThroughAkrabiForm(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Akrabi Number input (for new Akrabi)
-            if (selectedAkrabi == null) {
+            // Dropdown for farmer name
+            ExposedDropdownMenuBox(
+                expanded = expandedFarmers,
+                onExpandedChange = { expandedFarmers = !expandedFarmers }
+            ) {
                 OutlinedTextField(
-                    value = akrabiNumber,
-                    onValueChange = { akrabiNumber = it },
-                    label = { Text("Akrabi Number") },
-                    modifier = Modifier.fillMaxWidth()
+                    value = farmerName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Farmer Name") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFarmers) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                ExposedDropdownMenu(
+                    expanded = expandedFarmers,
+                    onDismissRequest = { expandedFarmers = false }
+                ) {
+                    filteredFarmers.forEach { farmer ->
+                        DropdownMenuItem(
+                            text = { Text(farmer.farmerName) },
+                            onClick = {
+                                farmerName = farmer.farmerName
+                                expandedFarmers = false
+                            }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text("Create New Farmer") },
+                        onClick = {
+                            showCreateFarmerDialog = true
+                            expandedFarmers = false
+                        }
+                    )
+                }
             }
 
-            // Akrabi Name input (for new Akrabi)
-            if (selectedAkrabi == null) {
-                OutlinedTextField(
-                    value = akrabiName,
-                    onValueChange = { akrabiName = it },
-                    label = { Text("Akrabi Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Cherry sold input
             OutlinedTextField(
@@ -497,302 +876,28 @@ fun BuyThroughAkrabiForm(
             // Submit button
             Button(
                 onClick = {
-                    if (selectedAkrabi == null) {
-                        val newAkrabi = Akrabi(akrabiNumber = akrabiNumber, akrabiName = akrabiName, siteName = selectedSiteName)
-                        onCreateAkrabi(newAkrabi)
-                    }
-                    val buyThroughAkrabi = BuyThroughAkrabi(
+                    val directBuy = DirectBuy(
                         date = date,
                         time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
                         location = location,
                         siteName = selectedSiteName,
-                        akrabiSearch = akrabiSearch,
-                        akrabiNumber = selectedAkrabi?.akrabiNumber ?: akrabiNumber,
-                        akrabiName = selectedAkrabi?.akrabiName ?: akrabiName,
+                        farmerSearch = farmerSearch,
+                        farmerNumber = farmerNumber,
+                        farmerName = farmerName,
                         cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
                         pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
                         paid = paid.toDoubleOrNull() ?: 0.0,
                         photo = photo,
                         photoUri = photoUri.toString()
                     )
-                    onSubmit(buyThroughAkrabi)
+                    onSubmit(directBuy)
 
-                    navController.navigate("bought_items_buy_through_Akrabi")
+                    navController.navigate("bought_items_direct_buy")
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Submit")
+                Text("Submit")
             }
-        }
-}
-
-
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun DirectBuyForm(
-    collectionSites: List<CollectionSite>,
-    farmers: List<Farm>,
-    onSubmit: (DirectBuy) -> Unit,
-    navController: NavController,
-) {
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var time by remember { mutableStateOf(LocalTime.now()) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    var location by remember { mutableStateOf("") }
-    var selectedSiteName by remember { mutableStateOf("") }
-    var selectedSiteId by remember { mutableLongStateOf(0L) } // Store selected site ID
-    var farmerSearch by remember { mutableStateOf("") }
-    var farmerNumber by remember { mutableStateOf("") }
-    var farmerName by remember { mutableStateOf("") }
-    var cherrySold by remember { mutableStateOf("") }
-    var pricePerKg by remember { mutableStateOf("") }
-    var paid by remember { mutableStateOf("") }
-    var photo by remember { mutableStateOf("") }
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
-
-    var expandedSites by remember { mutableStateOf(false) }
-    var expandedFarmers by remember { mutableStateOf(false) }
-    var showCreateFarmerDialog by remember { mutableStateOf(false) }
-
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDateSelected = { selectedDate ->
-                date = selectedDate
-                showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false }
-        )
-    }
-
-    if (showTimePicker) {
-        TimePickerDialog(
-            onTimeSelected = { selectedTime ->
-                time = selectedTime
-                showTimePicker = false
-            },
-            onDismiss = { showTimePicker = false }
-        )
-    }
-
-    if (showCreateFarmerDialog) {
-        CreateFarmerDialog(
-            navController = navController,
-            siteId = selectedSiteId, // Pass the selected site ID
-            onDismiss = { showCreateFarmerDialog = false }
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-
-        // Header
-        Text(
-            text = "Direct Buy",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .align(Alignment.CenterHorizontally)
-        )
-        // Date input
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showDatePicker = true }
-        ) {
-            OutlinedTextField(
-                value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                onValueChange = { },
-                label = { Text("Date") },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                enabled = false
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Time input
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showTimePicker = true }
-        ) {
-            OutlinedTextField(
-                value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
-                onValueChange = { },
-                label = { Text("Time") },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                enabled = false
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Location input
-        OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Location") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Dropdown for site name
-        ExposedDropdownMenuBox(
-            expanded = expandedSites,
-            onExpandedChange = { expandedSites = !expandedSites }
-        ) {
-            OutlinedTextField(
-                value = selectedSiteName,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Site Name") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSites) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = expandedSites,
-                onDismissRequest = { expandedSites = false }
-            ) {
-                collectionSites.forEach { site ->
-                    DropdownMenuItem(
-                        text = { Text(site.name) },
-                        onClick = {
-                            selectedSiteName = site.name
-                            selectedSiteId = site.siteId // Store selected site ID
-                            expandedSites = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Dropdown for farmer name
-        ExposedDropdownMenuBox(
-            expanded = expandedFarmers,
-            onExpandedChange = { expandedFarmers = !expandedFarmers }
-        ) {
-            OutlinedTextField(
-                value = farmerName,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Farmer Name") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFarmers) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = expandedFarmers,
-                onDismissRequest = { expandedFarmers = false }
-            ) {
-                farmers.forEach { farmer ->
-                    DropdownMenuItem(
-                        text = { Text(farmer.farmerName) },
-                        onClick = {
-                            farmerName = farmer.farmerName
-                            expandedFarmers = false
-                        }
-                    )
-                }
-                DropdownMenuItem(
-                    text = { Text("Create New Farmer") },
-                    onClick = {
-                        showCreateFarmerDialog = true
-                        expandedFarmers = false
-                    }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Cherry sold input
-        OutlinedTextField(
-            value = cherrySold,
-            onValueChange = { cherrySold = it },
-            label = { Text("Cherry Sold (kg)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Price per kg input
-        OutlinedTextField(
-            value = pricePerKg,
-            onValueChange = { pricePerKg = it },
-            label = { Text("Price per kg") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Paid input
-        OutlinedTextField(
-            value = paid,
-            onValueChange = { paid = it },
-            label = { Text("Paid") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Pick Image Button
-        ImagePicker { uri ->
-            photoUri = uri
-            photo = uri?.toString() ?: ""
-        }
-
-        // Display selected image
-        photoUri?.let {
-            Image(
-                painter = rememberImagePainter(it),
-                contentDescription = "Selected image",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Gray)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Submit button
-        Button(
-            onClick = {
-                val directBuy = DirectBuy(
-                    date = date,
-                    time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
-                    location = location,
-                    siteName = selectedSiteName,
-                    farmerSearch = farmerSearch,
-                    farmerNumber = farmerNumber,
-                    farmerName = farmerName,
-                    cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
-                    pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
-                    paid = paid.toDoubleOrNull() ?: 0.0,
-                    photo = photo,
-                    photoUri = photoUri.toString()
-                )
-                onSubmit(directBuy)
-
-                navController.navigate("bought_items_direct_buy")
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Submit")
         }
     }
 }
@@ -808,7 +913,8 @@ fun CreateFarmerDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    navController.navigate("addFarm/$siteId") // Navigate to addFarm with siteId
+                    /// navController.navigate("addFarm/$siteId") // Navigate to addFarm with siteId
+                    navController.navigate("siteList") // Navigate to addFarm with siteId
                 }
             ) {
                 Text("Create")
@@ -824,17 +930,20 @@ fun CreateFarmerDialog(
 }
 
 
-
 @Composable
 fun CreateAkrabiForm(
+    navController: NavController, // Pass NavController for navigation
     akrabi: Akrabi? = null,
+    title: String,
+    collectionSites: List<CollectionSite>,
     onSubmit: (Akrabi) -> Unit,
     onCancel: () -> Unit
 ) {
-
     var akrabiNumber by remember { mutableStateOf(akrabi?.akrabiNumber ?: "") }
     var akrabiName by remember { mutableStateOf(akrabi?.akrabiName ?: "") }
-    var siteName by remember { mutableStateOf(akrabi?.siteName ?: "") }
+    var selectedSiteName by remember { mutableStateOf(akrabi?.siteName ?: "") }
+
+    var dropdownExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -842,7 +951,7 @@ fun CreateAkrabiForm(
             .padding(16.dp)
     ) {
         Text(
-            text = "Create Akrabi Form",
+            text = title,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(16.dp)
         )
@@ -865,12 +974,47 @@ fun CreateAkrabiForm(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = siteName,
-            onValueChange = { siteName = it },
-            label = { Text("Site Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        // Dropdown for selecting site name
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = selectedSiteName,
+                onValueChange = { selectedSiteName = it },
+                label = { Text("Site Name") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { dropdownExpanded = true }) {
+                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Select Site Name")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            DropdownMenu(
+                expanded = dropdownExpanded,
+                onDismissRequest = { dropdownExpanded = false }
+            ) {
+                // Existing site names
+                collectionSites.forEach { site ->
+                    DropdownMenuItem(
+                        text = { Text(site.name) },
+                        onClick = {
+                            selectedSiteName = site.name
+                            dropdownExpanded = false
+                        }
+                    )
+                }
+
+                // Option to create a new site name
+                DropdownMenuItem(
+                    text = { Text("Create New Site") },
+                    onClick = {
+                        dropdownExpanded = false
+                        selectedSiteName = "" // Clear the selected site name
+                        navController.navigate("addSite") // Navigate to the add site screen
+                    }
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -887,7 +1031,7 @@ fun CreateAkrabiForm(
                     id = akrabi?.id ?: 0, // Use existing ID if editing
                     akrabiNumber = akrabiNumber,
                     akrabiName = akrabiName,
-                    siteName = siteName
+                    siteName = selectedSiteName
                 )
                 onSubmit(updatedAkrabi)
             }) {
@@ -898,10 +1042,14 @@ fun CreateAkrabiForm(
 }
 
 
+
 @Composable
-fun CreateAkrabiFormScreen(navController: NavController,akrabiViewModel: AkrabiViewModel) {
+fun CreateAkrabiFormScreen(navController: NavController,akrabiViewModel: AkrabiViewModel,collectionSites: List<CollectionSite>) {
     CreateAkrabiForm(
+        navController = navController,
+        title="Create Akrabi Form",
         akrabi = null,
+        collectionSites = collectionSites,
         onSubmit = { newAkrabi ->
             // Handle Akrabi creation, e.g., update the list
             akrabiViewModel.insertAkrabi(newAkrabi)
@@ -928,15 +1076,6 @@ fun AkrabiListScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        // Header
-        Text(
-            text = "Akrabi List",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .align(Alignment.CenterHorizontally)
-        )
-
         // Akrabi List
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -1000,6 +1139,7 @@ fun AkrabiListScreen(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AkrabiListScreenScreen(navController: NavController) {
     val viewModel: AkrabiViewModel = viewModel()
@@ -1007,6 +1147,38 @@ fun AkrabiListScreenScreen(navController: NavController) {
 
     var showDialog by remember { mutableStateOf(false) }
     var akrabiToDelete by remember { mutableStateOf<Akrabi?>(null) }
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var filteredItems = akrabis.filter {
+        it.akrabiName.contains(searchQuery, ignoreCase = true)
+    }
+
+    // Drawer state
+    var drawerOffset by remember { mutableStateOf(0f) }
+    val drawerWidth = 250.dp
+    val drawerWidthPx = with(LocalDensity.current) { drawerWidth.toPx() }
+
+    var isDrawerOpen by remember { mutableStateOf(false) }
+
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Simulate data loading delay
+    LaunchedEffect(Unit) {
+        delay(2000) // Simulate loading time
+        isLoading = false
+    }
+
+    // Handle drawer gesture
+    val gestureModifier = Modifier
+        .offset(x = drawerOffset.dp)
+        .pointerInput(Unit) {
+            detectDragGestures { _, dragAmount ->
+                drawerOffset = (drawerOffset + dragAmount.x).coerceIn(0f, drawerWidthPx)
+                isDrawerOpen = drawerOffset > 0
+            }
+        }
+
 
     if (showDialog) {
         AlertDialog(
@@ -1042,29 +1214,146 @@ fun AkrabiListScreenScreen(navController: NavController) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AkrabiListScreen(
-            akrabis = akrabis,
-            onEdit = { akrabi ->
-                // Navigate to the Edit Akrabi form with pre-filled data
-                navController.navigate("edit_akrabi_form/${akrabi.id}")
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Akrabi List") },
+                    navigationIcon = {
+                        IconButton(onClick = { isDrawerOpen = !isDrawerOpen }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
+                    }
+                )
             },
-            onDelete = { akrabi ->
-                akrabiToDelete = akrabi
-                showDialog = true
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("create_akrabi_form")
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Akrabi")
+                }
+            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    if (isSearchActive) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text("Search...") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .padding(top = 8.dp),
+                            singleLine = true,
+                            leadingIcon = {
+                                IconButton(onClick = { isSearchActive = false; searchQuery = "" }) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
+                                }
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { searchQuery = "" }) {
+                                        Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+                                    }
+                                }
+                            }
+                        )
+                    }
+
+
+            AkrabiListScreen(
+                akrabis = akrabis,
+                onEdit = { akrabi ->
+                    // Navigate to the Edit Akrabi form with pre-filled data
+                    navController.navigate("edit_akrabi_form/${akrabi.id}")
+                },
+                onDelete = { akrabi ->
+                    akrabiToDelete = akrabi
+                    showDialog = true
+                }
+            )
+                }
             }
         )
+    }
 
-        // Floating Action Button (FAB)
-        FloatingActionButton(
-            onClick = {
-                navController.navigate("create_akrabi_form")
-            },
+    // Sidebar Drawer Overlay
+    // if (drawerVisible) {
+    if (isDrawerOpen) {
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            //containerColor = Color.White
+                .fillMaxSize()
+                .background(Color(0x99000000)) // Semi-transparent background
+                // .clickable { drawerVisible = false }, // Dismiss drawer on background click
+                .clickable { isDrawerOpen = false },
+            contentAlignment = Alignment.TopStart
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Akrabi")
+            Column(
+                //modifier = Modifier
+                modifier = gestureModifier
+                    .fillMaxHeight()
+                    .width(250.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Menu",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Divider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                DrawerItem(
+                    text = "Home",
+                    onClick = {
+                        navController.navigate("home")
+                        // drawerVisible = false
+                        isDrawerOpen = false
+                    }
+                )
+                DrawerItem(
+                    text = "Akrabi  Registration",
+                    onClick = {
+                        navController.navigate("akrabi_list_screen")
+                        //drawerVisible = false
+                        isDrawerOpen = false
+                    }
+                )
+
+                DrawerItem(
+                    text = "Collection Site Registaration",
+                    onClick = {
+                        navController.navigate("siteList")
+                        // drawerVisible = false
+                        isDrawerOpen = false
+                    }
+                )
+
+                DrawerItem(
+                    text = "Farmer Registaration",
+                    onClick = {
+                        //val siteId = farmViewModel.getLastSiteId()
+//                            navController.navigate("farmList/$siteId")
+                        navController.navigate("siteList")
+                        // drawerVisible = false
+                        isDrawerOpen = false
+                    }
+                )
+
+
+            }
         }
     }
 }
@@ -1074,6 +1363,7 @@ fun AkrabiListScreenScreen(navController: NavController) {
 @Composable
 fun EditAkrabiScreen(
     akrabiId:   Long, // Ensure this matches the type in your ViewModel
+    collectionSites: List<CollectionSite>,
     viewModel: AkrabiViewModel,
     navController: NavController
 ) {
@@ -1089,17 +1379,19 @@ fun EditAkrabiScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Edit Akrabi Form",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
+//        Text(
+//            text = "Edit Akrabi Form",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
         // Display a loading indicator while waiting for data
         if (akrabi == null) {
             CircularProgressIndicator(modifier = Modifier.fillMaxSize())
         } else {
             CreateAkrabiForm(
+                navController = navController,
+                title="Edit Akrabi Form",
                 akrabi = akrabi, // Pass existing data to pre-fill the form
+                collectionSites = collectionSites, // Get the site names for dropdown
                 onSubmit = { updatedAkrabi ->
                     viewModel.updateAkrabi(updatedAkrabi)
                     navController.navigate("akrabi_list_screen")

@@ -106,6 +106,15 @@ class FarmViewModel(
 
     fun getBoughtItemDirectBuyById(id: Long): Flow<DirectBuy?> = repository.getDirectBuyById(id)
 
+    fun getBoughtItemDirectById(itemId: Long?): DirectBuy? {
+        return boughtItemsDirectBuy.value.find { it.id == itemId }
+    }
+
+    fun getBoughtItemThroughAkrabiById(itemId: Long?): BuyThroughAkrabi? {
+        return boughtItems.value.find { it.id == itemId }
+    }
+
+
     fun insertBoughtItemDirect(directBuy: DirectBuy) = viewModelScope.launch {
         repository.insertDirectBuy(directBuy)
         // Refresh the list
@@ -151,11 +160,12 @@ class FarmViewModel(
             val start = LocalDate.parse(normalizedStartDate, dateFormatter)
             val end = LocalDate.parse(normalizedEndDate, dateFormatter)
 
-            // Access the current list of bought items
-            val currentItems = _boughtItems.value
+            // Access the original list of bought items
+            val originalItems = _boughtItems.value
+
 
             // Filter the items based on the date range
-            val filteredItems = currentItems.filter { item ->
+            val filteredItems = originalItems.filter { item ->
                 val itemDate = LocalDate.parse(normalizeDate(item.date.toString()), dateFormatter)
                 itemDate.isAfter(start.minusDays(1)) && itemDate.isBefore(end.plusDays(1))
             }
@@ -194,17 +204,21 @@ class FarmViewModel(
     fun clearFilter() {
         viewModelScope.launch {
             // Restore the original list
+            _boughtItems.value=_originalBoughtItems.value
+        }
+    }
+
+    fun clearFilterDirectBuy() {
+        viewModelScope.launch {
+            // Restore the original list
             _boughtItemsDirectBuy.value = _originalBoughtDirectItems.value
         }
     }
 
-
-
-
-
-
-
-
+    fun getLastSiteId(): Long? {
+        // Assuming `readAllSites` is a list or LiveData holding the collection sites
+        return readAllSites.value?.lastOrNull()?.siteId
+    }
 
 
     fun readAllData(siteId: Long): LiveData<List<Farm>> = repository.readAllFarms(siteId)

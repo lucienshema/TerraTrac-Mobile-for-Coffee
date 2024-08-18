@@ -89,7 +89,7 @@ fun Home(
                     shape = RoundedCornerShape(10.dp)
                 )
                 .clickable {
-                    navController.navigate("siteList")
+                    navController.navigate("shopping")
                 }
                 .padding(16.dp) // Additional padding to make the clickable area similar to a button
         ) {

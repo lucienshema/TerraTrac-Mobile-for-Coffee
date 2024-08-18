@@ -1,5 +1,6 @@
 package com.example.egnss4coffeev2.ui.screens
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -10,15 +11,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,26 +36,34 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -57,12 +71,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -70,7 +85,7 @@ import coil.compose.rememberImagePainter
 import com.example.egnss4coffeev2.database.BuyThroughAkrabi
 import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.database.FarmViewModel
-import com.example.egnss4coffeev2.database.converters.DateConverter
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -243,6 +258,7 @@ fun DateRangePicker(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BoughtItemsList(
@@ -252,21 +268,51 @@ fun BoughtItemsList(
 ) {
     val boughtItems by farmViewModel.boughtItems.collectAsStateWithLifecycle(initialValue = emptyList())
 
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var filteredItems = boughtItems.filter {
+        it.akrabiName.contains(searchQuery, ignoreCase = true) ||
+                it.location.contains(searchQuery, ignoreCase = true)
+    }
+
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
 
     var showDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<BuyThroughAkrabi?>(null) }
 
+    // var drawerVisible by remember { mutableStateOf(false) }
+
+    // Drawer state
+    var drawerOffset by remember { mutableStateOf(0f) }
+    val drawerWidth = 250.dp
+    val drawerWidthPx = with(LocalDensity.current) { drawerWidth.toPx() }
+
+    var isDrawerOpen by remember { mutableStateOf(false) }
+
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Simulate data loading delay
+    LaunchedEffect(Unit) {
+        delay(2000) // Simulate loading time
+        isLoading = false
+    }
+
+    // Handle drawer gesture
+    val gestureModifier = Modifier
+        .offset(x = drawerOffset.dp)
+        .pointerInput(Unit) {
+            detectDragGestures { _, dragAmount ->
+                drawerOffset = (drawerOffset + dragAmount.x).coerceIn(0f, drawerWidthPx)
+                isDrawerOpen = drawerOffset > 0
+            }
+        }
+
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = {
-                Text(text = "Confirm Delete")
-            },
-            text = {
-                Text(text = "Are you sure you want to delete this item? This action cannot be undone.")
-            },
+            title = { Text(text = "Confirm Delete") },
+            text = { Text(text = "Are you sure you want to delete this item? This action cannot be undone.") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -290,77 +336,193 @@ fun BoughtItemsList(
             }
         )
     }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Bought Items",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
-            DateRangePicker(
-                startDate = startDate,
-                endDate = endDate,
-                onStartDateChange = { startDate = it },
-                onEndDateChange = { endDate = it },
-                onApply = {
-                    farmViewModel.filterBoughtItems(startDate, endDate)
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Main content for Direct Buy
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Bought Items") },
+                        navigationIcon = {
+//                            IconButton(onClick = { drawerVisible = !drawerVisible }) {
+                            IconButton(onClick = { isDrawerOpen = !isDrawerOpen }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
+                            }
+                        }
+                    )
                 },
-                onClear = {
-                    startDate = ""
-                    endDate = ""
-                    // Optionally refresh the list with no filter
-                    farmViewModel.filterBoughtItems("", "")
+                floatingActionButton = {
+                    // Floating Action Button (FAB)
+                    FloatingActionButton(
+                        onClick = { navController.navigate("buy_through_akrabi/add") },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 8.dp, bottom = 72.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Buy Through Akrabi")
+                    }
                 }
             )
-
-            if (boughtItems.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No items bought yet")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    items(boughtItems) { item ->
-                        BoughtItemCard(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onEditClick = {
-                                navController.navigate("buy_through_akrabi/edit/${item.id}")
+            { paddingValues ->
+                // Main content
+                Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                    if (isSearchActive) {
+                        // Search TextField
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text("Search...") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .padding(top = 8.dp), // Add padding to push it down
+                            singleLine = true,
+                            leadingIcon = {
+                                IconButton(onClick = { isSearchActive = false ; searchQuery = "" }) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
+                                }
                             },
-                            onDeleteClick = {
-                                itemToDelete = item
-                                showDialog = true
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { searchQuery = "" }) {
+                                        Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+                                    }
+                                }
                             }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    DateRangePicker(
+                        startDate = startDate,
+                        endDate = endDate,
+                        onStartDateChange = { startDate = it },
+                        onEndDateChange = { endDate = it },
+                        onApply = { farmViewModel.filterBoughtItems(startDate, endDate) },
+                        onClear = {
+                            startDate = ""
+                            endDate = ""
+                            farmViewModel.clearFilter()
+                        }
+                    )
+
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        when {
+                            isLoading -> {
+                                CircularProgressIndicator() // Show a loading spinner
+                            }
+
+                            filteredItems.isEmpty() -> {
+                                Text("No items bought yet")
+                            }
+
+                            else -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(
+                                        horizontal = 16.dp,
+                                        vertical = 8.dp
+                                    )
+                                ) {
+                                    items(filteredItems) { item ->
+                                        BoughtItemCard(
+                                            item = item,
+                                            onClick = { onItemClick(item) },
+                                            onEditClick = {
+                                                navController.navigate("buy_through_akrabi/edit/${item.id}")
+                                            },
+                                            onDeleteClick = {
+                                                itemToDelete = item
+                                                showDialog = true
+                                            }
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Floating Action Button (FAB)
-        FloatingActionButton(
-            onClick = {
-                navController.navigate("buy_through_akrabi/add")
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Buy Through Akrabi")
+
+        // Sidebar Drawer Overlay
+       // if (drawerVisible) {
+    if (isDrawerOpen) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x99000000)) // Semi-transparent background
+                    // .clickable { drawerVisible = false }, // Dismiss drawer on background click
+                    .clickable { isDrawerOpen = false },
+                contentAlignment = Alignment.TopStart
+            ) {
+                Column(
+                    //modifier = Modifier
+                    modifier = gestureModifier
+                        .fillMaxHeight()
+                        .width(250.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Menu",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Divider()
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    DrawerItem(
+                        text = "Home",
+                        onClick = {
+                            navController.navigate("home")
+                           // drawerVisible = false
+                            isDrawerOpen = false
+                        }
+                    )
+                    DrawerItem(
+                        text = "Akrabi  Registration",
+                        onClick = {
+                            navController.navigate("akrabi_list_screen")
+                            //drawerVisible = false
+                            isDrawerOpen = false
+                        }
+                    )
+
+                    DrawerItem(
+                        text = "Collection Site Registaration",
+                        onClick = {
+                            navController.navigate("siteList")
+                            // drawerVisible = false
+                            isDrawerOpen = false
+                        }
+                    )
+
+                    DrawerItem(
+                        text = "Farmer Registaration",
+                        onClick = {
+                            val siteId = farmViewModel.getLastSiteId()
+//                            navController.navigate("farmList/$siteId")
+                            navController.navigate("siteList")
+                            // drawerVisible = false
+                            isDrawerOpen = false
+                        }
+                    )
+
+
+                }
+            }
         }
     }
-}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BoughtItemsListDirectBuy(
@@ -370,11 +532,30 @@ fun BoughtItemsListDirectBuy(
 ) {
     val boughtItemsDirectBuy by farmViewModel.boughtItemsDirectBuy.collectAsStateWithLifecycle(initialValue = emptyList())
 
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var filteredItems = boughtItemsDirectBuy.filter {
+        it.farmerName.contains(searchQuery, ignoreCase = true) ||
+                it.location.contains(searchQuery, ignoreCase = true)
+    }
+
+    var isLoading by remember { mutableStateOf(true) }
+
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
 
     var showDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<DirectBuy?>(null) }
+
+    var drawerVisible by remember { mutableStateOf(false) }
+
+
+    // Simulate data loading delay
+    LaunchedEffect(Unit) {
+        delay(2000) // Simulate loading time
+        isLoading = false
+    }
 
     if (showDialog) {
         AlertDialog(
@@ -410,75 +591,339 @@ fun BoughtItemsListDirectBuy(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Bought Items",
-                    style = MaterialTheme.typography.headlineSmall
+        // Main content for Direct Buy
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Bought Items") },
+                    navigationIcon = {
+                        IconButton(onClick = { drawerVisible = !drawerVisible }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
+                    }
                 )
-            }
-
-            DateRangePicker(
-                startDate = startDate,
-                endDate = endDate,
-                onStartDateChange = { startDate = it },
-                onEndDateChange = { endDate = it },
-                onApply = {
-                    farmViewModel.filterBoughtItemsDirectBuy(startDate, endDate)
-                },
-                onClear = {
-                    startDate = ""
-                    endDate = ""
-                    farmViewModel.clearFilter()
-                }
-            )
-
-            if (boughtItemsDirectBuy.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No items bought yet")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("direct_buy/add")
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end=8.dp, bottom =72.dp)
                 ) {
-                    items(boughtItemsDirectBuy) { item ->
-                        BoughtItemCardDirectBuy(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onEditClick = {
-                                navController.navigate("direct_buy/edit/${item.id}")
-                            },
-                            onDeleteClick = {
-                                itemToDelete = item
-                                showDialog = true
+                    Icon(Icons.Default.Add, contentDescription = "Direct Buy")
+                }
+            }
+        ) { paddingValues ->
+            Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                if (isSearchActive) {
+                    // Search TextField
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search...") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 8.dp), // Add padding to push it down
+                        singleLine = true,
+                        leadingIcon = {
+                            IconButton(onClick = { isSearchActive = false ; searchQuery = "" }) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
                             }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+                                }
+                            }
+                        }
+                    )
+                }
+                DateRangePicker(
+                    startDate = startDate,
+                    endDate = endDate,
+                    onStartDateChange = { startDate = it },
+                    onEndDateChange = { endDate = it },
+                    onApply = {
+                        farmViewModel.filterBoughtItemsDirectBuy(startDate, endDate)
+                    },
+                    onClear = {
+                        startDate = ""
+                        endDate = ""
+                        farmViewModel.clearFilterDirectBuy()
+                    }
+                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        isLoading -> {
+                            CircularProgressIndicator() // Show a loading spinner
+                        }
+
+                        filteredItems.isEmpty() -> {
+                            Text("No items bought yet")
+                        }
+
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                items(filteredItems) { item ->
+                                    BoughtItemCardDirectBuy(
+                                        item = item,
+                                        onClick = {
+                                            navController.navigate("bought_item_detail_direct_buy/${item.id}")
+                                        },
+                                        onEditClick = {
+                                            navController.navigate("direct_buy/edit/${item.id}")
+                                        },
+                                        onDeleteClick = {
+                                            itemToDelete = item
+                                            showDialog = true
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Floating Action Button (FAB)
-        FloatingActionButton(
-            onClick = {
-                navController.navigate("direct_buy/add")
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Direct Buy")
+        // Sidebar Drawer Overlay
+        if (drawerVisible) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x99000000)) // Semi-transparent background
+                    .clickable { drawerVisible = false }, // Dismiss drawer on background click
+                contentAlignment = Alignment.TopStart
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(250.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Menu",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Divider()
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    DrawerItem(
+                        text = "Home",
+                        onClick = {
+                            navController.navigate("home")
+                            drawerVisible = false
+                        }
+                    )
+
+                    DrawerItem(
+                        text = "Akrabi  Registration",
+                        onClick = {
+                            navController.navigate("akrabi_list_screen")
+                            drawerVisible = false
+                        }
+                    )
+
+                    DrawerItem(
+                        text = "Collection Site Registaration",
+                        onClick = {
+                            navController.navigate("siteList")
+                            drawerVisible = false
+                        }
+                    )
+
+                    DrawerItem(
+                        text = "Farmer Registaration",
+                        onClick = {
+                            val siteId = farmViewModel.getLastSiteId()
+//                            navController.navigate("farmList/$siteId")
+                            navController.navigate("siteList")
+                            drawerVisible = false
+                        }
+                    )
+                }
+            }
         }
     }
 }
 
+@Composable
+fun DrawerItem(text: String, onClick: () -> Unit) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 8.dp)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun DirectBuyDetailScreen(directBuy: DirectBuy, onBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Item Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Header
+            Text(
+                text = "Direct Buy Details",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Display the image if available
+            directBuy.photoUri?.let { imageUrl ->
+                Image(
+                    painter = rememberAsyncImagePainter(imageUrl),
+                    contentDescription = "Bought Item Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(4.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Card for item details
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    DetailText(label = "Date", value = directBuy.date.toString())
+                    DetailText(label = "Time", value = directBuy.time)
+                    DetailText(label = "Location", value = directBuy.location)
+                    DetailText(label = "Farmer", value = directBuy.farmerName)
+                    DetailText(label = "Collection Site", value = directBuy.siteName)
+                    DetailText(label = "Quantity (kg)", value = "${directBuy.cherrySold} kg")
+                    DetailText(label = "Price per kg", value = "$${directBuy.pricePerKg}")
+                    DetailText(label = "Total Paid", value = "$${directBuy.paid}", bold = true)
+                }
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun BoughtItemDetailScreen(buyThroughAkrabi: BuyThroughAkrabi, onBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Item Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Header
+            Text(
+                text = "Item Details",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Display the image if available
+            buyThroughAkrabi.photoUri?.let { imageUrl ->
+                Image(
+                    painter = rememberAsyncImagePainter(imageUrl),
+                    contentDescription = "Bought Item Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(4.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Card for item details
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    DetailText(label = "Date", value = buyThroughAkrabi.date.toString())
+                    DetailText(label = "Time", value = buyThroughAkrabi.time)
+                    DetailText(label = "Location", value = buyThroughAkrabi.location)
+                    DetailText(label = "Akrabi Name", value = buyThroughAkrabi.akrabiName)
+                    DetailText(label = "Collection Site", value = buyThroughAkrabi.siteName)
+                    DetailText(label = "Quantity (kg)", value = "${buyThroughAkrabi.cherrySold} kg")
+                    DetailText(label = "Price per kg", value = "$${buyThroughAkrabi.pricePerKg}")
+                    DetailText(label = "Total Paid", value = "$${buyThroughAkrabi.paid}", bold = true)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailText(label: String, value: String, bold: Boolean = false) {
+    Column(
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primary)
+        )
+        Text(
+            text = value,
+            style = if (bold) MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+            else MaterialTheme.typography.bodyLarge
+        )
+    }
+}
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -490,37 +935,31 @@ fun BoughtItemCard(
     onDeleteClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp), // Added padding around the card for better spacing
+        onClick = onClick,
+        elevation = CardDefaults.cardElevation(4.dp) // Optional: add subtle elevation
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp), // Adjusted padding to make it more compact
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column( modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Date: ${item.date.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text = "Time: ${item.time}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = item.akrabiName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Site: ${item.siteName}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Akrabi: ${item.akrabiName}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
                     text = "Cherry Sold: ${item.cherrySold} kg",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "Price per kg: $${item.pricePerKg}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -529,13 +968,26 @@ fun BoughtItemCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-
-            Row {
-                IconButton(onClick = onEditClick) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+            Row(
+                modifier = Modifier.padding(end = 0.dp)
+                    .padding(horizontal = 4.dp)
+            ) {
+                IconButton(onClick = onEditClick, modifier = Modifier.size(36.dp) ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
-                IconButton(onClick = onDeleteClick) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                IconButton(onClick = onDeleteClick,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .offset(x = (-8).dp) ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.Red
+                    )
                 }
             }
         }
@@ -551,116 +1003,65 @@ fun BoughtItemCardDirectBuy(
     onDeleteClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp), // Added padding around the card for better spacing
+        onClick = onClick,
+        elevation = CardDefaults.cardElevation(4.dp) // Optional: add subtle elevation
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp), // Adjusted padding to make it more compact
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Date: ${item.date.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = "Time: ${item.time}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Site: ${item.siteName}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Akrabi: ${item.farmerName}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Cherry Sold: ${item.cherrySold} kg",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Price per kg: $${item.pricePerKg}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Total Paid: $${item.paid}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-        }
-            Row {
-                IconButton(onClick = onEditClick) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                text = item.farmerName,
+                style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Site: ${item.siteName}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Cherry Sold: ${item.cherrySold} kg",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Total Paid: $${item.paid}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Row(
+                modifier = Modifier.padding(end = 0.dp)
+                    .padding(horizontal = 4.dp)
+            ) {
+                IconButton(onClick = onEditClick, modifier = Modifier.size(36.dp) ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
-                IconButton(onClick = onDeleteClick) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                IconButton(onClick = onDeleteClick,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .offset(x = (-8).dp) ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.Red
+                    )
                 }
             }
         }
     }
-}
-
-@Composable
-fun BoughtItemDetailScreen(
-    itemId: Long,
-    farmViewModel: FarmViewModel,
-    onNavigateBack: () -> Unit
-) {
-    // Fetch the specific item using the itemId
-    val item by farmViewModel.getBoughtItemById(itemId).collectAsStateWithLifecycle(initialValue = null)
-
-    item?.let { buyThroughAkrabi ->
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Item Details", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Date: ${buyThroughAkrabi.date}")
-            Text("Time: ${buyThroughAkrabi.time}")
-            Text("Location: ${buyThroughAkrabi.location}")
-            Text("Site Name: ${buyThroughAkrabi.siteName}")
-            Text("Akrabi Name: ${buyThroughAkrabi.akrabiName}")
-            Text("Cherry Sold: ${buyThroughAkrabi.cherrySold} kg")
-            Text("Price per kg: $${buyThroughAkrabi.pricePerKg}")
-            Text("Total Paid: $${buyThroughAkrabi.paid}")
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onNavigateBack) {
-                Text("Back to List")
-            }
-        }
-    } ?: Text("Loading...")
-}
-
-
-@Composable
-fun BoughtItemDetailScreenDirectBuy(
-    itemId: Long,
-    farmViewModel: FarmViewModel,
-    onNavigateBack: () -> Unit
-) {
-    // Fetch the specific item using the itemId
-    val item by farmViewModel.getBoughtItemDirectBuyById(itemId).collectAsStateWithLifecycle(initialValue = null)
-
-    item?.let { buyThroughAkrabi ->
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Item Details", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Date: ${buyThroughAkrabi.date}")
-            Text("Time: ${buyThroughAkrabi.time}")
-            Text("Location: ${buyThroughAkrabi.location}")
-            Text("Site Name: ${buyThroughAkrabi.siteName}")
-            Text("Akrabi Name: ${buyThroughAkrabi.farmerName}")
-            Text("Cherry Sold: ${buyThroughAkrabi.cherrySold} kg")
-            Text("Price per kg: $${buyThroughAkrabi.pricePerKg}")
-            Text("Total Paid: $${buyThroughAkrabi.paid}")
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onNavigateBack) {
-                Text("Back to List")
-            }
-        }
-    } ?: Text("Loading...")
 }
 
 
@@ -860,7 +1261,9 @@ fun EditDirectBuyForm(
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
@@ -871,10 +1274,11 @@ fun EditDirectBuyForm(
             }
 
             Button(
-                onClick = { navController.popBackStack() }, // Navigate back without saving
-                modifier = Modifier.weight(1f)
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
-                Text("Cancel")
+                Text("Cancel", color = Color.White)
             }
         }
     }
@@ -907,6 +1311,8 @@ fun EditBuyThroughAkrabiForm(
     var showConfirmationDialog by remember { mutableStateOf(false) }
     LaunchedEffect(item) {
         item?.let {
+
+
             date = it.date // Assuming date is stored as a String in ISO format
             time = LocalTime.parse(it.time) // Assuming time is stored as a String in ISO format
             location = it.location

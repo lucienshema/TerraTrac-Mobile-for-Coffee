@@ -52,12 +52,12 @@ import com.example.egnss4coffeev2.ui.screens.AddFarm
 import com.example.egnss4coffeev2.ui.screens.AddSite
 import com.example.egnss4coffeev2.ui.screens.AkrabiListScreenScreen
 import com.example.egnss4coffeev2.ui.screens.BoughtItemDetailScreen
-import com.example.egnss4coffeev2.ui.screens.BoughtItemDetailScreenDirectBuy
 import com.example.egnss4coffeev2.ui.screens.BoughtItemsList
 import com.example.egnss4coffeev2.ui.screens.BoughtItemsListDirectBuy
 import com.example.egnss4coffeev2.ui.screens.BuyThroughAkrabiForm
 import com.example.egnss4coffeev2.ui.screens.CollectionSiteList
 import com.example.egnss4coffeev2.ui.screens.CreateAkrabiFormScreen
+import com.example.egnss4coffeev2.ui.screens.DirectBuyDetailScreen
 import com.example.egnss4coffeev2.ui.screens.DirectBuyForm
 import com.example.egnss4coffeev2.ui.screens.EditAkrabiScreen
 import com.example.egnss4coffeev2.ui.screens.EditBuyThroughAkrabiForm
@@ -172,10 +172,16 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         bottomBar = {
                             val currentRoute = currentRoute(navController)
-                            if (currentRoute == "shopping" ||
-                                currentRoute == BottomNavItem.DirectBuy.route ||
-                                currentRoute == BottomNavItem.BuyThroughAkrabi.route) {
-                                BottomNavBar(navController)
+                            if (currentRoute in listOf(
+//                                    "shopping",
+                                    "akrabi_list_screen",
+                                    "bought_items_direct_buy",
+                                    "bought_items_buy_through_Akrabi",
+                                    BottomNavItem.DirectBuy.route,
+                                    BottomNavItem.BuyThroughAkrabi.route
+                                )
+                            ) {
+                                BottomNavBar(navController = navController)
                             }
                         }
                     ) { innerPadding ->
@@ -216,7 +222,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("create_akrabi_form") {
-                                CreateAkrabiFormScreen(navController,akrabiViewModel)
+                                CreateAkrabiFormScreen(navController,akrabiViewModel,collectionSites)
                             }
                             composable("akrabi_list_screen") {
                                 AkrabiListScreenScreen(navController)
@@ -228,6 +234,7 @@ class MainActivity : ComponentActivity() {
                                 if (akrabiId != null) {
                                     EditAkrabiScreen(
                                         akrabiId = akrabiId,
+                                        collectionSites = collectionSites,
                                         viewModel = akrabiViewModel,
                                         navController = navController
                                     )
@@ -343,16 +350,11 @@ class MainActivity : ComponentActivity() {
                                 route = "bought_item_detail/{id}",
                                 arguments = listOf(navArgument("id") { type = NavType.LongType })
                             ) { backStackEntry ->
-                                val id = backStackEntry.arguments?.getLong("id")
-                                if (id != null) {
-                                    BoughtItemDetailScreen(
-                                        itemId = id,
-                                        farmViewModel = farmViewModel,
-                                        onNavigateBack = { navController.popBackStack() }
-                                    )
-                                } else {
-                                    // Handle error case, perhaps navigate back or show an error message
-                                    Text("Error: Invalid item ID")
+                                val itemId = backStackEntry.arguments?.getLong("id")
+                                val selectedItem =
+                                    itemId?.let { farmViewModel.getBoughtItemThroughAkrabiById(it) } // Ensure this function exists
+                                selectedItem?.let { item ->
+                                    BoughtItemDetailScreen(buyThroughAkrabi = item, onBack = { navController.popBackStack() })
                                 }
                             }
 
@@ -360,16 +362,11 @@ class MainActivity : ComponentActivity() {
                                 route = "bought_item_detail_direct_buy/{id}",
                                 arguments = listOf(navArgument("id") { type = NavType.LongType })
                             ) { backStackEntry ->
-                                val id = backStackEntry.arguments?.getLong("id")
-                                if (id != null) {
-                                    BoughtItemDetailScreenDirectBuy(
-                                        itemId = id,
-                                        farmViewModel = farmViewModel,
-                                        onNavigateBack = { navController.popBackStack() }
-                                    )
-                                } else {
-                                    // Handle error case, perhaps navigate back or show an error message
-                                    Text("Error: Invalid item ID")
+                                val itemId = backStackEntry.arguments?.getLong("id")
+                                val selectedItem =
+                                    itemId?.let { farmViewModel.getBoughtItemDirectById(it) } // Ensure this function exists
+                                selectedItem?.let { item ->
+                                    DirectBuyDetailScreen(directBuy = item, onBack = { navController.popBackStack() })
                                 }
                             }
 
