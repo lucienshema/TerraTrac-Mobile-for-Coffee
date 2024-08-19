@@ -1803,7 +1803,7 @@ fun UpdateFarmForm(
             showAdd = false,
             showSearch = false,
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions =
@@ -1814,10 +1814,19 @@ fun UpdateFarmForm(
             onValueChange = { farmerName = it },
             label = { Text(stringResource(id = R.string.farm_name), color = inputLabelColor) },
             isError = farmerName.isBlank(),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
+            ),
             modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 8.dp)
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
@@ -1826,7 +1835,7 @@ fun UpdateFarmForm(
                     false
                 },
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions =
@@ -1847,7 +1856,7 @@ fun UpdateFarmForm(
                     false
                 },
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions =
@@ -1857,13 +1866,23 @@ fun UpdateFarmForm(
             value = village,
             onValueChange = { village = it },
             label = { Text(stringResource(id = R.string.village), color = inputLabelColor) },
+            isError = village.isBlank(),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
+            ),
             modifier =
             Modifier
                 .focusRequester(focusRequester1)
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions =
@@ -1873,6 +1892,16 @@ fun UpdateFarmForm(
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district), color = inputLabelColor) },
+            isError = district.isBlank(),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
+            ),
             modifier =
             Modifier
                 .focusRequester(focusRequester2)
@@ -1883,7 +1912,7 @@ fun UpdateFarmForm(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            TextField(
+            OutlinedTextField(
                 singleLine = true,
                 value = truncateToDecimalPlaces(size,9),
                 onValueChange = {
@@ -1911,6 +1940,7 @@ fun UpdateFarmForm(
                 isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
                 colors =
                 TextFieldDefaults.textFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
@@ -1922,10 +1952,10 @@ fun UpdateFarmForm(
                 Modifier
                     .focusRequester(focusRequester3)
                     .weight(1f)
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 4.dp),
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             // Size measure
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -1934,7 +1964,7 @@ fun UpdateFarmForm(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                TextField(
+                OutlinedTextField(
                     readOnly = true,
                     value = selectedUnit,
                     onValueChange = { },
@@ -1944,7 +1974,9 @@ fun UpdateFarmForm(
                             expanded = expanded,
                         )
                     },
-                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                    ),
                     modifier = Modifier.menuAnchor(),
                 )
                 ExposedDropdownMenu(
@@ -1966,13 +1998,13 @@ fun UpdateFarmForm(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
+//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                TextField(
+                OutlinedTextField(
                     readOnly = true,
                     value = latitude,
                     onValueChange = { latitude = it },
@@ -1980,10 +2012,10 @@ fun UpdateFarmForm(
                     modifier =
                     Modifier
                         .weight(1f)
-                        .padding(bottom = 16.dp),
+                        .padding(bottom = 4.dp),
                 )
-                Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
-                TextField(
+                Spacer(modifier = Modifier.width(8.dp)) // Add space between the latitude and longitude input fields
+                OutlinedTextField(
                     readOnly = true,
                     value = longitude,
                     onValueChange = { longitude = it },

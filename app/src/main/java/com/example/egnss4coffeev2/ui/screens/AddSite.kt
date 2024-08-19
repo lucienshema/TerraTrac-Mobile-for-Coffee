@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -146,7 +147,7 @@ fun SiteForm(navController: NavController) {
             .verticalScroll(state = scrollState)
     ) {
         Row {
-            TextField(
+            OutlinedTextField(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
@@ -154,20 +155,21 @@ fun SiteForm(navController: NavController) {
                 ),
                 value = name,
                 onValueChange = { name = it },
-                label = { Text(stringResource(id = R.string.site_name) + " (*)",color = inputLabelColor ) },
+                label = { Text(stringResource(id = R.string.site_name) + " (*)", color = inputLabelColor) },
                 supportingText = { if (!isValid && name.isBlank()) Text(stringResource(R.string.error_site_name_empty)) },
                 isError = !isValid && name.isBlank(),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
-                    focusedIndicatorColor = inputBorder,
-                    unfocusedIndicatorColor = inputBorder,
-                    errorIndicatorColor = Color.Red
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder,
+                    errorBorderColor = Color.Red
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 4.dp)
                     .onKeyEvent {
                         if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                             focusRequester1.requestFocus()
@@ -176,38 +178,8 @@ fun SiteForm(navController: NavController) {
                     }
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester2.requestFocus() }
-            ),
-            value = agentName,
-            onValueChange = { agentName = it },
-            label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
-            isError = !isValid && agentName.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
-                errorLeadingIconColor = Color.Red,
-                cursorColor = inputTextColor,
-                errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester2.requestFocus()
-                    }
-                    false
-                }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
+//        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next,
@@ -225,17 +197,18 @@ fun SiteForm(navController: NavController) {
                 if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(stringResource(R.string.error_invalid_phone_number, phoneNumber))
             },
             isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester3.requestFocus()
@@ -243,8 +216,8 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
+//        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next,
@@ -266,17 +239,18 @@ fun SiteForm(navController: NavController) {
             isError = !isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                 email
             ).matches(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester4.requestFocus()
@@ -284,8 +258,8 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
+//        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
@@ -296,17 +270,18 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester5.requestFocus()
@@ -314,27 +289,28 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
+//        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
             singleLine = true,
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+//        Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
                 if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {

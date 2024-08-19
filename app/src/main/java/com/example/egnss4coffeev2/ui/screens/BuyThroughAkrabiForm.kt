@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,6 +76,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -87,15 +90,24 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.Akrabi
 import com.example.egnss4coffeev2.database.AkrabiViewModel
 import com.example.egnss4coffeev2.database.DirectBuy
@@ -323,6 +335,75 @@ fun BuyThroughAkrabiForm(
     var expandedSites by remember { mutableStateOf(false) }
     var expandedAkrabis by remember { mutableStateOf(false) }
 
+
+    var validationErrors by remember { mutableStateOf(emptyList<String>()) } // Store validation errors
+    val focusRequesterLocation = FocusRequester()
+    val focusRequesterSite = FocusRequester()
+    val focusRequesterAkrabi = FocusRequester()
+    val focusRequesterCherrySold = FocusRequester()
+    val focusRequesterPricePerKg = FocusRequester()
+    val focusRequesterPaid = FocusRequester()
+
+    // Focus manager
+    val focusManager = LocalFocusManager.current
+
+    // Handle focus change when "Next" is pressed
+    fun onNextFocus(currentField: FocusRequester, nextField: FocusRequester) {
+        currentField.requestFocus()
+        focusManager.moveFocus(FocusDirection.Down)
+        nextField.requestFocus()
+    }
+
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
+    // Get the strings from resources within a @Composable context
+    val locationError = stringResource(id = R.string.location)
+    val siteError = stringResource(id = R.string.select_or_create_site)
+    val akrabiError = stringResource(id = R.string.farmer_name)
+    val cherryError = stringResource(id = R.string.cherry_sold)
+    val priceError = stringResource(id = R.string.price_per_kg)
+    val paidError = stringResource(id = R.string.paid)
+
+
+
+    // Form validation function
+    fun validateFormBuyThroughAkrabi(
+        location: String,
+        selectedSiteName: String,
+        akrabiName: String,
+        cherrySold: String,
+        pricePerKg: String
+    ): List<String> {
+        val errors = mutableListOf<String>()
+        if (location.isBlank()) errors.add(locationError)
+        if (selectedSiteName.isBlank()) errors.add(siteError)
+        if (akrabiName.isBlank()) errors.add(akrabiError)
+        if (cherrySold.isBlank() || cherrySold.toDoubleOrNull() == null) errors.add(cherryError)
+        if (pricePerKg.isBlank() || pricePerKg.toDoubleOrNull() == null) errors.add(priceError)
+        if (paid.isBlank() || paid.toDoubleOrNull() == null) errors.add(paidError)
+        return errors
+    }
+
+    // Define string constants
+    val title = stringResource(id = R.string.buy_through_akrabi)
+    val dateLabel = stringResource(id = R.string.date)
+    val timeLabel = stringResource(id = R.string.time)
+    val locationLabel = stringResource(id = R.string.location)
+    val akrabiLabel = selectedAkrabi?.akrabiName ?: stringResource(id = R.string.select_or_create_akrabi)
+    val akrabiNumberLabel = stringResource(id = R.string.akrabi_number)
+    val selectSiteLabel = stringResource(id = R.string.select_or_create_site)
+    val selectAkrabiLabel = stringResource(id = R.string.akrabi_name)
+    val cherrySoldLabel = stringResource(id = R.string.cherry_sold)
+    val pricePerKgLabel = stringResource(id = R.string.price_per_kg)
+    val paidLabel = stringResource(id = R.string.paid)
+    val submitLabel = stringResource(id = R.string.submit)
+
     if (showDatePicker) {
         DatePickerDialog(
             onDateSelected = { selectedDate ->
@@ -346,7 +427,7 @@ fun BuyThroughAkrabiForm(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("Buy Through Akrabi") }
+                        title = { Text(title) }
                     )
                 }
             ) { paddingValues ->
@@ -357,68 +438,92 @@ fun BuyThroughAkrabiForm(
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
-
-
 //                    // Date input
-//                    Box(
+//                    OutlinedTextField(
+//                        value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+//                        onValueChange = { },
+//                        label = { Text(stringResource(id = R.string.date)) },
 //                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .clickable { showDatePicker = true }
-//                    ) {
-//                        OutlinedTextField(
-//                            value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
-//                            onValueChange = { },
-//                            label = { Text("Date") },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            readOnly = true,
-//                            enabled = false
-//                        )
-//                    }
+//                            .fillMaxWidth(),
+//                        readOnly = true,
+//                        enabled = false,
+//                        trailingIcon = {
+//                            IconButton(onClick = { showDatePicker = true }) {
+//                                Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
+//                            }
+//                        }
+//                    )
 //                    Spacer(modifier = Modifier.height(8.dp))
 //
 //                    // Time input
-//                    Box(
+//                    OutlinedTextField(
+//                        value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+//                        onValueChange = { },
+//                        label = { Text(stringResource(id = R.string.time)) },
 //                        modifier = Modifier
 //                            .fillMaxWidth()
-//                            .clickable { showTimePicker = true }
-//                    ) {
-//                        OutlinedTextField(
-//                            value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
-//                            onValueChange = { },
-//                            label = { Text("Time") },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            readOnly = true,
-//                            enabled = false
-//                        )
-//                    }
+//                            .focusRequester(focusRequesterSite),
+//                        readOnly = true,
+//                        enabled = false,
+//                        trailingIcon = {
+//                            IconButton(onClick = { showTimePicker = true }) {
+//                                Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
+//                            }
+//                        }
+//                    )
 //                    Spacer(modifier = Modifier.height(8.dp))
-
                     // Location input
                     OutlinedTextField(
                         value = location,
                         onValueChange = { location = it },
-                        label = { Text("Location") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text(stringResource(id = R.string.location)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequesterLocation),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                onNextFocus(focusRequesterLocation, focusRequesterSite)
+                            }
+                        ),
+                        isError = validationErrors.contains(stringResource(id = R.string.location))
                     )
+                    if (validationErrors.contains(stringResource(id = R.string.location))) {
+                        Text(
+                            text = stringResource(id = R.string.required_field),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Dropdown for selecting site name
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(
+                                onNext = {
+                                    onNextFocus(focusRequesterSite, focusRequesterAkrabi)
+                                }
+                            ),
                             value = selectedSiteName,
                             onValueChange = { selectedSiteName = it },
-                            label = { Text("Select or Create a new Site") },
+                            label = { Text(selectSiteLabel) },
                             readOnly = true,
                             trailingIcon = {
                                 IconButton(onClick = { expandedSites = true }) {
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "Select Site Name"
+                                        contentDescription = stringResource(id = R.string.select_site_name)
                                     )
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterSite),
+                            isError = validationErrors.contains(selectSiteLabel)
                         )
 
                         DropdownMenu(
@@ -438,7 +543,7 @@ fun BuyThroughAkrabiForm(
 
                             // Option to create a new site name
                             DropdownMenuItem(
-                                text = { Text("Create New Site") },
+                                text = { Text(stringResource(id = R.string.create_new_site)) },
                                 onClick = {
                                     expandedSites = false
                                     selectedSiteName = "" // Clear the selected site name
@@ -447,6 +552,14 @@ fun BuyThroughAkrabiForm(
                             )
                         }
                     }
+                    if (validationErrors.contains(selectSiteLabel)) {
+                        Text(
+                            text = stringResource(id = R.string.required_field),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -455,10 +568,10 @@ fun BuyThroughAkrabiForm(
                         onExpandedChange = { expandedAkrabis = !expandedAkrabis }
                     ) {
                         OutlinedTextField(
-                            value = selectedAkrabi?.akrabiName ?: "Select or Create Akrabi",
+                            value =  akrabiLabel,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Akrabi") },
+                            label = { Text(akrabiLabel) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAkrabis) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -483,7 +596,7 @@ fun BuyThroughAkrabiForm(
 
                             // Add option to create new Akrabi
                             DropdownMenuItem(
-                                text = { Text("Create New Akrabi") },
+                                text = { Text(stringResource(id = R.string.create_new_akrabi)) },
                                 onClick = {
                                     // Handle navigation to the CreateAkrabiForm
                                     navController.navigate("akrabi_list_screen")
@@ -493,26 +606,27 @@ fun BuyThroughAkrabiForm(
                         }
                     }
 
+                    if (validationErrors.contains(selectAkrabiLabel)) {
+                        Text(
+                            text = stringResource(id = R.string.required_field),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Akrabi Number input (for new Akrabi)
-                    if (selectedAkrabi == null) {
+                    if (selectedAkrabi != null) {
                         OutlinedTextField(
                             value = akrabiNumber,
                             onValueChange = { akrabiNumber = it },
-                            label = { Text("Akrabi Number") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    // Akrabi Name input (for new Akrabi)
-                    if (selectedAkrabi == null) {
-                        OutlinedTextField(
-                            value = akrabiName,
-                            onValueChange = { akrabiName = it },
-                            label = { Text("Akrabi Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text(akrabiNumberLabel) },
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction =  ImeAction.Next,
+                                keyboardType = KeyboardType.Number
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -521,19 +635,49 @@ fun BuyThroughAkrabiForm(
                     OutlinedTextField(
                         value = cherrySold,
                         onValueChange = { cherrySold = it },
-                        label = { Text("Cherry Sold (kg)") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text(cherrySoldLabel) },
+                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterCherrySold),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction =  ImeAction.Next,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                onNextFocus(focusRequesterCherrySold, focusRequesterPricePerKg)
+                            }
+                        ),
+                        isError = validationErrors.contains(cherrySoldLabel)
                     )
+                    if (validationErrors.contains(cherrySoldLabel)) {
+                        Text(
+                            text = stringResource(id = R.string.invalid_value),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
-
                     // Price per kg input
                     OutlinedTextField(
+                        singleLine = true,
                         value = pricePerKg,
                         onValueChange = { pricePerKg = it },
-                        label = { Text("Price per kg") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text(pricePerKgLabel) },
+                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPricePerKg),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction =  ImeAction.Next,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        isError = validationErrors.contains(pricePerKgLabel)
                     )
+
+                    if (validationErrors.contains(pricePerKgLabel)) {
+                        Text(
+                            text = stringResource(id = R.string.invalid_value),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -541,9 +685,27 @@ fun BuyThroughAkrabiForm(
                     OutlinedTextField(
                         value = paid,
                         onValueChange = { paid = it },
-                        label = { Text("Paid") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text(paidLabel) },
+                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPaid),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction =  ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusManager.clearFocus()
+                            }
+                        ),
+                        isError = validationErrors.contains(paidLabel)
                     )
+
+                    if (validationErrors.contains(paidLabel)) {
+                        Text(
+                            text = stringResource(id = R.string.invalid_value),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -570,35 +732,37 @@ fun BuyThroughAkrabiForm(
                     // Submit button
                     Button(
                         onClick = {
-                            if (selectedAkrabi == null) {
-                                val newAkrabi = Akrabi(
-                                    akrabiNumber = akrabiNumber,
-                                    akrabiName = akrabiName,
-                                    siteName = selectedSiteName
-                                )
-                                onCreateAkrabi(newAkrabi)
-                            }
-                            val buyThroughAkrabi = BuyThroughAkrabi(
-                                date = date,
-                                time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                            validationErrors = validateFormBuyThroughAkrabi(
                                 location = location,
-                                siteName = selectedSiteName,
-                                akrabiSearch = akrabiSearch,
-                                akrabiNumber = selectedAkrabi?.akrabiNumber ?: akrabiNumber,
-                                akrabiName = selectedAkrabi?.akrabiName ?: akrabiName,
-                                cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
-                                pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
-                                paid = paid.toDoubleOrNull() ?: 0.0,
-                                photo = photo,
-                                photoUri = photoUri.toString()
+                                selectedSiteName = selectedSiteName,
+                                akrabiName = akrabiName,
+                                cherrySold = cherrySold,
+                                pricePerKg = pricePerKg
                             )
-                            onSubmit(buyThroughAkrabi)
-
-                            navController.navigate("bought_items_buy_through_Akrabi")
+                            if (validationErrors.isEmpty()) {
+                                // If form is valid, proceed with submission
+                                onSubmit(
+                                    BuyThroughAkrabi(
+                                        date = date,
+                                        time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                        location = location,
+                                        siteName = selectedSiteName,
+                                        akrabiSearch = akrabiSearch,
+                                        akrabiNumber = selectedAkrabi?.akrabiNumber ?: akrabiNumber,
+                                        akrabiName = selectedAkrabi?.akrabiName ?: akrabiName,
+                                        cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
+                                        pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
+                                        paid = paid.toDoubleOrNull() ?: 0.0,
+                                        photo = photo,
+                                        photoUri = photoUri.toString()
+                                )
+                                )
+                                navController.navigate("bought_items_buy_through_Akrabi")
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "Submit")
+                        Text(submitLabel)
                     }
                 }
             }
@@ -607,7 +771,7 @@ fun BuyThroughAkrabiForm(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DirectBuyForm(
@@ -639,10 +803,75 @@ fun DirectBuyForm(
     // State for managing the filtered farmers based on the selected site
     var filteredFarmers by remember { mutableStateOf<List<Farm>>(emptyList()) }
 
+
+    var validationErrors by remember { mutableStateOf(emptyList<String>()) } // Store validation errors
+    val focusRequesterLocation = FocusRequester()
+    val focusRequesterSite = FocusRequester()
+    val focusRequesterFarmer = FocusRequester()
+    val focusRequesterCherrySold = FocusRequester()
+    val focusRequesterPricePerKg = FocusRequester()
+    val focusRequesterPaid = FocusRequester()
+
+    // Focus manager
+    val focusManager = LocalFocusManager.current
+
+    // Handle focus change when "Next" is pressed
+    fun onNextFocus(currentField: FocusRequester, nextField: FocusRequester) {
+        currentField.requestFocus()
+        focusManager.moveFocus(FocusDirection.Down)
+        nextField.requestFocus()
+    }
+
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     // Update the filteredFarmers whenever the selected site changes
     LaunchedEffect(selectedSiteName) {
         filteredFarmers = farmers.filter { it.siteId == selectedSiteId }
     }
+
+    // Get the strings from resources within a @Composable context
+    val locationError = stringResource(id = R.string.location)
+    val siteError = stringResource(id = R.string.select_or_create_site)
+    val farmerError = stringResource(id = R.string.farmer_name)
+    val cherryError = stringResource(id = R.string.cherry_sold)
+    val priceError = stringResource(id = R.string.price_per_kg)
+    val paidError = stringResource(id = R.string.paid)
+
+    // Form validation function
+    fun validateForm(
+        location: String,
+        selectedSiteName: String,
+        farmerName: String,
+        cherrySold: String,
+        pricePerKg: String
+    ): List<String> {
+        val errors = mutableListOf<String>()
+        if (location.isBlank()) errors.add(locationError)
+        if (selectedSiteName.isBlank()) errors.add(siteError)
+        if (farmerName.isBlank()) errors.add(farmerError)
+        if (cherrySold.isBlank() || cherrySold.toDoubleOrNull() == null) errors.add(cherryError)
+        if (pricePerKg.isBlank() || pricePerKg.toDoubleOrNull() == null) errors.add(priceError)
+        if (paid.isBlank() || paid.toDoubleOrNull() == null) errors.add(paidError)
+        return errors
+    }
+
+    // Define string constants
+    val title = stringResource(id = R.string.direct_buy)
+    val dateLabel = stringResource(id = R.string.date)
+    val timeLabel = stringResource(id = R.string.time)
+    val locationLabel = stringResource(id = R.string.location)
+    val selectSiteLabel = stringResource(id = R.string.select_or_create_site)
+    val selectFarmerLabel = stringResource(id = R.string.farmer_name)
+    val cherrySoldLabel = stringResource(id = R.string.cherry_sold)
+    val pricePerKgLabel = stringResource(id = R.string.price_per_kg)
+    val paidLabel = stringResource(id = R.string.paid)
+    val submitLabel = stringResource(id = R.string.submit)
 
 
     if (showDatePicker) {
@@ -675,7 +904,7 @@ fun DirectBuyForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Direct Buy") }
+                title = { Text(title) }
             )
         }
     ) { paddingValues ->
@@ -686,67 +915,92 @@ fun DirectBuyForm(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-
 //            // Date input
-//            Box(
+//            OutlinedTextField(
+//                value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+//                onValueChange = { },
+//                label = { Text(stringResource(id = R.string.date)) },
 //                modifier = Modifier
 //                    .fillMaxWidth()
-//                    .clickable { showDatePicker = true }
-//            ) {
-//                OutlinedTextField(
-//                    value = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
-//                    onValueChange = { },
-//                    label = { Text("Date") },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    readOnly = true,
-//                    enabled = false
-//                )
-//            }
+//                    .focusRequester(focusRequesterLocation),
+//                readOnly = true,
+//                enabled = false,
+//                trailingIcon = {
+//                    IconButton(onClick = { showDatePicker = true }) {
+//                        Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
+//                    }
+//                }
+//            )
 //            Spacer(modifier = Modifier.height(8.dp))
 //
 //            // Time input
-//            Box(
+//            OutlinedTextField(
+//                value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+//                onValueChange = { },
+//                label = { Text(stringResource(id = R.string.time)) },
 //                modifier = Modifier
 //                    .fillMaxWidth()
-//                    .clickable { showTimePicker = true }
-//            ) {
-//                OutlinedTextField(
-//                    value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
-//                    onValueChange = { },
-//                    label = { Text("Time") },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    readOnly = true,
-//                    enabled = false
-//                )
-//            }
+//                    .focusRequester(focusRequesterSite),
+//                readOnly = true,
+//                enabled = false,
+//                trailingIcon = {
+//                    IconButton(onClick = { showTimePicker = true }) {
+//                        Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
+//                    }
+//                }
+//            )
 //            Spacer(modifier = Modifier.height(8.dp))
-
             // Location input
             OutlinedTextField(
                 value = location,
                 onValueChange = { location = it },
-                label = { Text("Location") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text(stringResource(id = R.string.location)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterLocation),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterLocation, focusRequesterSite)
+                    }
+                ),
+                isError = validationErrors.contains(stringResource(id = R.string.location))
             )
-
+            if (validationErrors.contains(stringResource(id = R.string.location))) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
             // Dropdown for selecting site name
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            onNextFocus(focusRequesterSite, focusRequesterFarmer)
+                        }
+                    ),
                     value = selectedSiteName,
                     onValueChange = { selectedSiteName = it },
-                    label = { Text("Select or Create a new Site") },
+                    label = { Text(selectSiteLabel) },
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { expandedSites = true }) {
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Select Site Name"
+                                contentDescription = stringResource(id = R.string.select_site_name)
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterSite),
+                    isError = validationErrors.contains(selectSiteLabel)
                 )
 
                 DropdownMenu(
@@ -771,7 +1025,7 @@ fun DirectBuyForm(
 
                     // Option to create a new site name
                     DropdownMenuItem(
-                        text = { Text("Create New Site") },
+                        text = { Text(stringResource(id = R.string.create_new_site)) },
                         onClick = {
                             expandedSites = false
                             selectedSiteName = "" // Clear the selected site name
@@ -779,6 +1033,13 @@ fun DirectBuyForm(
                         }
                     )
                 }
+            }
+            if (validationErrors.contains(selectSiteLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -789,14 +1050,22 @@ fun DirectBuyForm(
                 onExpandedChange = { expandedFarmers = !expandedFarmers }
             ) {
                 OutlinedTextField(
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            onNextFocus(focusRequesterFarmer, focusRequesterCherrySold)
+                        }
+                    ),
                     value = farmerName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Farmer Name") },
+                    label = { Text(selectFarmerLabel) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFarmers) },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                        .fillMaxWidth().focusRequester(focusRequesterFarmer)
+                        .menuAnchor(),
+                    isError = validationErrors.contains(selectFarmerLabel)
                 )
                 ExposedDropdownMenu(
                     expanded = expandedFarmers,
@@ -820,6 +1089,14 @@ fun DirectBuyForm(
                     )
                 }
             }
+            if (validationErrors.contains(selectFarmerLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -827,19 +1104,49 @@ fun DirectBuyForm(
             OutlinedTextField(
                 value = cherrySold,
                 onValueChange = { cherrySold = it },
-                label = { Text("Cherry Sold (kg)") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text(cherrySoldLabel) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterCherrySold),
+                keyboardOptions = KeyboardOptions(
+                    imeAction =  ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterCherrySold, focusRequesterPricePerKg)
+                    }
+                ),
+                isError = validationErrors.contains(cherrySoldLabel)
             )
-
+            if (validationErrors.contains(cherrySoldLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
             // Price per kg input
             OutlinedTextField(
+                singleLine = true,
                 value = pricePerKg,
                 onValueChange = { pricePerKg = it },
-                label = { Text("Price per kg") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text(pricePerKgLabel) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPricePerKg),
+                keyboardOptions = KeyboardOptions(
+                    imeAction =  ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
+                isError = validationErrors.contains(pricePerKgLabel)
             )
+
+            if (validationErrors.contains(pricePerKgLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -847,9 +1154,27 @@ fun DirectBuyForm(
             OutlinedTextField(
                 value = paid,
                 onValueChange = { paid = it },
-                label = { Text("Paid") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text(paidLabel) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPaid),
+                keyboardOptions = KeyboardOptions(
+                    imeAction =  ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
+                isError = validationErrors.contains(paidLabel)
             )
+
+            if (validationErrors.contains(paidLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -876,31 +1201,42 @@ fun DirectBuyForm(
             // Submit button
             Button(
                 onClick = {
-                    val directBuy = DirectBuy(
-                        date = date,
-                        time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                    validationErrors = validateForm(
                         location = location,
-                        siteName = selectedSiteName,
-                        farmerSearch = farmerSearch,
-                        farmerNumber = farmerNumber,
+                        selectedSiteName = selectedSiteName,
                         farmerName = farmerName,
-                        cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
-                        pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
-                        paid = paid.toDoubleOrNull() ?: 0.0,
-                        photo = photo,
-                        photoUri = photoUri.toString()
+                        cherrySold = cherrySold,
+                        pricePerKg = pricePerKg
                     )
-                    onSubmit(directBuy)
-
-                    navController.navigate("bought_items_direct_buy")
+                    if (validationErrors.isEmpty()) {
+                        // If form is valid, proceed with submission
+                        onSubmit(
+                            DirectBuy(
+                                date = date,
+                                time = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                location = location,
+                                siteName = selectedSiteName,
+                                farmerSearch = farmerSearch,
+                                farmerNumber = farmerNumber,
+                                farmerName = farmerName,
+                                cherrySold = cherrySold.toDoubleOrNull() ?: 0.0,
+                                pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0,
+                                paid = paid.toDoubleOrNull() ?: 0.0,
+                                photo = photo,
+                                photoUri = photoUri.toString()
+                            )
+                        )
+                        navController.navigate("bought_items_direct_buy")
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Submit")
+                Text(submitLabel)
             }
         }
     }
 }
+
 
 @Composable
 fun CreateFarmerDialog(
@@ -930,6 +1266,7 @@ fun CreateFarmerDialog(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAkrabiForm(
     navController: NavController, // Pass NavController for navigation
@@ -942,100 +1279,170 @@ fun CreateAkrabiForm(
     var akrabiNumber by remember { mutableStateOf(akrabi?.akrabiNumber ?: "") }
     var akrabiName by remember { mutableStateOf(akrabi?.akrabiName ?: "") }
     var selectedSiteName by remember { mutableStateOf(akrabi?.siteName ?: "") }
-
     var dropdownExpanded by remember { mutableStateOf(false) }
+    var validationErrors by remember { mutableStateOf(emptyList<String>()) } // Store validation errors
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
-        )
+    // Focus management
+    val focusRequesterSite = remember { FocusRequester() }
+    val focusRequesterAkrabi = remember { FocusRequester() }
+    val focusRequesterAkrabiNumber = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
-        OutlinedTextField(
-            value = akrabiNumber,
-            onValueChange = { akrabiNumber = it },
-            label = { Text("Akrabi Number") },
-            modifier = Modifier.fillMaxWidth()
-        )
+    // Get string resources for validation
+    val akrabiNumberError = stringResource(id = R.string.invalid_value)
+    val siteError = stringResource(id = R.string.required_field)
+    val akrabiNameError = stringResource(id = R.string.required_field)
 
-        Spacer(modifier = Modifier.height(8.dp))
+    // Form validation function
+    fun validateForm(): List<String> {
+        val errors = mutableListOf<String>()
+        if (akrabiNumber.isBlank()) errors.add(akrabiNumberError)
+        if (selectedSiteName.isBlank()) errors.add(siteError)
+        if (akrabiName.isBlank()) errors.add(akrabiNameError)
+        return errors
+    }
 
-        OutlinedTextField(
-            value = akrabiName,
-            onValueChange = { akrabiName = it },
-            label = { Text("Akrabi Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Dropdown for selecting site name
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = selectedSiteName,
-                onValueChange = { selectedSiteName = it },
-                label = { Text("Site Name") },
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { dropdownExpanded = true }) {
-                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Select Site Name")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(title) }
             )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
 
-            DropdownMenu(
-                expanded = dropdownExpanded,
-                onDismissRequest = { dropdownExpanded = false }
-            ) {
-                // Existing site names
-                collectionSites.forEach { site ->
+            OutlinedTextField(
+                value = akrabiNumber,
+                onValueChange = { akrabiNumber = it },
+                label = { Text(text = stringResource(id = R.string.akrabi_number)) },
+                isError = validationErrors.contains(akrabiNumberError),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterAkrabiNumber),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequesterAkrabi.requestFocus() }
+                )
+            )
+            if (validationErrors.contains(akrabiNumberError)) {
+                Text(
+                    text = akrabiNumberError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = akrabiName,
+                onValueChange = { akrabiName = it },
+                label = { Text(text = stringResource(id = R.string.akrabi_name)) },
+                isError = validationErrors.contains(akrabiNameError),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterAkrabi),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequesterSite.requestFocus() }
+                )
+            )
+            if (validationErrors.contains(akrabiNameError)) {
+                Text(
+                    text = akrabiNameError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Dropdown for selecting site name
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = selectedSiteName,
+                    onValueChange = { selectedSiteName = it },
+                    label = { Text(text = stringResource(id = R.string.select_or_create_site)) },
+                    readOnly = true,
+                    isError = validationErrors.contains(siteError),
+                    trailingIcon = {
+                        IconButton(onClick = { dropdownExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Select Site Name"
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequesterSite)
+                )
+
+                DropdownMenu(
+                    expanded = dropdownExpanded,
+                    onDismissRequest = { dropdownExpanded = false }
+                ) {
+                    collectionSites.forEach { site ->
+                        DropdownMenuItem(
+                            text = { Text(site.name) },
+                            onClick = {
+                                selectedSiteName = site.name
+                                dropdownExpanded = false
+                            }
+                        )
+                    }
+
+                    // Option to create a new site name
                     DropdownMenuItem(
-                        text = { Text(site.name) },
+                        text = { Text(stringResource(id = R.string.create_new_site)) },
                         onClick = {
-                            selectedSiteName = site.name
                             dropdownExpanded = false
+                            selectedSiteName = "" // Clear the selected site name
+                            navController.navigate("addSite") // Navigate to the add site screen
                         }
                     )
                 }
+            }
 
-                // Option to create a new site name
-                DropdownMenuItem(
-                    text = { Text("Create New Site") },
-                    onClick = {
-                        dropdownExpanded = false
-                        selectedSiteName = "" // Clear the selected site name
-                        navController.navigate("addSite") // Navigate to the add site screen
+            if (validationErrors.contains(siteError)) {
+                Text(
+                    text = siteError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(onClick = onCancel,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                    Text(text = stringResource(id = R.string.cancel), color = Color.White)
+                }
+
+                Button(onClick = {
+                    validationErrors = validateForm() // Validate the form
+                    if (validationErrors.isEmpty()) {
+                        val updatedAkrabi = Akrabi(
+                            id = akrabi?.id ?: 0, // Use existing ID if editing
+                            akrabiNumber = akrabiNumber,
+                            akrabiName = akrabiName,
+                            siteName = selectedSiteName
+                        )
+                        onSubmit(updatedAkrabi)
                     }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(onClick = onCancel) {
-                Text("Cancel")
-            }
-
-            Button(onClick = {
-                val updatedAkrabi = Akrabi(
-                    id = akrabi?.id ?: 0, // Use existing ID if editing
-                    akrabiNumber = akrabiNumber,
-                    akrabiName = akrabiName,
-                    siteName = selectedSiteName
-                )
-                onSubmit(updatedAkrabi)
-            }) {
-                Text("Submit")
+                }) {
+                    Text(text = stringResource(id = R.string.submit))
+                }
             }
         }
     }
@@ -1043,11 +1450,12 @@ fun CreateAkrabiForm(
 
 
 
+
 @Composable
 fun CreateAkrabiFormScreen(navController: NavController,akrabiViewModel: AkrabiViewModel,collectionSites: List<CollectionSite>) {
     CreateAkrabiForm(
         navController = navController,
-        title="Create Akrabi Form",
+        title=stringResource(id=R.string.create_akrabi_form),
         akrabi = null,
         collectionSites = collectionSites,
         onSubmit = { newAkrabi ->
@@ -1370,60 +1778,62 @@ fun EditAkrabiScreen(
     // Observe LiveData from ViewModel
     val akrabi by viewModel.getAkrabiById(akrabiId).observeAsState()
 
-    // Logging for debugging
-    println("Akrabi ID $akrabiId")
-    println("Akrabi $akrabi")
+    // State to control the visibility of the confirmation dialog
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+
+    // Store the updated Akrabi object temporarily before confirmation
+    var updatedAkrabi: Akrabi? by remember { mutableStateOf(null) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-//        Text(
-//            text = "Edit Akrabi Form",
-//            style = MaterialTheme.typography.headlineMedium
-//        )
         // Display a loading indicator while waiting for data
         if (akrabi == null) {
             CircularProgressIndicator(modifier = Modifier.fillMaxSize())
         } else {
             CreateAkrabiForm(
                 navController = navController,
-                title="Edit Akrabi Form",
+                title= stringResource(id=R.string.edit_akrabi_form),
                 akrabi = akrabi, // Pass existing data to pre-fill the form
                 collectionSites = collectionSites, // Get the site names for dropdown
-                onSubmit = { updatedAkrabi ->
-                    viewModel.updateAkrabi(updatedAkrabi)
-                    navController.navigate("akrabi_list_screen")
+                onSubmit = { tempUpdatedAkrabi ->
+                    // Store the updated Akrabi and show the confirmation dialog
+                    updatedAkrabi = tempUpdatedAkrabi
+                    showConfirmationDialog = true
                 },
                 onCancel = {
                     navController.navigate("akrabi_list_screen")
                 }
             )
         }
+
+        // Show confirmation dialog if the flag is set to true
+        if (showConfirmationDialog && updatedAkrabi != null) {
+            AlertDialog(
+                onDismissRequest = { showConfirmationDialog = false },
+                title = { Text(text = stringResource(id = R.string.confirm_update)) },
+                text = { Text(text = stringResource(id = R.string.are_you_sure_save_the_changes)) },
+                confirmButton = {
+                    Button(onClick = {
+                        // Update the Akrabi and navigate back to the list screen
+                        viewModel.updateAkrabi(updatedAkrabi!!)
+                        showConfirmationDialog = false
+                        navController.navigate("akrabi_list_screen")
+                    }) {
+                        Text(text = stringResource(id = R.string.yes))
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = {
+                        // Dismiss the dialog without updating
+                        showConfirmationDialog = false
+                    }) {
+                        Text(text = stringResource(id = R.string.no))
+                    }
+                }
+            )
+        }
     }
-}
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun BuyThroughAkrabiFormScreen(navController: NavController) {
-    // Assume you have collectionSites and akrabis available here
-    var collectionSites by remember { mutableStateOf(listOf<CollectionSite>()) }
-    var akrabis by remember { mutableStateOf(listOf<Akrabi>()) }
-
-    BuyThroughAkrabiForm(
-        collectionSites = collectionSites,
-        akrabis = akrabis,
-        onCreateAkrabi = { newAkrabi ->
-            // Navigate to CreateAkrabiFor
-            navController.navigate("create_akrabi_form")
-        },
-        onSubmit = { buyThroughAkrabi ->
-            // Handle form submission
-            // e.g., save data or navigate to another screen
-        },
-        navController = navController
-    )
 }

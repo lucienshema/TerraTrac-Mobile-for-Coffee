@@ -37,6 +37,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -525,7 +527,7 @@ fun FarmForm(
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
@@ -536,17 +538,18 @@ fun FarmForm(
             label = { Text(stringResource(id = R.string.farm_name) + " (*)",color = inputLabelColor)},
             supportingText = { if (!isValid && farmerName.isBlank()) Text(stringResource(R.string.error_farmer_name_empty) + " (*)") },
             isError = !isValid && farmerName.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
@@ -554,7 +557,7 @@ fun FarmForm(
                     false
                 }
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
@@ -565,7 +568,7 @@ fun FarmForm(
             label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
@@ -573,7 +576,7 @@ fun FarmForm(
                     false
                 }
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
@@ -584,20 +587,21 @@ fun FarmForm(
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester1)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom =4.dp)
         )
-        TextField(
+        OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
@@ -608,25 +612,26 @@ fun FarmForm(
             label = { Text(stringResource(id = R.string.district) + " (*)", color =inputLabelColor) },
             supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester2)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 4.dp)
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextField(
+            OutlinedTextField(
                 singleLine = true,
                 value = truncateToDecimalPlaces(size,9),
                 onValueChange = { inputValue ->
@@ -669,18 +674,19 @@ fun FarmForm(
                     }
                 },
                 isError = isFormSubmitted && (!isValidSize || size.isBlank()),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
-                    focusedIndicatorColor = inputBorder,
-                    unfocusedIndicatorColor = inputBorder,
-                    errorIndicatorColor = Color.Red
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder,
+                    errorBorderColor = Color.Red
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
                     .weight(1f)
-                    .padding(end = 16.dp)
+                    .padding(end = 8.dp)
             )
             // Size measure
             ExposedDropdownMenuBox(
@@ -688,7 +694,7 @@ fun FarmForm(
                 onExpandedChange = { expanded = !expanded },
                 modifier = Modifier.weight(1f)
             ) {
-                TextField(
+                OutlinedTextField(
                     readOnly = true,
                     value = selectedUnit,
                     onValueChange = { },
@@ -698,7 +704,9 @@ fun FarmForm(
                             expanded = expanded
                         )
                     },
-                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                    ),
                     modifier = Modifier.menuAnchor()
                 )
                 ExposedDropdownMenu(
@@ -719,14 +727,14 @@ fun FarmForm(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
+//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
 //        if ((size.toFloatOrNull() ?: 0f) < 4f) {
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                TextField(
+                OutlinedTextField(
                     readOnly = true,
                     value = latitude,
 //                    onValueChange = {
@@ -764,13 +772,14 @@ fun FarmForm(
                     isError = !isValid && latitude.split(".").last().length < 6,
                     colors = TextFieldDefaults.textFieldColors(
                         errorLeadingIconColor = Color.Red,
+                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 4.dp)
                 )
-                Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
-                TextField(
+                Spacer(modifier = Modifier.width(8.dp)) // Add space between the latitude and longitude input fields
+                OutlinedTextField(
                     readOnly = true,
                     value = longitude,
 //                    onValueChange = {
@@ -809,10 +818,11 @@ fun FarmForm(
                     isError = !isValid && longitude.split(".").last().length < 6,
                     colors = TextFieldDefaults.textFieldColors(
                         errorLeadingIconColor = Color.Red,
+                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 4.dp)
                 )
             }
         }

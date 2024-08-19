@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -70,18 +71,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.BuyThroughAkrabi
 import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.database.FarmViewModel
@@ -311,8 +319,8 @@ fun BoughtItemsList(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(text = "Confirm Delete") },
-            text = { Text(text = "Are you sure you want to delete this item? This action cannot be undone.") },
+            title = { Text(text = stringResource(id=R.string.confirm))},
+            text = { Text(text = stringResource(id =R.string.delete_this_item_cannot)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -321,7 +329,7 @@ fun BoughtItemsList(
                         itemToDelete = null
                     }
                 ) {
-                    Text("Delete")
+                    Text(text= stringResource(id=R.string.delete))
                 }
             },
             dismissButton = {
@@ -331,7 +339,7 @@ fun BoughtItemsList(
                         itemToDelete = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(text= stringResource(id=R.string.cancel))
                 }
             }
         )
@@ -341,7 +349,7 @@ fun BoughtItemsList(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("Bought Items") },
+                        title = { Text(text= stringResource(id=R.string.bought_items)) },
                         navigationIcon = {
 //                            IconButton(onClick = { drawerVisible = !drawerVisible }) {
                             IconButton(onClick = { isDrawerOpen = !isDrawerOpen }) {
@@ -418,7 +426,7 @@ fun BoughtItemsList(
                             }
 
                             filteredItems.isEmpty() -> {
-                                Text("No items bought yet")
+                                Text(text= stringResource(id =R.string.no_bought_items))
                             }
 
                             else -> {
@@ -1065,6 +1073,7 @@ fun BoughtItemCardDirectBuy(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EditDirectBuyForm(
@@ -1123,11 +1132,68 @@ fun EditDirectBuyForm(
         photoUri = null
     }
 
+    var validationErrors by remember { mutableStateOf(emptyList<String>()) } // Store validation errors
+    val focusRequesterLocation = FocusRequester()
+    val focusRequesterSite = FocusRequester()
+    val focusRequesterFarmer = FocusRequester()
+    val focusRequesterCherrySold = FocusRequester()
+    val focusRequesterPricePerKg = FocusRequester()
+    val focusRequesterPaid = FocusRequester()
+
+    // Focus manager
+    val focusManager = LocalFocusManager.current
+
+    // Handle focus change when "Next" is pressed
+    fun onNextFocus(currentField: FocusRequester, nextField: FocusRequester) {
+        currentField.requestFocus()
+        focusManager.moveFocus(FocusDirection.Down)
+        nextField.requestFocus()
+    }
+
+
+    // Get the strings from resources within a @Composable context
+    val locationError = stringResource(id = R.string.location)
+    val siteError = stringResource(id = R.string.select_or_create_site)
+    val farmerError = stringResource(id = R.string.farmer_name)
+    val cherryError = stringResource(id = R.string.cherry_sold)
+    val priceError = stringResource(id = R.string.price_per_kg)
+    val paidError = stringResource(id = R.string.paid)
+
+    // Form validation function
+    fun validateForm(
+        location: String,
+        selectedSiteName: String,
+        farmerName: String,
+        cherrySold: String,
+        pricePerKg: String
+    ): List<String> {
+        val errors = mutableListOf<String>()
+        if (location.isBlank()) errors.add(locationError)
+        if (selectedSiteName.isBlank()) errors.add(siteError)
+        if (farmerName.isBlank()) errors.add(farmerError)
+        if (cherrySold.isBlank() || cherrySold.toDoubleOrNull() == null) errors.add(cherryError)
+        if (pricePerKg.isBlank() || pricePerKg.toDoubleOrNull() == null) errors.add(priceError)
+        if (paid.isBlank() || paid.toDoubleOrNull() == null) errors.add(paidError)
+        return errors
+    }
+
+    // Define string constants
+    val title = stringResource(id = R.string.direct_buy)
+    val dateLabel = stringResource(id = R.string.date)
+    val timeLabel = stringResource(id = R.string.time)
+    val locationLabel = stringResource(id = R.string.location)
+    val SiteLabel = stringResource(id = R.string.site_name)
+    val FarmerLabel = stringResource(id = R.string.farmer_name)
+    val cherrySoldLabel = stringResource(id = R.string.cherry_sold)
+    val pricePerKgLabel = stringResource(id = R.string.price_per_kg)
+    val paidLabel = stringResource(id = R.string.paid)
+    val submitLabel = stringResource(id = R.string.submit)
+
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Confirm Update") },
-            text = { Text("Are you sure you want to save these changes?") },
+            title = { Text(text= stringResource(id = R.string.confirm_update)) },
+            text = { Text(text= stringResource(id = R.string.are_you_sure_save_the_changes)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1152,133 +1218,260 @@ fun EditDirectBuyForm(
                         showDialog = false
                     }
                 ) {
-                    Text("Confirm")
+                    Text(text= stringResource(id= R.string.save_changes))
                 }
             },
             dismissButton = {
                 Button(
                     onClick = { showDialog = false }
                 ) {
-                    Text("Cancel")
+                    Text(text= stringResource(id= R.string.cancel))
                 }
             }
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(text = "Update Bought Item", style = MaterialTheme.typography.headlineMedium)
-
-        // Date field
-        TextField(
-            value = date.toString(),
-            onValueChange = { /* Disable manual input, use a date picker instead */ },
-            label = { Text("Date") },
-            readOnly = true,
-            trailingIcon = {
-                IconButton(onClick = { /* Show date picker dialog */ }) {
-                    Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
-                }
-            }
-        )
-
-        // Time field
-        TextField(
-            value = time.toString(),
-            onValueChange = { /* Disable manual input, use a time picker instead */ },
-            label = { Text("Time") },
-            readOnly = true,
-            trailingIcon = {
-                IconButton(onClick = { /* Show time picker dialog */ }) {
-                    Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
-                }
-            }
-        )
-
-        TextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Location") }
-        )
-
-        TextField(
-            value = selectedSiteName,
-            onValueChange = { selectedSiteName = it },
-            label = { Text("Site Name") }
-        )
-
-        TextField(
-            value = farmerSearch,
-            onValueChange = { farmerSearch = it },
-            label = { Text("Farmer Search") }
-        )
-
-        TextField(
-            value = farmerNumber,
-            onValueChange = { farmerNumber = it },
-            label = { Text("Farmer Number") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        TextField(
-            value = farmerName,
-            onValueChange = { farmerName = it },
-            label = { Text("Farmer Name") }
-        )
-
-        TextField(
-            value = cherrySold,
-            onValueChange = { cherrySold = it },
-            label = { Text("Cherry Sold") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        TextField(
-            value = pricePerKg,
-            onValueChange = { pricePerKg = it },
-            label = { Text("Price Per Kg") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        TextField(
-            value = paid,
-            onValueChange = { paid = it },
-            label = { Text("Paid") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        // Photo Picker
-        PhotoPicker(
-            photoUri = photoUri,
-//            onPhotoSelected = { uri -> photoUri = uri },
-            onPickPhotoClick = { pickPhoto() },
-            onRemovePhotoClick = { removePhoto() }
-        )
-
-        Row(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text =stringResource(id = R.string.update_bought_item)) }
+            )
+        }
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(paddingValues)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
-                onClick = { showDialog = true },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Save Changes")
+
+//        // Date field
+//        TextField(
+//            value = date.toString(),
+//            onValueChange = { /* Disable manual input, use a date picker instead */ },
+//            label = { Text("Date") },
+//            readOnly = true,
+//            trailingIcon = {
+//                IconButton(onClick = { /* Show date picker dialog */ }) {
+//                    Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
+//                }
+//            }
+//        )
+//
+//        // Time field
+//        TextField(
+//            value = time.toString(),
+//            onValueChange = { /* Disable manual input, use a time picker instead */ },
+//            label = { Text("Time") },
+//            readOnly = true,
+//            trailingIcon = {
+//                IconButton(onClick = { /* Show time picker dialog */ }) {
+//                    Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
+//                }
+//            }
+//        )
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text(stringResource(id = R.string.location)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterLocation),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterLocation, focusRequesterSite)
+                    }
+                ),
+                isError = validationErrors.contains(stringResource(id = R.string.location))
+            )
+            if (validationErrors.contains(stringResource(id = R.string.location))) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            OutlinedTextField(
+                singleLine = true,
+                value = selectedSiteName,
+                onValueChange = { selectedSiteName = it },
+                label = { Text(text = stringResource(id = R.string.site_name)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterSite, focusRequesterFarmer)
+                    }
+                ),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterSite),
+                isError = validationErrors.contains(SiteLabel)
+            )
+
+            if (validationErrors.contains(SiteLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+//            TextField(
+//                value = farmerSearch,
+//                onValueChange = { farmerSearch = it },
+//                label = { Text("Farmer Search") }
+//            )
+
+            OutlinedTextField(
+                value = farmerName,
+                onValueChange = { farmerName = it },
+                label = { Text(text = stringResource(id = R.string.farmer_name)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterFarmer, focusRequesterCherrySold)
+                    }
+                ),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterFarmer),
+                isError = validationErrors.contains(FarmerLabel)
+            )
+
+            if (validationErrors.contains(FarmerLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = farmerNumber,
+                onValueChange = { farmerNumber = it },
+                label = { Text(text= stringResource(id=R.string.farmer_number)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            if (validationErrors.contains(farmerNumber)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = cherrySold,
+                onValueChange = { cherrySold = it },
+                label = { Text(text = stringResource(id = R.string.cherry_sold)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterCherrySold),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterCherrySold, focusRequesterPricePerKg)
+                    }
+                ),
+                isError = validationErrors.contains(cherrySoldLabel)
+            )
+            if (validationErrors.contains(cherrySoldLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = pricePerKg,
+                onValueChange = { pricePerKg = it },
+                label = { Text(text = stringResource(id = R.string.price_per_kg)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPricePerKg),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
+                isError = validationErrors.contains(pricePerKgLabel)
+            )
+            if (validationErrors.contains(pricePerKgLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = paid,
+                onValueChange = { paid = it },
+                label = { Text(text = stringResource(id = R.string.paid)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPaid),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
+                isError = validationErrors.contains(paidLabel)
+            )
+            if (validationErrors.contains(paidLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            // Photo Picker
+            PhotoPicker(
+                photoUri = photoUri,
+//            onPhotoSelected = { uri -> photoUri = uri },
+                onPickPhotoClick = { pickPhoto() },
+                onRemovePhotoClick = { removePhoto() }
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Cancel", color = Color.White)
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text(text= stringResource(id =R.string.cancel), color = Color.White)
+                }
+                Button(
+                    onClick = {
+                        validationErrors = validateForm(
+                            location = location,
+                            selectedSiteName = selectedSiteName,
+                            farmerName = farmerName,
+                            cherrySold = cherrySold,
+                            pricePerKg = pricePerKg
+                        )
+                        if (validationErrors.isEmpty()) {
+                            showDialog = true
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text= stringResource(id =R.string.save_changes))
+                }
             }
         }
     }
@@ -1286,6 +1479,7 @@ fun EditDirectBuyForm(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EditBuyThroughAkrabiForm(
@@ -1345,11 +1539,69 @@ fun EditBuyThroughAkrabiForm(
         photoUri = null
     }
 
+    var validationErrors by remember { mutableStateOf(emptyList<String>()) } // Store validation errors
+    val focusRequesterLocation = FocusRequester()
+    val focusRequesterSite = FocusRequester()
+    val focusRequesterAkrabi = FocusRequester()
+    val focusRequesterCherrySold = FocusRequester()
+    val focusRequesterPricePerKg = FocusRequester()
+    val focusRequesterPaid = FocusRequester()
+
+    // Focus manager
+    val focusManager = LocalFocusManager.current
+
+    // Handle focus change when "Next" is pressed
+    fun onNextFocus(currentField: FocusRequester, nextField: FocusRequester) {
+        currentField.requestFocus()
+        focusManager.moveFocus(FocusDirection.Down)
+        nextField.requestFocus()
+    }
+
+    // Get the strings from resources within a @Composable context
+    val locationError = stringResource(id = R.string.location)
+    val siteError = stringResource(id = R.string.site_name)
+    val akrabiError = stringResource(id = R.string.akrabi_name)
+    val cherryError = stringResource(id = R.string.cherry_sold)
+    val priceError = stringResource(id = R.string.price_per_kg)
+    val paidError = stringResource(id = R.string.paid)
+
+    // Form validation function
+    fun validateFormBuyThroughAkrabi(
+        location: String,
+        selectedSiteName: String,
+        akrabiName: String,
+        cherrySold: String,
+        pricePerKg: String
+    ): List<String> {
+        val errors = mutableListOf<String>()
+        if (location.isBlank()) errors.add(locationError)
+        if (selectedSiteName.isBlank()) errors.add(siteError)
+        if (akrabiName.isBlank()) errors.add(akrabiError)
+        if (cherrySold.isBlank() || cherrySold.toDoubleOrNull() == null) errors.add(cherryError)
+        if (pricePerKg.isBlank() || pricePerKg.toDoubleOrNull() == null) errors.add(priceError)
+        if (paid.isBlank() || paid.toDoubleOrNull() == null) errors.add(paidError)
+        return errors
+    }
+
+    // Define string constants
+    val title = stringResource(id = R.string.buy_through_akrabi)
+    val dateLabel = stringResource(id = R.string.date)
+    val timeLabel = stringResource(id = R.string.time)
+    val locationLabel = stringResource(id = R.string.location)
+    val akrabiLabel = stringResource(id = R.string.akrabi_name)
+    val akrabiNumberLabel = stringResource(id = R.string.akrabi_number)
+    val SiteLabel = stringResource(id = R.string.site_name)
+    val selectAkrabiLabel = stringResource(id = R.string.akrabi_name)
+    val cherrySoldLabel = stringResource(id = R.string.cherry_sold)
+    val pricePerKgLabel = stringResource(id = R.string.price_per_kg)
+    val paidLabel = stringResource(id = R.string.paid)
+    val submitLabel = stringResource(id = R.string.submit)
+
     if (showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
-            title = { Text(text = "Confirm Update") },
-            text = { Text(text = "Are you sure you want to save these changes?") },
+            title = { Text(text = stringResource(id = R.string.confirm_update)) },
+            text = { Text(text = stringResource(id =R.string.are_you_sure_save_the_changes)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1373,136 +1625,269 @@ fun EditBuyThroughAkrabiForm(
                         showConfirmationDialog = false
                     }
                 ) {
-                    Text("Confirm")
+                    Text(text = stringResource(id = R.string.confirm))
                 }
             },
             dismissButton = {
                 Button(
                     onClick = { showConfirmationDialog = false }
                 ) {
-                    Text("Cancel")
+                    Text(text = stringResource(id = R.string.cancel))
                 }
             }
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(text = "Update Bought Item", style = MaterialTheme.typography.headlineMedium)
 
-        // Date and Time pickers
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextField(
-                value = date.toString(),
-                onValueChange = { date = LocalDate.parse(it) },
-                label = { Text("Date") },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { /* Show date picker */ }) {
-                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Pick Date")
-                    }
-                }
-            )
-            TextField(
-                value = time.toString(),
-                onValueChange = { time = LocalTime.parse(it) },
-                label = { Text("Time") },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { /* Show time picker */ }) {
-                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Pick Time")
-                    }
-                }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text =stringResource(id = R.string.update_bought_item)) }
             )
         }
-
-        TextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Location") }
-        )
-
-        TextField(
-            value = selectedSiteName,
-            onValueChange = { selectedSiteName = it },
-            label = { Text("Site Name") }
-        )
-
-        TextField(
-            value = akrabiSearch,
-            onValueChange = { akrabiSearch = it },
-            label = { Text("Akrabi Search") }
-        )
-
-        TextField(
-            value = akrabiNumber,
-            onValueChange = { akrabiNumber = it },
-            label = { Text("Akrabi Number") }
-        )
-
-        TextField(
-            value = akrabiName,
-            onValueChange = { akrabiName = it },
-            label = { Text("Akrabi Name") }
-        )
-
-        TextField(
-            value = cherrySold,
-            onValueChange = { cherrySold = it },
-            label = { Text("Cherry Sold") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        TextField(
-            value = pricePerKg,
-            onValueChange = { pricePerKg = it },
-            label = { Text("Price Per Kg") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        TextField(
-            value = paid,
-            onValueChange = { paid = it },
-            label = { Text("Paid") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-
-        PhotoPicker(
-            photoUri = photoUri,
-//            onPhotoSelected = { uri -> photoUri = uri },
-            onPickPhotoClick = { pickPhoto() },
-            onRemovePhotoClick = { removePhoto() },
-        )
-
-
-        Row(
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(paddingValues)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
-                onClick = { showConfirmationDialog = true },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Save Changes")
+
+//        // Date and Time pickers
+//        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//            TextField(
+//                value = date.toString(),
+//                onValueChange = { date = LocalDate.parse(it) },
+//                label = { Text("Date") },
+//                modifier = Modifier.weight(1f),
+//                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+//                readOnly = true,
+//                trailingIcon = {
+//                    IconButton(onClick = { /* Show date picker */ }) {
+//                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Pick Date")
+//                    }
+//                }
+//            )
+//            TextField(
+//                value = time.toString(),
+//                onValueChange = { time = LocalTime.parse(it) },
+//                label = { Text("Time") },
+//                modifier = Modifier.weight(1f),
+//                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+//                readOnly = true,
+//                trailingIcon = {
+//                    IconButton(onClick = { /* Show time picker */ }) {
+//                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Pick Time")
+//                    }
+//                }
+//            )
+//        }
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text(stringResource(id = R.string.location)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterLocation),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterLocation, focusRequesterSite)
+                    }
+                ),
+                isError = validationErrors.contains(stringResource(id = R.string.location))
+            )
+            if (validationErrors.contains(stringResource(id = R.string.location))) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            OutlinedTextField(
+                singleLine = true,
+                value = selectedSiteName,
+                onValueChange = { selectedSiteName = it },
+                label = { Text(text = stringResource(id = R.string.site_name)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterSite, focusRequesterAkrabi)
+                    }
+                ),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterSite),
+                isError = validationErrors.contains(SiteLabel)
+            )
+
+            if (validationErrors.contains(SiteLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+//        TextField(
+//            value = akrabiSearch,
+//            onValueChange = { akrabiSearch = it },
+//            label = { Text("Akrabi Search") }
+//        )
+
+            OutlinedTextField(
+                value = akrabiName,
+                onValueChange = { akrabiName = it },
+                label = { Text(text = stringResource(id = R.string.akrabi_name)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterAkrabi, focusRequesterCherrySold)
+                    }
+                ),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterAkrabi),
+                isError = validationErrors.contains(akrabiLabel)
+            )
+
+            if (validationErrors.contains(akrabiLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+
+            OutlinedTextField(
+                value = akrabiNumber,
+                onValueChange = { akrabiNumber = it },
+                label = { Text(text = stringResource(id = R.string.akrabi_number)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            if (validationErrors.contains(akrabiNumber)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = cherrySold,
+                onValueChange = { cherrySold = it },
+                label = { Text(text = stringResource(id = R.string.cherry_sold)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterCherrySold),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterCherrySold, focusRequesterPricePerKg)
+                    }
+                ),
+                isError = validationErrors.contains(cherrySoldLabel)
+            )
+            if (validationErrors.contains(cherrySoldLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = pricePerKg,
+                onValueChange = { pricePerKg = it },
+                label = { Text(text = stringResource(id = R.string.price_per_kg)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPricePerKg),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
+                isError = validationErrors.contains(pricePerKgLabel)
+            )
+            if (validationErrors.contains(pricePerKgLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            OutlinedTextField(
+                value = paid,
+                onValueChange = { paid = it },
+                label = { Text(text = stringResource(id = R.string.paid)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPaid),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
+                isError = validationErrors.contains(paidLabel)
+            )
+            if (validationErrors.contains(paidLabel)) {
+                Text(
+                    text = stringResource(id = R.string.invalid_value),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            PhotoPicker(
+                photoUri = photoUri,
+//            onPhotoSelected = { uri -> photoUri = uri },
+                onPickPhotoClick = { pickPhoto() },
+                onRemovePhotoClick = { removePhoto() },
+            )
+
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Cancel", color = Color.White)
+
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text(text = stringResource(id = R.string.cancel), color = Color.White)
+                }
+
+                Button(
+                    onClick = {
+                        validationErrors = validateFormBuyThroughAkrabi(
+                            location = location,
+                            selectedSiteName = selectedSiteName,
+                            akrabiName = akrabiName,
+                            cherrySold = cherrySold,
+                            pricePerKg = pricePerKg
+                        )
+                        if (validationErrors.isEmpty()) {
+                            showConfirmationDialog = true
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = stringResource(id = R.string.save_changes))
+                }
             }
         }
     }

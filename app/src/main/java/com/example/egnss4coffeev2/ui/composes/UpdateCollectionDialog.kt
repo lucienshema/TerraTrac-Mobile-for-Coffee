@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -97,21 +98,21 @@ fun UpdateCollectionDialog(
                 Column {
                     Text(stringResource(id = R.string.confirm_update_site))
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
                         label = { Text(stringResource(id = R.string.site_name)) },
                         isError = name.isBlank(),
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
-                    TextField(
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OutlinedTextField(
                         value = agentName,
                         onValueChange = { agentName = it },
                         label = { Text(stringResource(id = R.string.agent_name)) },
                         isError = agentName.isBlank(),
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
-                    TextField(
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OutlinedTextField(
                         value = phoneNumber,
                         onValueChange = { phoneNumber = it },
                         label = { Text(stringResource(id = R.string.phone_number)) },
@@ -124,8 +125,8 @@ fun UpdateCollectionDialog(
                             errorLeadingIconColor = Color.Red,
                         ),
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
-                    TextField(
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text(stringResource(id = R.string.email)) },
@@ -138,15 +139,15 @@ fun UpdateCollectionDialog(
                             errorLeadingIconColor = Color.Red,
                         ),
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
-                    TextField(
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OutlinedTextField(
                         value = village,
                         onValueChange = { village = it },
                         label = { Text(stringResource(id = R.string.village)) },
                         isError = village.isBlank(),
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
-                    TextField(
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OutlinedTextField(
                         value = district,
                         onValueChange = { district = it },
                         label = { Text(stringResource(id = R.string.district)) },
