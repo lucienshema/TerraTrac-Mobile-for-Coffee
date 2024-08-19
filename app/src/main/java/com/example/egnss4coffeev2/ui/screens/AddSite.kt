@@ -181,6 +181,36 @@ fun SiteForm(navController: NavController) {
 //        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester2.requestFocus() }
+            ),
+            value = agentName,
+            onValueChange = { agentName = it },
+            label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
+            supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
+            isError = !isValid && agentName.isBlank(),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder,
+                errorBorderColor = Color.Red
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+                .onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester2.requestFocus()
+                    }
+                    false
+                }
+        )
+        OutlinedTextField(
+            singleLine = true,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next,
                 keyboardType = KeyboardType.Phone
