@@ -1,5 +1,8 @@
 package com.example.egnss4coffeev2.ui.screens
 
+
+import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -73,6 +76,9 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -86,8 +92,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -98,6 +107,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -105,6 +115,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.egnss4coffeev2.R
@@ -112,6 +123,8 @@ import com.example.egnss4coffeev2.database.Akrabi
 import com.example.egnss4coffeev2.database.AkrabiViewModel
 import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.database.Farm
+import com.example.egnss4coffeev2.utils.Language
+import com.example.egnss4coffeev2.utils.LanguageViewModel
 import kotlinx.coroutines.delay
 
 
@@ -165,9 +178,9 @@ fun ImagePicker(
 
         // OutlinedTextField acting as the photo selection button
             OutlinedTextField(
-                value = "Select a Photo",
+                value = stringResource(R.string.select_photo),
                 onValueChange = {}, // No-op since the field is read-only
-                label = { Text("Photo") },
+                label = { Text(text=stringResource(R.string.photo)) },
                 readOnly = true,
                 trailingIcon = {
                     IconButton(onClick = { pickPhoto() }) {
@@ -236,12 +249,12 @@ fun DatePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text("OK")
+                Text(text=stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(text=stringResource(R.string.cancel))
             }
         }
     )
@@ -282,12 +295,12 @@ fun TimePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text("OK")
+                Text(text=stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(text=stringResource(R.string.cancel))
             }
         },
         icon = {
@@ -715,17 +728,6 @@ fun BuyThroughAkrabiForm(
                         photo = uri?.toString() ?: ""
                     }
 
-                    // Display selected image
-                    photoUri?.let {
-                        Image(
-                            painter = rememberImagePainter(it),
-                            contentDescription = "Selected image",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.Gray)
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1184,18 +1186,6 @@ fun DirectBuyForm(
                 photo = uri?.toString() ?: ""
             }
 
-            // Display selected image
-            photoUri?.let {
-                Image(
-                    painter = rememberImagePainter(it),
-                    contentDescription = "Selected image",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Gray)
-                )
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Submit button
@@ -1325,7 +1315,10 @@ fun CreateAkrabiForm(
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequesterAkrabiNumber),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                keyboardOptions = KeyboardOptions(
+                    imeAction =  ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequesterAkrabi.requestFocus() }
                 )
@@ -1475,6 +1468,7 @@ fun CreateAkrabiFormScreen(navController: NavController,akrabiViewModel: AkrabiV
 @Composable
 fun AkrabiListScreen(
     akrabis: List<Akrabi>,
+    onViewDetails: (Akrabi) -> Unit,
     onEdit: (Akrabi) -> Unit,
     onDelete: (Akrabi) -> Unit
 ) {
@@ -1494,7 +1488,8 @@ fun AkrabiListScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 8.dp)
+                        .clickable { onViewDetails(akrabi) },
                     elevation = CardDefaults.cardElevation(4.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -1509,15 +1504,15 @@ fun AkrabiListScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "Number: ${akrabi.akrabiNumber}",
+                                text = "${stringResource(id=R.string.akrabi_number)}: ${akrabi.akrabiNumber}",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "Name: ${akrabi.akrabiName}",
+                                text = "${stringResource(id=R.string.akrabi_name)}: ${akrabi.akrabiName}",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "Site: ${akrabi.siteName}",
+                                text = "${stringResource(id=R.string.site_name)}: ${akrabi.siteName}",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -1535,7 +1530,7 @@ fun AkrabiListScreen(
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Delete",
-                                    tint = MaterialTheme.colorScheme.error
+                                    tint = Color.Red
                                 )
                             }
                         }
@@ -1546,15 +1541,20 @@ fun AkrabiListScreen(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AkrabiListScreenScreen(navController: NavController) {
+fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<Boolean>,
+                           languageViewModel: LanguageViewModel,
+                           languages: List<Language>) {
     val viewModel: AkrabiViewModel = viewModel()
     val akrabis by viewModel.akrabis.observeAsState(emptyList())
 
     var showDialog by remember { mutableStateOf(false) }
     var akrabiToDelete by remember { mutableStateOf<Akrabi?>(null) }
+
+    val currentLanguage by languageViewModel.currentLanguage.collectAsState()
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
@@ -1570,6 +1570,8 @@ fun AkrabiListScreenScreen(navController: NavController) {
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     var isLoading by remember { mutableStateOf(true) }
+
+    var drawerVisible by remember { mutableStateOf(false) }
 
     // Simulate data loading delay
     LaunchedEffect(Unit) {
@@ -1592,10 +1594,10 @@ fun AkrabiListScreenScreen(navController: NavController) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = {
-                Text(text = "Confirm Delete")
+                Text(text=stringResource(id=R.string.confirm))
             },
             text = {
-                Text(text = "Are you sure you want to delete ${akrabiToDelete?.akrabiName}? This action cannot be undone.")
+                Text(text=stringResource(id=R.string.item_will_be_deleted))
             },
             confirmButton = {
                 Button(
@@ -1605,7 +1607,7 @@ fun AkrabiListScreenScreen(navController: NavController) {
                         akrabiToDelete = null
                     }
                 ) {
-                    Text("Delete")
+                    Text(text=stringResource(id=R.string.delete))
                 }
             },
             dismissButton = {
@@ -1615,7 +1617,7 @@ fun AkrabiListScreenScreen(navController: NavController) {
                         akrabiToDelete = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(text=stringResource(id=R.string.cancel))
                 }
             }
         )
@@ -1625,9 +1627,9 @@ fun AkrabiListScreenScreen(navController: NavController) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Akrabi List") },
+                    title = { Text(text= stringResource(id=R.string.akrabi_list)) },
                     navigationIcon = {
-                        IconButton(onClick = { isDrawerOpen = !isDrawerOpen }) {
+                        IconButton(onClick = { drawerVisible = ! drawerVisible }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     },
@@ -1682,6 +1684,10 @@ fun AkrabiListScreenScreen(navController: NavController) {
 
             AkrabiListScreen(
                 akrabis = akrabis,
+                onViewDetails = { akrabi ->
+                    // Navigate to the View Akrabi details screen
+                    navController.navigate("akrabiDetails/${akrabi.id}")
+                },
                 onEdit = { akrabi ->
                     // Navigate to the Edit Akrabi form with pre-filled data
                     navController.navigate("edit_akrabi_form/${akrabi.id}")
@@ -1696,71 +1702,145 @@ fun AkrabiListScreenScreen(navController: NavController) {
         )
     }
 
-    // Sidebar Drawer Overlay
-    // if (drawerVisible) {
-    if (isDrawerOpen) {
+    if (drawerVisible) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0x99000000)) // Semi-transparent background
-                // .clickable { drawerVisible = false }, // Dismiss drawer on background click
-                .clickable { isDrawerOpen = false },
+                .background(Color(0x99000000))
+                .clickable { drawerVisible = false },
             contentAlignment = Alignment.TopStart
         ) {
-            Column(
-                //modifier = Modifier
-                modifier = gestureModifier
+            Row(
+                modifier = Modifier
                     .fillMaxHeight()
                     .width(250.dp)
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Menu",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                Divider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(16.dp)
+                ) {
+                    // Header
+                    Text(
+                        text = stringResource(id = R.string.menu),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Divider()
 
-                DrawerItem(
-                    text = "Home",
-                    onClick = {
-                        navController.navigate("home")
-                        // drawerVisible = false
-                        isDrawerOpen = false
+                    // Scrollable Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 64.dp)
+                        ) {
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.home),
+                                    icon = Icons.Default.Home,
+                                    onClick = {
+                                        navController.navigate("shopping")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    icon = Icons.Default.Person,
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.collection_site_registration),
+                                    icon = Icons.Default.LocationOn,
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.farmer_registration),
+                                    icon = Icons.Default.Person,
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                // Dark Mode Toggle
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.light_dark_theme),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Switch(
+                                        checked = darkMode.value,
+                                        onCheckedChange = {
+                                            darkMode.value = it
+                                            sharedPreferences.edit().putBoolean("dark_mode", it)
+                                                .apply()
+                                        }
+                                    )
+                                }
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                // Language Selector
+                                Text(
+                                    text = stringResource(id = R.string.select_language),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    languages.forEach { language ->
+                                        LanguageCardSideBar(
+                                            language = language,
+                                            isSelected = language == currentLanguage,
+                                            onSelect = {
+                                                languageViewModel.selectLanguage(language, context)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            item {
+                                // Logout Item
+                                DrawerItem(
+                                    text = stringResource(id = R.string.logout),
+                                    icon = Icons.Default.ExitToApp,
+                                    onClick = {
+                                        // Call your logout function here
+                                        // navigate to login screen or refresh UI
+                                        navController.popBackStack()
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                        }
                     }
-                )
-                DrawerItem(
-                    text = "Akrabi  Registration",
-                    onClick = {
-                        navController.navigate("akrabi_list_screen")
-                        //drawerVisible = false
-                        isDrawerOpen = false
-                    }
-                )
-
-                DrawerItem(
-                    text = "Collection Site Registaration",
-                    onClick = {
-                        navController.navigate("siteList")
-                        // drawerVisible = false
-                        isDrawerOpen = false
-                    }
-                )
-
-                DrawerItem(
-                    text = "Farmer Registaration",
-                    onClick = {
-                        //val siteId = farmViewModel.getLastSiteId()
-//                            navController.navigate("farmList/$siteId")
-                        navController.navigate("siteList")
-                        // drawerVisible = false
-                        isDrawerOpen = false
-                    }
-                )
-
-
+                }
             }
         }
     }
@@ -1837,3 +1917,124 @@ fun EditAkrabiScreen(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun AkrabiDetailScreen(
+    akrabi: Akrabi,
+    navController: NavHostController,
+    akrabiViewModel: AkrabiViewModel,
+    onBack: () -> Unit // Callback for navigation back
+) {
+    var showDialog by remember { mutableStateOf(false) } // State to show/hide delete confirmation dialog
+    var itemToDelete by remember { mutableStateOf<Akrabi?>(null) } // State to hold the item to delete
+
+    fun deleteAkrabi(akrabi: Akrabi, akrabiViewModel: AkrabiViewModel) {
+        akrabiViewModel.deleteAkrabi(akrabi)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.akrabi_details)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
+                    }
+                }
+            )
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 64.dp), // Adjust the top padding here to move the Card closer to the header
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally within Column
+            ) {
+                // Card for item details
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp), // Padding for horizontal spacing
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        DetailText(label = stringResource(R.string.akrabi_number), value = akrabi.akrabiNumber)
+                        DetailText(label = stringResource(R.string.akrabi_name), value = akrabi.akrabiName)
+                        DetailText(label = stringResource(R.string.site_name), value = akrabi.siteName)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Row for icons
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .align(Alignment.CenterHorizontally) // Center icons horizontally
+                ) {
+                    IconButton(
+                        onClick = {
+                            // Navigate to edit screen
+                            navController.navigate("edit_akrabi_form/${akrabi.id}")
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp)) // Space between icons
+                    IconButton(
+                        onClick = {
+                            // Trigger the confirmation dialog
+                            itemToDelete = akrabi
+                            showDialog = true
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.Red
+                        )
+                    }
+                }
+            }
+        }
+
+        // Delete Confirmation Dialog
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(text = stringResource(id = R.string.confirm)) },
+                text = { Text(text = stringResource(id = R.string.are_you_sure)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            itemToDelete?.let { deleteAkrabi(it, akrabiViewModel) } // Perform the delete action
+                            showDialog = false // Close the dialog
+                            onBack() // Navigate back after deletion
+                        }
+                    ) {
+                        Text(text = stringResource(id = R.string.confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
+                }
+            )
+        }
+    }
+}
+
+
+

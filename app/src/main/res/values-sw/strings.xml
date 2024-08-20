@@ -135,5 +135,56 @@
     <string name="invalid_farms">%1$d Rekodi za mashamba zisizo sahihi hazijaingizwa</string>
     <string name="invalid_farms_with_names">%1$d rekodi za mashamba zisizo sahihi hazikuletewa. Wakulima: %2$s</string>
 
+    <string name="direct_buy">Kununua Moja kwa Moja</string>
+    <string name="buy_through_akrabi">Nunua Kupitia Akrabi</string>
+    <string name="date">Tarehe</string>
+    <string name="time">Muda</string>
+    <string name="location">Mahali</string>
+    <string name="select_or_create_site">Chagua au Unda Tovuti</string>
+    <string name="farmer_name">Jina la Mkulima</string>
+    <string name="farmer_number">Nambari ya Mkulima</string>
+    <string name="akrabi_name">Jina la Akrabi</string>
+    <string name="cherry_sold">Zabibu Zilizouzwa (kg)</string>
+    <string name="price_per_kg">Bei kwa kilo</string>
+    <string name="paid">Imelipwa</string>
+    <string name="total_paid">Jumla Iliyolipwa</string>
+    <string name="submit">Wasilisha</string>
+    <string name="required_field">Sehemu hii ni ya lazima</string>
+    <string name="select_site_name">Tafadhali chagua jina la tovuti</string>
+    <string name="select_or_create_akrabi">Chagua au Unda Akrabi</string>
+    <string name="akrabi_number">Nambari ya Akrabi</string>
+    <string name="create_new_site">Unda Tovuti Mpya</string>
+    <string name="create_new_akrabi">Unda Akrabi Mpya</string>
+    <string name="invalid_value">Thamani Batili</string>
+    <string name="update_bought_item">Sasisha Kipengee Ulichonunua</string>
+    <string name="are_you_sure_save_the_changes">Je, una uhakika unataka kuhifadhi mabadiliko haya?</string>
+    <string name="save_changes">Hifadhi Mabadiliko</string>
+    <string name="delete_this_item_cannot">Je, una uhakika unataka kufuta kipengee hiki? Hatua hii haiwezi kubatilishwa.</string>
+    <string name="delete">Futa</string>
+    <string name="bought_items">Vitu Vilivyonunuliwa</string>
+    <string name="no_bought_items">Hakuna vitu vilivyonunuliwa bado</string>
+    <string name="create_akrabi_form">Fomu ya Kuunda Akrabi</string>
+    <string name="edit_akrabi_form">Fomu ya Hariri Akrabi</string>
+    <string name="menu">Menyu</string>
+    <string name="home">Nyumbani</string>
+    <string name="akrabi_registration">Usajili wa Akrabi</string>
+    <string name="collection_site_registration">Usajili wa Tovuti ya Mkusanyiko</string>
+    <string name="farmer_registration">Usajili wa Mkulima</string>
+    <string name="search_placeholder">Tafuta...</string>
+    <string name="item_details_title">Maelezo ya Kipengee</string>
+    <string name="back">Rudi</string>
+    <string name="bought_item_image_description">Picha ya Kipengee Kilichonunuliwa</string>
+    <string name="start_date">Tarehe ya Mwanzo</string>
+    <string name="end_date">Tarehe ya Mwisho</string>
+    <string name="apply">Tumia</string>
+    <string name="clear">Futa</string>
+    <string name="select_date_range">Chagua Kipindi cha Tarehe</string>
+    <string name="photo">Picha</string>
+    <string name="select_photo">Chagua Picha</string>
+    <string name="photo_selected">Picha Imechaguliwa</string>
+    <string name="no_photo_selected">Hakuna Picha Imechaguliwa</string>
+    <string name="logout">Ondoka</string>
+
+
 
 </resources>

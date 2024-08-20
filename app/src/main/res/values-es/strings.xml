@@ -135,5 +135,56 @@
     <string name="invalid_farms">%1$d Registros de granjas inválidos no fueron importados</string>
     <string name="invalid_farms_with_names">%1$d registros de granjas inválidos no fueron importados. Agricultores: %2$s</string>
 
+    <string name="direct_buy">Compra Directa</string>
+    <string name="buy_through_akrabi">Comprar a través de Akrabi</string>
+    <string name="date">Fecha</string>
+    <string name="time">Hora</string>
+    <string name="location">Ubicación</string>
+    <string name="select_or_create_site">Seleccionar o Crear Sitio</string>
+    <string name="farmer_name">Nombre del Agricultor</string>
+    <string name="farmer_number">Número del Agricultor</string>
+    <string name="akrabi_name">Nombre de Akrabi</string>
+    <string name="cherry_sold">Cereza Vendida (kg)</string>
+    <string name="price_per_kg">Precio por kg</string>
+    <string name="paid">Pagado</string>
+    <string name="total_paid">Total Pagado</string>
+    <string name="submit">Enviar</string>
+    <string name="required_field">Este campo es obligatorio</string>
+    <string name="select_site_name">Por favor seleccione un nombre de sitio</string>
+    <string name="select_or_create_akrabi">Seleccionar o Crear Akrabi</string>
+    <string name="akrabi_number">Número de Akrabi</string>
+    <string name="create_new_site">Crear Nuevo Sitio</string>
+    <string name="create_new_akrabi">Crear Nuevo Akrabi</string>
+    <string name="invalid_value">Valor inválido</string>
+    <string name="update_bought_item">Actualizar Artículo Comprado</string>
+    <string name="are_you_sure_save_the_changes">¿Está seguro de que desea guardar estos cambios?</string>
+    <string name="save_changes">Guardar Cambios</string>
+    <string name="delete_this_item_cannot">¿Está seguro de que desea eliminar este artículo? Esta acción no se puede deshacer.</string>
+    <string name="delete">Eliminar</string>
+    <string name="bought_items">Artículos Comprados</string>
+    <string name="no_bought_items">Aún no se han comprado artículos</string>
+    <string name="create_akrabi_form">Formulario de Creación de Akrabi</string>
+    <string name="edit_akrabi_form">Formulario de Edición de Akrabi</string>
+    <string name="menu">Menú</string>
+    <string name="home">Inicio</string>
+    <string name="akrabi_registration">Registro de Akrabi</string>
+    <string name="collection_site_registration">Registro de Sitio de Recogida</string>
+    <string name="farmer_registration">Registro de Agricultor</string>
+    <string name="search_placeholder">Buscar...</string>
+    <string name="item_details_title">Detalles del Artículo</string>
+    <string name="back">Atrás</string>
+    <string name="bought_item_image_description">Imagen del Artículo Comprado</string>
+    <string name="start_date">Fecha de Inicio</string>
+    <string name="end_date">Fecha de Finalización</string>
+    <string name="apply">Aplicar</string>
+    <string name="clear">Borrar</string>
+    <string name="select_date_range">Seleccionar Rango de Fechas</string>
+    <string name="photo">Foto</string>
+    <string name="select_photo">Seleccionar Foto</string>
+    <string name="photo_selected">Foto Seleccionada</string>
+    <string name="no_photo_selected">No se ha Seleccionado Ninguna Foto</string>
+    <string name="logout">Cerrar Sesión</string>
+
+
 
 </resources>

@@ -147,6 +147,7 @@
     <string name="cherry_sold">Cherry Sold (kg)</string>
     <string name="price_per_kg">Price per kg</string>
     <string name="paid">Paid</string>
+    <string name="total_paid">Total Paid</string>
     <string name="submit">Submit</string>
     <string name="required_field">This field is required</string>
     <string name="select_site_name">Please select a site name</string>
@@ -163,7 +164,29 @@
     <string name="bought_items">Bought Items</string>
     <string name="no_bought_items">No items bought yet</string>
     <string name="create_akrabi_form">Create Akrabi Form</string>
-    <string name="edit_akrabi_form">"Edit Akrabi Form"</string>
+    <string name="edit_akrabi_form">Edit Akrabi Form</string>
+    <string name="menu">Menu</string>
+    <string name="home">Home</string>
+    <string name="akrabi_registration">Akrabi  Registration</string>
+    <string name="collection_site_registration">Collection Site Registaration</string>
+    <string name="farmer_registration">Farmer Registaration</string>
+    <string name="search_placeholder">"Search...</string>
+    <string name="item_details_title">Item Details</string>
+    <string name="back">Back</string>
+    <string name="bought_item_image_description">Bought Item Image</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="apply">Apply</string>
+    <string name="clear">Clear</string>
+    <string name="select_date_range">Select Date Range</string>
+    <string name="photo">Photo</string>
+    <string name="select_photo">Select Photo</string>
+    <string name="photo_selected">Photo Selected</string>
+    <string name="no_photo_selected">No Photo Selected</string>
+    <string name="logout">Logout</string>
+
+    <string name="akrabi_list">Akrabi List</string>
+    <string name="akrabi_details">Akrabi Details</string>
 
 
 </resources>

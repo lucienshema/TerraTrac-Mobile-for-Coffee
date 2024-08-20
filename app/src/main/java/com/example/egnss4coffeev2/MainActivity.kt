@@ -50,6 +50,7 @@ import com.example.egnss4coffeev2.database.sync.SyncService
 import com.example.egnss4coffeev2.map.MapViewModel
 import com.example.egnss4coffeev2.ui.screens.AddFarm
 import com.example.egnss4coffeev2.ui.screens.AddSite
+import com.example.egnss4coffeev2.ui.screens.AkrabiDetailScreen
 import com.example.egnss4coffeev2.ui.screens.AkrabiListScreenScreen
 import com.example.egnss4coffeev2.ui.screens.BoughtItemDetailScreen
 import com.example.egnss4coffeev2.ui.screens.BoughtItemsList
@@ -218,14 +219,34 @@ class MainActivity : ComponentActivity() {
                                 AddSite(navController)
                             }
                             composable("shopping") {
-                                ShoppingScreen(navController, farmViewModel = farmViewModel)
+                                ShoppingScreen(navController, farmViewModel = farmViewModel, darkMode,
+                                    languageViewModel=languageViewModel,
+                                    languages)
                             }
 
                             composable("create_akrabi_form") {
                                 CreateAkrabiFormScreen(navController,akrabiViewModel,collectionSites)
                             }
                             composable("akrabi_list_screen") {
-                                AkrabiListScreenScreen(navController)
+                                AkrabiListScreenScreen(navController, darkMode,
+                                    languageViewModel=languageViewModel,
+                                    languages)
+                            }
+
+                            composable("akrabiDetails/{akrabiId}") { backStackEntry ->
+                                val akrabiId = backStackEntry.arguments?.getString("akrabiId")?.toLong()
+                                val akrabi = akrabis.find { it.id == akrabiId }
+                                if (akrabi != null) {
+                                    AkrabiDetailScreen(
+                                        akrabi = akrabi,
+                                        navController,
+                                        akrabiViewModel,
+                                        onBack = { navController.popBackStack() }
+                                    )
+                                }
+                                else {
+                                    Text("Error: Invalid Akrabi ID")
+                                }
                             }
 
                             // Add this composable for the edit Akrabi screen
@@ -248,7 +269,10 @@ class MainActivity : ComponentActivity() {
                                     onItemClick = { selectedItem ->
                                         navController.navigate("bought_item_detail/${selectedItem.id}")
                                     },
-                                    navController
+                                    navController,
+                                    darkMode,
+                                    languageViewModel=languageViewModel,
+                                    languages
                                 )
                             }
 
@@ -269,7 +293,10 @@ class MainActivity : ComponentActivity() {
                                     onItemClick = { selectedItem ->
                                         navController.navigate("bought_item_detail/${selectedItem.id}")
                                     },
-                                    navController
+                                    navController,
+                                    darkMode,
+                                    languageViewModel=languageViewModel,
+                                    languages
                                 )
                             }
 
@@ -303,7 +330,10 @@ class MainActivity : ComponentActivity() {
                                     onItemClick = { selectedItem ->
                                         navController.navigate("bought_item_detail_direct_buy/${selectedItem.id}")
                                     },
-                                    navController
+                                    navController,
+                                    darkMode,
+                                    languageViewModel=languageViewModel,
+                                    languages
                                 )
                             }
 
@@ -341,7 +371,10 @@ class MainActivity : ComponentActivity() {
                                     onItemClick = { selectedItem ->
                                         navController.navigate("bought_item_detail/${selectedItem.id}")
                                     },
-                                    navController
+                                    navController,
+                                    darkMode,
+                                    languageViewModel=languageViewModel,
+                                    languages
                                 )
                             }
 
@@ -354,7 +387,8 @@ class MainActivity : ComponentActivity() {
                                 val selectedItem =
                                     itemId?.let { farmViewModel.getBoughtItemThroughAkrabiById(it) } // Ensure this function exists
                                 selectedItem?.let { item ->
-                                    BoughtItemDetailScreen(buyThroughAkrabi = item, onBack = { navController.popBackStack() })
+                                    BoughtItemDetailScreen(buyThroughAkrabi = item, onBack = { navController.popBackStack()}, navController,
+                                        farmViewModel = farmViewModel)
                                 }
                             }
 
@@ -366,7 +400,8 @@ class MainActivity : ComponentActivity() {
                                 val selectedItem =
                                     itemId?.let { farmViewModel.getBoughtItemDirectById(it) } // Ensure this function exists
                                 selectedItem?.let { item ->
-                                    DirectBuyDetailScreen(directBuy = item, onBack = { navController.popBackStack() })
+                                    DirectBuyDetailScreen(directBuy = item, onBack = { navController.popBackStack() }, navController,
+                                        farmViewModel = farmViewModel)
                                 }
                             }
 

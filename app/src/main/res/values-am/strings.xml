@@ -136,7 +136,53 @@
     <string name="invalid_farms">%1$d የማይገባው እርሻ መዝግቦች አልተገቡም</string>
     <string name="invalid_farms_with_names">%1$d ተገቢ ያልሆኑ እርሻ ቅጽበቶች አልተሰጡም። ግለሰቦች፡ %2$s</string>
 
-
-
-
+    <string name="direct_buy">ቀጥታ ግዢ</string>
+    <string name="buy_through_akrabi">በአካራቢ ተጠቅመው ግዢ አድርጉ</string>
+    <string name="date">ቀን</string>
+    <string name="time">ሰዓት</string>
+    <string name="location">አድራሻ</string>
+    <string name="select_or_create_site">ጣቢያ ይምረጡ ወይም ይፍጠሩ</string>
+    <string name="farmer_name">አርሰኛ ስም</string>
+    <string name="farmer_number">አርሰኛ ቁጥር</string>
+    <string name="akrabi_name">አካራቢ ስም</string>
+    <string name="cherry_sold">የተሽጠ ቼሪ (ኪግ)</string>
+    <string name="price_per_kg">ዋጋ በኪግ</string>
+    <string name="paid">የተከፈለ</string>
+    <string name="total_paid">ጠቅላላ የተከፈለ</string>
+    <string name="submit">አቅርብ</string>
+    <string name="required_field">ይህ መስክ የተጠየቀ ነው</string>
+    <string name="select_site_name">እባክዎ የቦታ ስም ይምረጡ</string>
+    <string name="select_or_create_akrabi">አካራቢ ይምረጡ ወይም ይፍጠሩ</string>
+    <string name="akrabi_number">አካራቢ ቁጥር</string>
+    <string name="create_new_site">አዲስ ቦታ ፍጠር</string>
+    <string name="create_new_akrabi">አዲስ አካራቢ ፍጠር</string>
+    <string name="invalid_value">ልክ ያልሆነ እሴት</string>
+    <string name="update_bought_item">የተገዙትን እቃዎች አዘምን</string>
+    <string name="are_you_sure_save_the_changes">ይህን ለማስቀመጥ ተረጋግጠዋል?</string>
+    <string name="save_changes">ለማስቀመጥ እቁም</string>
+    <string name="delete_this_item_cannot">እቃውን ማጥፋት ተረጋግጠዋል? ይህ እርስ በእርሳችሁ እንደዋጣ ነው ፡፡ ተቃውሞ አልተከፈተም።</string>
+    <string name="delete">ማጥፋት</string>
+    <string name="bought_items">የተገዙ እቃዎች</string>
+    <string name="no_bought_items">እስካሁን እቃዎች አልተገዙም</string>
+    <string name="create_akrabi_form">አካራቢ ፎርም ይፍጠሩ</string>
+    <string name="edit_akrabi_form">አካራቢ ፎርም ያስተካክሉ</string>
+    <string name="menu">ምናሌ</string>
+    <string name="home">መነሻ</string>
+    <string name="akrabi_registration">አካራቢ ምዝገባ</string>
+    <string name="collection_site_registration">የቦታ ምዝገባ</string>
+    <string name="farmer_registration">አርሰኛ ምዝገባ</string>
+    <string name="search_placeholder">ፍለጋ...</string>
+    <string name="item_details_title">የእቃ ዝርዝር</string>
+    <string name="back">ተመለስ</string>
+    <string name="bought_item_image_description">የተገዙት እቃዎች ምስል</string>
+    <string name="start_date">የመጀመሪያ ቀን</string>
+    <string name="end_date">የመጨረሻ ቀን</string>
+    <string name="apply">ተጠቀም</string>
+    <string name="clear">አጥፋ</string>
+    <string name="select_date_range">ቀን ይምረጡ</string>
+    <string name="photo">ፎቶ</string>
+    <string name="select_photo">ፎቶ ይምረጡ</string>
+    <string name="photo_selected">ፎቶ ተመርጧል</string>
+    <string name="no_photo_selected">ፎቶ አልተመረጠም</string>
+    <string name="logout">ውጣ</string>
 </resources>

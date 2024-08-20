@@ -112,7 +112,7 @@ fun CollectionSiteList(navController: NavController) {
             onSearchQueryChanged = setSearchQuery,
             onAddFarmClicked = { navController.navigate("addSite") },
             onBackSearchClicked = { navController.navigate("siteList") },
-            onBackClicked = { navController.navigate("home") },
+            onBackClicked = { navController.navigate("shopping") },
             showAdd = true,
             showSearch = true,
         )
