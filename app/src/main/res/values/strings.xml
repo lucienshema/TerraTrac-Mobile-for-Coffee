@@ -187,6 +187,12 @@
 
     <string name="akrabi_list">Akrabi List</string>
     <string name="akrabi_details">Akrabi Details</string>
+    <string name="age">Age</string>
+    <string name="gender">Gender</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Government ID Number</string>
+    <string name="phone">Phone</string>
 
 
 </resources>

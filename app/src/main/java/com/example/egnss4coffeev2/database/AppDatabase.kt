@@ -11,7 +11,7 @@ import com.example.egnss4coffeev2.database.converters.BitmapConverter
 import com.example.egnss4coffeev2.database.converters.DateConverter
 
 
-@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 7, exportSchema = true)
+@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 8, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -164,6 +164,44 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create a new table with the updated schema
+                db.execSQL("""
+            CREATE TABLE IF NOT EXISTS new_Akrabis (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                akrabiNumber TEXT NOT NULL,
+                akrabiName TEXT NOT NULL,
+                siteName TEXT NOT NULL,
+                age INTEGER NOT NULL DEFAULT 0,
+                gender TEXT NOT NULL DEFAULT '',
+                woreda TEXT NOT NULL DEFAULT '',
+                kebele TEXT NOT NULL DEFAULT '',
+                govtIdNumber TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL DEFAULT '',
+                photoUri TEXT NOT NULL DEFAULT ''
+            )
+        """.trimIndent())
+
+                // Copy data from the old table to the new table
+                db.execSQL("""
+            INSERT INTO new_Akrabis (
+                id, akrabiNumber, akrabiName, siteName
+            )
+            SELECT
+                id, akrabiNumber, akrabiName, siteName
+            FROM Akrabis
+        """.trimIndent())
+
+                // Drop the old table
+                db.execSQL("DROP TABLE Akrabis")
+
+                // Rename the new table to the original name
+                db.execSQL("ALTER TABLE new_Akrabis RENAME TO Akrabis")
+            }
+        }
+
+
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
                 var instance = INSTANCE
@@ -173,7 +211,7 @@ abstract class AppDatabase : RoomDatabase() {
                         context.applicationContext,
                         AppDatabase::class.java,
                         "farm_collector_database_for_coffee"
-                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7)
+                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8)
                         .build()
 
                     INSTANCE = instance

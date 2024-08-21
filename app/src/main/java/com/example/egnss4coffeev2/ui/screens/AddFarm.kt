@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Looper
 import android.provider.Settings
 import android.view.KeyEvent
@@ -218,6 +219,14 @@ fun FarmForm(
     var farmerPhoto by rememberSaveable { mutableStateOf("") }
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
+
+    var age by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
+    var govtIdNumber by remember { mutableStateOf("") }
+    var numberOfTrees by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var photo by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
 
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
@@ -627,6 +636,88 @@ fun FarmForm(
                 .padding(bottom = 4.dp)
         )
 
+        // Age
+        OutlinedTextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            value = age,
+            onValueChange = { age = it },
+            label = { Text("Age", color = inputLabelColor) },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = backgroundColor,
+                cursorColor = inputTextColor,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        )
+
+        // Gender (Dropdown)
+        GenderDropdown(gender = gender, onGenderSelected = { selectedGender ->
+            gender = selectedGender
+        })
+
+        // Govt ID Number
+        OutlinedTextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            value = govtIdNumber,
+            onValueChange = { govtIdNumber = it },
+            label = { Text("Govt ID Number", color = inputLabelColor) },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = backgroundColor,
+                cursorColor = inputTextColor,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        )
+
+        // Number of Trees
+        OutlinedTextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            value = numberOfTrees,
+            onValueChange = { numberOfTrees = it },
+            label = { Text("Number of Trees", color = inputLabelColor) },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = backgroundColor,
+                cursorColor = inputTextColor,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        )
+
+        // Phone
+        OutlinedTextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone", color = inputLabelColor) },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = backgroundColor,
+                cursorColor = inputTextColor,
+                focusedBorderColor = inputBorder,
+                unfocusedBorderColor = inputBorder
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        )
+        // Pick Image Button
+        ImagePicker { uri ->
+            photoUri = uri
+            photo = uri?.toString() ?: ""
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween

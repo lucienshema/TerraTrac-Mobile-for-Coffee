@@ -1335,7 +1335,7 @@ fun BoughtItemCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "${stringResource(id=R.string.total_paid)}: $${item.paid}",
+                    text = "${stringResource(id=R.string.total_paid)}: ${item.paid}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -1405,7 +1405,7 @@ fun BoughtItemCardDirectBuy(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "${stringResource(id=R.string.total_paid)}: $${item.paid}",
+                    text = "${stringResource(id=R.string.total_paid)}: ${item.paid}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )

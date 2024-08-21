@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -110,7 +111,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -437,7 +440,19 @@ fun BuyThroughAkrabiForm(
         )
     }
 
-            Scaffold(
+    var showImportDialog by remember { mutableStateOf(false) }
+
+    // Show import dialog when triggered
+    if (showImportDialog) {
+        ImportFileDialog(
+            siteId = siteID,
+            onDismiss = { showImportDialog = false },
+            navController = navController
+        )
+    }
+
+
+    Scaffold(
                 topBar = {
                     TopAppBar(
                         title = { Text(title) }
@@ -535,7 +550,9 @@ fun BuyThroughAkrabiForm(
                                     )
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterSite),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequesterSite),
                             isError = validationErrors.contains(selectSiteLabel)
                         )
 
@@ -649,7 +666,9 @@ fun BuyThroughAkrabiForm(
                         value = cherrySold,
                         onValueChange = { cherrySold = it },
                         label = { Text(cherrySoldLabel) },
-                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterCherrySold),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequesterCherrySold),
                         keyboardOptions = KeyboardOptions(
                             imeAction =  ImeAction.Next,
                             keyboardType = KeyboardType.Number
@@ -676,7 +695,9 @@ fun BuyThroughAkrabiForm(
                         value = pricePerKg,
                         onValueChange = { pricePerKg = it },
                         label = { Text(pricePerKgLabel) },
-                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPricePerKg),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequesterPricePerKg),
                         keyboardOptions = KeyboardOptions(
                             imeAction =  ImeAction.Next,
                             keyboardType = KeyboardType.Number
@@ -699,7 +720,9 @@ fun BuyThroughAkrabiForm(
                         value = paid,
                         onValueChange = { paid = it },
                         label = { Text(paidLabel) },
-                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPaid),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequesterPaid),
                         keyboardOptions = KeyboardOptions(
                             imeAction =  ImeAction.Done,
                             keyboardType = KeyboardType.Number
@@ -727,7 +750,26 @@ fun BuyThroughAkrabiForm(
                         photoUri = uri
                         photo = uri?.toString() ?: ""
                     }
-
+                    // Improved Import Button:
+                    Button(
+                        onClick = { showImportDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = ButtonDefaults.buttonColors(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.icons8_import_file_48),
+                            contentDescription = "Import",
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Text(
+                            text = stringResource(id = R.string.import_file),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -762,7 +804,9 @@ fun BuyThroughAkrabiForm(
                                 navController.navigate("bought_items_buy_through_Akrabi")
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(submitLabel)
                     }
@@ -1001,7 +1045,9 @@ fun DirectBuyForm(
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterSite),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequesterSite),
                     isError = validationErrors.contains(selectSiteLabel)
                 )
 
@@ -1065,7 +1111,8 @@ fun DirectBuyForm(
                     label = { Text(selectFarmerLabel) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFarmers) },
                     modifier = Modifier
-                        .fillMaxWidth().focusRequester(focusRequesterFarmer)
+                        .fillMaxWidth()
+                        .focusRequester(focusRequesterFarmer)
                         .menuAnchor(),
                     isError = validationErrors.contains(selectFarmerLabel)
                 )
@@ -1107,7 +1154,9 @@ fun DirectBuyForm(
                 value = cherrySold,
                 onValueChange = { cherrySold = it },
                 label = { Text(cherrySoldLabel) },
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterCherrySold),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterCherrySold),
                 keyboardOptions = KeyboardOptions(
                     imeAction =  ImeAction.Next,
                     keyboardType = KeyboardType.Number
@@ -1134,7 +1183,9 @@ fun DirectBuyForm(
                 value = pricePerKg,
                 onValueChange = { pricePerKg = it },
                 label = { Text(pricePerKgLabel) },
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPricePerKg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterPricePerKg),
                 keyboardOptions = KeyboardOptions(
                     imeAction =  ImeAction.Next,
                     keyboardType = KeyboardType.Number
@@ -1157,7 +1208,9 @@ fun DirectBuyForm(
                 value = paid,
                 onValueChange = { paid = it },
                 label = { Text(paidLabel) },
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequesterPaid),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterPaid),
                 keyboardOptions = KeyboardOptions(
                     imeAction =  ImeAction.Done,
                     keyboardType = KeyboardType.Number
@@ -1219,7 +1272,9 @@ fun DirectBuyForm(
                         navController.navigate("bought_items_direct_buy")
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(submitLabel)
             }
@@ -1255,6 +1310,57 @@ fun CreateFarmerDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GenderDropdown(gender: String, onGenderSelected: (String) -> Unit) {
+    // Options for gender dropdown
+    val genderOptions = listOf("Male", "Female", "Other")
+
+    // State to manage the expanded state of the dropdown
+    var expanded by remember { mutableStateOf(false) }
+
+    // State to track the selected gender
+    var selectedGender by remember { mutableStateOf(gender) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedGender,
+            onValueChange = { /* Do nothing here, selection happens via dropdown */ },
+            label = { Text("Gender") },
+            readOnly = true, // Ensure the text field is read-only, dropdown handles selection
+            modifier = Modifier
+                .menuAnchor() // Anchor the dropdown to the text field
+                .fillMaxWidth(),
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+        )
+
+        // The dropdown menu that shows the gender options
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            genderOptions.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        selectedGender = option
+                        onGenderSelected(option)
+                        expanded = false // Close the dropdown menu
+                    }
+                )
+            }
+        }
+    }
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1269,6 +1375,19 @@ fun CreateAkrabiForm(
     var akrabiNumber by remember { mutableStateOf(akrabi?.akrabiNumber ?: "") }
     var akrabiName by remember { mutableStateOf(akrabi?.akrabiName ?: "") }
     var selectedSiteName by remember { mutableStateOf(akrabi?.siteName ?: "") }
+
+    var age by remember { mutableStateOf(akrabi?.age?.toString() ?: "") }
+    //var gender by remember { mutableStateOf(akrabi?.gender ?: "") }
+
+    var gender by remember { mutableStateOf("") }
+
+    var woreda by remember { mutableStateOf(akrabi?.woreda ?: "") }
+    var kebele by remember { mutableStateOf(akrabi?.kebele ?: "") }
+    var govtIdNumber by remember { mutableStateOf(akrabi?.govtIdNumber ?: "") }
+    var phone by remember { mutableStateOf(akrabi?.phone ?: "") }
+    var photo by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf(akrabi?.photoUri ?: "") }
+
     var dropdownExpanded by remember { mutableStateOf(false) }
     var validationErrors by remember { mutableStateOf(emptyList<String>()) } // Store validation errors
 
@@ -1411,6 +1530,89 @@ fun CreateAkrabiForm(
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+
+            OutlinedTextField(
+                value = age,
+                onValueChange = { age = it },
+                label = { Text(text = "Age") },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+//            OutlinedTextField(
+//                value = gender,
+//                onValueChange = { gender = it },
+//                label = { Text(text = "Gender") },
+//                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+//                modifier = Modifier.fillMaxWidth()
+//            )
+
+            GenderDropdown(gender = gender, onGenderSelected = { selectedGender ->
+                gender = selectedGender
+            })
+
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = woreda,
+                onValueChange = { woreda = it },
+                label = { Text(text = "Woreda") },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = kebele,
+                onValueChange = { kebele = it },
+                label = { Text(text = "Kebele") },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = govtIdNumber,
+                onValueChange = { govtIdNumber = it },
+                label = { Text(text = "Govt ID Number") },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text(text = "Phone") },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Pick Image Button
+            ImagePicker { uri ->
+                photoUri = uri.toString()
+                photo = uri?.toString() ?: ""
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
@@ -1429,7 +1631,14 @@ fun CreateAkrabiForm(
                             id = akrabi?.id ?: 0, // Use existing ID if editing
                             akrabiNumber = akrabiNumber,
                             akrabiName = akrabiName,
-                            siteName = selectedSiteName
+                            siteName = selectedSiteName,
+                            age = age.toIntOrNull() ?: 0,
+                            gender = gender,
+                            woreda = woreda,
+                            kebele = kebele,
+                            govtIdNumber = govtIdNumber,
+                            phone = phone,
+                            photoUri = photoUri
                         )
                         onSubmit(updatedAkrabi)
                     }
@@ -1682,21 +1891,39 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                     }
 
 
-            AkrabiListScreen(
-                akrabis = akrabis,
-                onViewDetails = { akrabi ->
-                    // Navigate to the View Akrabi details screen
-                    navController.navigate("akrabiDetails/${akrabi.id}")
-                },
-                onEdit = { akrabi ->
-                    // Navigate to the Edit Akrabi form with pre-filled data
-                    navController.navigate("edit_akrabi_form/${akrabi.id}")
-                },
-                onDelete = { akrabi ->
-                    akrabiToDelete = akrabi
-                    showDialog = true
-                }
-            )
+                    if (filteredItems.isEmpty()) {
+                        // Show "List not found" message
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.no_results_found),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    } else {
+
+
+                        AkrabiListScreen(
+                            akrabis = filteredItems,
+                            onViewDetails = { akrabi ->
+                                // Navigate to the View Akrabi details screen
+                                navController.navigate("akrabiDetails/${akrabi.id}")
+                            },
+                            onEdit = { akrabi ->
+                                // Navigate to the Edit Akrabi form with pre-filled data
+                                navController.navigate("edit_akrabi_form/${akrabi.id}")
+                            },
+                            onDelete = { akrabi ->
+                                akrabiToDelete = akrabi
+                                showDialog = true
+                            }
+                        )
+                    }
                 }
             }
         )
@@ -1954,6 +2181,22 @@ fun AkrabiDetailScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally within Column
             ) {
+                // Display the image if available
+                akrabi.photoUri?.let { imageUrl ->
+                    Image(
+                        painter = rememberAsyncImagePainter(imageUrl),
+                        contentDescription = stringResource(R.string.bought_item_image_description),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(4.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
                 // Card for item details
                 Card(
                     modifier = Modifier
@@ -1966,6 +2209,12 @@ fun AkrabiDetailScreen(
                         DetailText(label = stringResource(R.string.akrabi_number), value = akrabi.akrabiNumber)
                         DetailText(label = stringResource(R.string.akrabi_name), value = akrabi.akrabiName)
                         DetailText(label = stringResource(R.string.site_name), value = akrabi.siteName)
+                        DetailText(label = stringResource(R.string.age), value = akrabi.age.toString())
+                        DetailText(label = stringResource(R.string.gender), value = akrabi.gender)
+                        DetailText(label = stringResource(R.string.woreda), value = akrabi.woreda)
+                        DetailText(label = stringResource(R.string.kebele), value = akrabi.kebele)
+                        DetailText(label = stringResource(R.string.gov_id_number), value = akrabi.govtIdNumber)
+                        DetailText(label = stringResource(R.string.phone), value = akrabi.phone)
                     }
                 }
 
