@@ -24,6 +24,7 @@ import com.example.egnss4coffeev2.database.toDtoList
 import kotlinx.coroutines.DelicateCoroutinesApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.example.egnss4coffeev2.BuildConfig
 
 
 class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
@@ -58,7 +59,8 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
         Log.d(TAG, "Found ${unsyncedFarms.size} unsynced farms.")
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://8e00-154-72-7-234.ngrok-free.app")
+//            .baseUrl("https://8e00-154-72-7-234.ngrok-free.app")
+            .baseUrl(BuildConfig.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 

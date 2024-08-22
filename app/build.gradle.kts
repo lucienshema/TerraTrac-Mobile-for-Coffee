@@ -1,3 +1,4 @@
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -25,14 +26,38 @@ android {
             useSupportLibrary = true
         }
     }
-
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Load BASE_URL from local.properties
+            val baseUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("BASE_URL") ?: "default_debug_url"
+                } else {
+                    "default_debug_url"
+                }
+            }
+            buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+        }
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Load BASE_URL from local.properties
+            val baseUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("BASE_URL") ?: "default_release_url"
+                } else {
+                    "default_release_url"
+                }
+            }
+            buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
         }
     }
     compileOptions {
@@ -44,6 +69,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
