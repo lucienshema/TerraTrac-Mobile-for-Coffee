@@ -1610,7 +1610,7 @@ fun CreateAkrabiForm(
             // Pick Image Button
             ImagePicker { uri ->
                 photoUri = uri.toString()
-                photo = uri?.toString() ?: ""
+                photo = uri.toString()
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -2176,15 +2176,16 @@ fun AkrabiDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(top = 64.dp), // Adjust the top padding here to move the Card closer to the header
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally within Column
             ) {
-                // Display the image if available
-                akrabi.photoUri?.let { imageUrl ->
+                // Display the image if available (non-null and non-empty)
+                if (akrabi.photoUri?.isNotBlank() == true) {
                     Image(
-                        painter = rememberAsyncImagePainter(imageUrl),
+                        painter = rememberAsyncImagePainter(akrabi.photoUri),
                         contentDescription = stringResource(R.string.bought_item_image_description),
                         modifier = Modifier
                             .fillMaxWidth()

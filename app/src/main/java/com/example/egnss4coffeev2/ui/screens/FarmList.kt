@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -896,6 +897,7 @@ fun FarmList(
                                 items(filteredList) { farm ->
                                     FarmCard(
                                         farm = farm,
+                                        navController,
                                         onCardClick = {
                                             navController.currentBackStackEntry?.arguments?.apply {
                                                 putParcelableArrayList(
@@ -1384,6 +1386,7 @@ fun FarmListHeaderPlots(
 @Composable
 fun FarmCard(
     farm: Farm,
+    navController: NavController,
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
@@ -1391,108 +1394,97 @@ fun FarmCard(
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
 
-    Column(
-        modifier =
-        Modifier
-            .fillMaxSize()
-            .padding(top = 8.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+    ElevatedCard(
+        elevation = CardDefaults.cardElevation(6.dp),
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .fillMaxWidth()
+            .clickable { onCardClick() },
     ) {
-        ElevatedCard(
-            elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 6.dp,
-            ),
-            modifier =
-            Modifier
+        Column(
+            modifier = Modifier
                 .background(backgroundColor)
-                .fillMaxWidth()
-                .padding(8.dp),
-            onClick = {
-                onCardClick()
-            },
+                .padding(16.dp)
         ) {
-            Column(
-                modifier =
-                Modifier
-                    .background(backgroundColor)
-                    .padding(16.dp),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
+
+                // Farm Name and Village (Left Side)
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = farm.farmerName,
-                        style =
-                        MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 18.sp,
+                        style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = textColor,
+                            fontSize = 20.sp,
+                            color = textColor
                         ),
-                        modifier =
-                        Modifier
-                            .weight(1.1f)
-                            .padding(bottom = 4.dp),
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
-                            stringResource(id = R.string.ha)
-                        }",
-                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        modifier =
-                        Modifier
-                            .weight(0.9f)
-                            .padding(bottom = 4.dp),
+                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${stringResource(id = R.string.ha)}",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
                     )
-                    IconButton(
-                        onClick = {
-                            onDeleteClick()
-                        },
-                        modifier =
-                        Modifier
-                            .size(24.dp)
-                            .padding(4.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = Color.Red,
-                        )
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
                     Text(
                         text = "${stringResource(id = R.string.village)}: ${farm.village}",
-                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
                     )
                     Text(
                         text = "${stringResource(id = R.string.district)}: ${farm.district}",
-                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
                     )
                 }
 
-                // Show the label if the farm needs an update
-                if (farm.needsUpdate) {
-                    Text(
-                        text = stringResource(id = R.string.needs_update),
-                        color = Color.Blue,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,  // Adjust font size
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                // Action Icons (Right Side)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    IconButton(
+                        onClick = { navController.navigate("updateFarm/${farm.id}") },
+                        modifier = Modifier.padding(end = 2.dp).size(24.dp) // Reduced padding and set explicit size
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(id = R.string.edit),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier.padding(end = 2.dp).size(24.dp) // Reduced padding and set explicit size
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(id = R.string.delete),
+                            tint = Color.Red
+                        )
+                    }
                 }
+            }
+
+            // Show the label if the farm needs an update
+            if (farm.needsUpdate) {
+                Text(
+                    text = stringResource(id = R.string.needs_update),
+                    color = Color.Blue,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     }
 }
+
+
+
 
 
 fun OutputStream.writeCsv(farms: List<Farm>) {
@@ -1555,29 +1547,45 @@ fun UpdateFarmForm(
     listItems: List<Farm>,
 ) {
     val floatValue = 123.45f
-    val item =
-        listItems.find { it.id == farmId } ?: Farm(
-//        id = 0,
-            siteId = 0L,
-            farmerName = "Default Farmer",
-            memberId = "",
-            farmerPhoto = "Default photo",
-            village = "Default Village",
-            district = "Default District",
-            latitude = "Default Village",
-            longitude = "Default Village",
-            coordinates = null,
-            size = floatValue,
-            purchases = floatValue,
-            createdAt = 1L,
-            updatedAt = 1L,
-        )
+    val item = listItems.find { it.id == farmId } ?: Farm(
+        siteId = 0L,
+        farmerPhoto = "Default photo",
+        farmerName = "Default Farmer",
+        memberId = "",
+        village = "Default Village",
+        district = "Default District",
+        purchases = floatValue,
+        size = floatValue,
+        latitude = "0.0", // Default latitude
+        longitude = "0.0", // Default longitude
+        coordinates = null,
+        age = 0,  // Default age
+        gender = "",  // Default gender
+        govtIdNumber = "",  // Default government ID number
+        numberOfTrees = 0,  // Default number of trees
+        phone = "",  // Default phone
+        photo = "",  // Default photo
+        synced = false,
+        scheduledForSync = false,
+        createdAt = 1L,
+        updatedAt = 1L
+    )
+
     val context = LocalContext.current as Activity
     var farmerName by remember { mutableStateOf(item.farmerName) }
     var memberId by remember { mutableStateOf(item.memberId) }
     var farmerPhoto by remember { mutableStateOf(item.farmerPhoto) }
     var village by remember { mutableStateOf(item.village) }
     var district by remember { mutableStateOf(item.district) }
+    var age by remember { mutableStateOf(item.age.toString()) }
+    var gender by remember { mutableStateOf(item.gender) }
+    var govtIdNumber by remember { mutableStateOf(item.govtIdNumber.toString()) }
+    var phone by remember { mutableStateOf(item.phone) }
+    var numberOfTrees by remember { mutableStateOf(item.numberOfTrees.toString()) }
+
+    //var photo by remember { mutableStateOf(item.photo)}
+    // var photoUri by remember { mutableStateOf(Uri.parse(item.photo))}
+
     var size by remember { mutableStateOf(item.size.toString()) }
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
@@ -1698,6 +1706,12 @@ fun UpdateFarmForm(
             item.latitude = latitude
             item.village = village
             item.district = district
+            item.age = age?.toInt()
+            item.gender = gender
+            item.govtIdNumber = govtIdNumber
+            item.phone = phone
+            item.numberOfTrees = numberOfTrees.toIntOrNull()?: 0
+            item.photo = "" // Default photo
             item.longitude = longitude
             if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
                 if ((coordinates?.size ?: 0) < 3) {
@@ -1792,7 +1806,7 @@ fun UpdateFarmForm(
             .fillMaxWidth()
             .background(backgroundColor)
             .padding(16.dp)
-            .verticalScroll(state = scrollState),
+//            .verticalScroll(state = scrollState),
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.update_farm),
@@ -1803,121 +1817,236 @@ fun UpdateFarmForm(
             showAdd = false,
             showSearch = false,
         )
-        OutlinedTextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions =
-            KeyboardActions(
-                onDone = { focusRequester1.requestFocus() },
-            ),
-            value = farmerName,
-            onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name), color = inputLabelColor) },
-            isError = farmerName.isBlank(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                errorLeadingIconColor = Color.Red,
-                cursorColor = inputTextColor,
-                errorCursorColor = Color.Red,
-                focusedBorderColor = inputBorder,
-                unfocusedBorderColor = inputBorder,
-                errorBorderColor = Color.Red
-            ),
+
+        Column(
             modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester1.requestFocus()
-                        true
-                    }
-                    false
-                },
-        )
-        OutlinedTextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions =
-            KeyboardActions(
-                onDone = { focusRequester1.requestFocus() },
-            ),
-            value = memberId,
-            onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id), color = inputLabelColor) },
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester1.requestFocus()
-                    }
-                    false
-                },
-        )
-        OutlinedTextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions =
-            KeyboardActions(
-                onDone = { focusRequester2.requestFocus() },
-            ),
-            value = village,
-            onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village), color = inputLabelColor) },
-            isError = village.isBlank(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                errorLeadingIconColor = Color.Red,
-                cursorColor = inputTextColor,
-                errorCursorColor = Color.Red,
-                focusedBorderColor = inputBorder,
-                unfocusedBorderColor = inputBorder,
-                errorBorderColor = Color.Red
-            ),
-            modifier =
-            Modifier
-                .focusRequester(focusRequester1)
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-        )
-        OutlinedTextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions =
-            KeyboardActions(
-                onDone = { focusRequester3.requestFocus() },
-            ),
-            value = district,
-            onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district), color = inputLabelColor) },
-            isError = district.isBlank(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                errorLeadingIconColor = Color.Red,
-                cursorColor = inputTextColor,
-                errorCursorColor = Color.Red,
-                focusedBorderColor = inputBorder,
-                unfocusedBorderColor = inputBorder,
-                errorBorderColor = Color.Red
-            ),
-            modifier =
-            Modifier
-                .focusRequester(focusRequester2)
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .background(backgroundColor)
+                .padding(8.dp)
+            .verticalScroll(state = scrollState),
         ) {
+
             OutlinedTextField(
                 singleLine = true,
-                value = truncateToDecimalPlaces(size,9),
-                onValueChange = {
-                    size = it
-                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions =
+                KeyboardActions(
+                    onDone = { focusRequester1.requestFocus() },
+                ),
+                value = farmerName,
+                onValueChange = { farmerName = it },
+                label = { Text(stringResource(id = R.string.farm_name), color = inputLabelColor) },
+                isError = farmerName.isBlank(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                    errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder,
+                    errorBorderColor = Color.Red
+                ),
+                modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .onKeyEvent {
+                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                            focusRequester1.requestFocus()
+                            true
+                        }
+                        false
+                    },
+            )
+            OutlinedTextField(
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions =
+                KeyboardActions(
+                    onDone = { focusRequester1.requestFocus() },
+                ),
+                value = memberId,
+                onValueChange = { memberId = it },
+                label = { Text(stringResource(id = R.string.member_id), color = inputLabelColor) },
+                modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .onKeyEvent {
+                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                            focusRequester1.requestFocus()
+                        }
+                        false
+                    },
+            )
+            OutlinedTextField(
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions =
+                KeyboardActions(
+                    onDone = { focusRequester2.requestFocus() },
+                ),
+                value = village,
+                onValueChange = { village = it },
+                label = { Text(stringResource(id = R.string.village), color = inputLabelColor) },
+                isError = village.isBlank(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                    errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder,
+                    errorBorderColor = Color.Red
+                ),
+                modifier =
+                Modifier
+                    .focusRequester(focusRequester1)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+            )
+            OutlinedTextField(
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions =
+                KeyboardActions(
+                    onDone = { focusRequester3.requestFocus() },
+                ),
+                value = district,
+                onValueChange = { district = it },
+                label = { Text(stringResource(id = R.string.district), color = inputLabelColor) },
+                isError = district.isBlank(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                    errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder,
+                    errorBorderColor = Color.Red
+                ),
+                modifier =
+                Modifier
+                    .focusRequester(focusRequester2)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+            )
+
+            OutlinedTextField(
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions =
+                KeyboardActions(
+                    onDone = { focusRequester3.requestFocus() },
+                ),
+                value = age,
+                onValueChange = { age = it },
+                label = { Text(stringResource(id = R.string.age), color = inputLabelColor) },
+                isError = district.isBlank(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                    errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder,
+                    errorBorderColor = Color.Red
+                ),
+                modifier =
+                Modifier
+                    .focusRequester(focusRequester2)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+            )
+
+
+            // Gender (Dropdown)
+            gender?.let {
+                GenderDropdown(
+                    gender = it,
+                    onGenderSelected =
+                    { selectedGender ->
+                        gender = selectedGender
+                    }
+                )
+            }
+
+            // Govt ID Number
+            govtIdNumber?.let {
+                OutlinedTextField(
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    value = it,
+                    onValueChange = { govtIdNumber = it },
+                    label = { Text("Govt ID Number", color = inputLabelColor) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = backgroundColor,
+                        cursorColor = inputTextColor,
+                        focusedBorderColor = inputBorder,
+                        unfocusedBorderColor = inputBorder
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+            }
+
+            // Number of Trees
+            OutlinedTextField(
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                value = numberOfTrees,
+                onValueChange = { numberOfTrees = it },
+                label = { Text("Number of Trees", color = inputLabelColor) },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = backgroundColor,
+                    cursorColor = inputTextColor,
+                    focusedBorderColor = inputBorder,
+                    unfocusedBorderColor = inputBorder
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp)
+            )
+
+            // Phone
+            phone?.let {
+                OutlinedTextField(
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    value = it,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone", color = inputLabelColor) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = backgroundColor,
+                        cursorColor = inputTextColor,
+                        focusedBorderColor = inputBorder,
+                        unfocusedBorderColor = inputBorder
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+            }
+
+//            // Pick Image Button
+//            ImagePicker { uri ->
+//                photoUri = uri
+//                photo = uri?.toString() ?: ""
+//            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                OutlinedTextField(
+                    singleLine = true,
+                    value = truncateToDecimalPlaces(size, 9),
+                    onValueChange = {
+                        size = it
+                    },
 //                value =  truncateToDecimalPlaces(formatInput(size),9),
 //                onValueChange = { inputValue ->
 //                    val formattedValue = when {
@@ -1932,182 +2061,203 @@ fun UpdateFarmForm(
 //                    // Update the size state with the formatted value
 //                    size = formattedValue
 //                },
-                keyboardOptions =
-                KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number,
-                ),
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
-                isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
-                colors =
-                TextFieldDefaults.textFieldColors(
-                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                    errorLeadingIconColor = Color.Red,
-                    cursorColor = inputTextColor,
-                    errorCursorColor = Color.Red,
-                    focusedIndicatorColor = inputBorder,
-                    unfocusedIndicatorColor = inputBorder,
-                    errorIndicatorColor = Color.Red,
-                ),
-                modifier =
-                Modifier
-                    .focusRequester(focusRequester3)
-                    .weight(1f)
-                    .padding(bottom = 4.dp),
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-            // Size measure
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = {
-                    expanded = !expanded
-                },
-                modifier = Modifier.weight(1f),
-            ) {
-                OutlinedTextField(
-                    readOnly = true,
-                    value = selectedUnit,
-                    onValueChange = { },
-                    label = { Text(stringResource(R.string.unit)) },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = expanded,
-                        )
-                    },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                    keyboardOptions =
+                    KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number,
                     ),
-                    modifier = Modifier.menuAnchor(),
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = {
-                        expanded = false
-                    },
-                ) {
-                    items.forEach { selectionOption ->
-                        DropdownMenuItem(
-                            { Text(text = selectionOption) },
-                            onClick = {
-                                selectedUnit = selectionOption
-                                expanded = false
-                            },
+                    label = {
+                        Text(
+                            stringResource(id = R.string.size_in_hectares) + " (*)",
+                            color = inputLabelColor
                         )
-                    }
-                }
-            }
-        }
-
-//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-        if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                OutlinedTextField(
-                    readOnly = true,
-                    value = latitude,
-                    onValueChange = { latitude = it },
-                    label = { Text(stringResource(id = R.string.latitude), color = inputLabelColor) },
+                    },
+                    isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
+                    colors =
+                    TextFieldDefaults.textFieldColors(
+                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                        errorLeadingIconColor = Color.Red,
+                        cursorColor = inputTextColor,
+                        errorCursorColor = Color.Red,
+                        focusedIndicatorColor = inputBorder,
+                        unfocusedIndicatorColor = inputBorder,
+                        errorIndicatorColor = Color.Red,
+                    ),
                     modifier =
                     Modifier
+                        .focusRequester(focusRequester3)
                         .weight(1f)
                         .padding(bottom = 4.dp),
                 )
-                Spacer(modifier = Modifier.width(8.dp)) // Add space between the latitude and longitude input fields
-                OutlinedTextField(
-                    readOnly = true,
-                    value = longitude,
-                    onValueChange = { longitude = it },
-                    label = { Text(stringResource(id = R.string.longitude), color = inputLabelColor) },
-                    modifier =
-                    Modifier
-                        .weight(1f)
-                        .padding(bottom = 16.dp),
-                )
-            }
-        }
-        Button(
-            onClick = {
-                showPermissionRequest.value = true
-                if (!isLocationEnabled(context)) {
-                    showLocationDialog.value = true
-                } else {
-                    if (isLocationEnabled(context) && context.hasLocationPermission()) {
-//                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
-                        if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) {
-                            // Simulate collecting latitude and longitude
-                            if (context.hasLocationPermission()) {
-                                val locationRequest =
-                                    LocationRequest.create().apply {
-                                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                                        interval = 10000 // Update interval in milliseconds
-                                        fastestInterval =
-                                            5000 // Fastest update interval in milliseconds
-                                    }
 
-                                fusedLocationClient.requestLocationUpdates(
-                                    locationRequest,
-                                    object : LocationCallback() {
-                                        override fun onLocationResult(locationResult: LocationResult) {
-                                            locationResult.lastLocation?.let { lastLocation ->
-                                                // Handle the new location
-                                                latitude = "${lastLocation.latitude}"
-                                                longitude = "${lastLocation.longitude}"
-                                                // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
-                                            }
-                                        }
-                                    },
-                                    Looper.getMainLooper(),
-                                )
-                            }
-                        } else {
-                            if (isLocationEnabled(context)) {
-                                navController.navigate("setPolygon")
-                            }
+                Spacer(modifier = Modifier.width(8.dp))
+                // Size measure
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = {
+                        expanded = !expanded
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    OutlinedTextField(
+                        readOnly = true,
+                        value = selectedUnit,
+                        onValueChange = { },
+                        label = { Text(stringResource(R.string.unit)) },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expanded,
+                            )
+                        },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                        ),
+                        modifier = Modifier.menuAnchor(),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = {
+                            expanded = false
+                        },
+                    ) {
+                        items.forEach { selectionOption ->
+                            DropdownMenuItem(
+                                { Text(text = selectionOption) },
+                                onClick = {
+                                    selectedUnit = selectionOption
+                                    expanded = false
+                                },
+                            )
                         }
-                    } else {
-                        showPermissionRequest.value = true
-                        showLocationDialog.value = true
                     }
                 }
-            },
-            modifier =
-            Modifier
-                .align(Alignment.CenterHorizontally)
-                .fillMaxWidth(0.7f)
-                .padding(bottom = 5.dp)
-                .height(50.dp),
-            enabled = size.toFloatOrNull() != null,
-        ) {
-            Text(
-                // text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
-                text =
-                if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } ==
-                    true
+            }
+
+//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
+            if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }
+                    ?: 0f) < 4f) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    stringResource(id = R.string.get_coordinates)
-                } else {
-                    stringResource(
-                        id = R.string.set_new_polygon,
+                    OutlinedTextField(
+                        readOnly = true,
+                        value = latitude,
+                        onValueChange = { latitude = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.latitude),
+                                color = inputLabelColor
+                            )
+                        },
+                        modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(bottom = 4.dp),
                     )
-                },
-            )
-        }
-        Button(
-            onClick = {
-                if (validateForm()) {
-                    showDialog.value = true
-                } else {
-                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+                    Spacer(modifier = Modifier.width(8.dp)) // Add space between the latitude and longitude input fields
+                    OutlinedTextField(
+                        readOnly = true,
+                        value = longitude,
+                        onValueChange = { longitude = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.longitude),
+                                color = inputLabelColor
+                            )
+                        },
+                        modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(bottom = 16.dp),
+                    )
                 }
-            },
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-        ) {
-            Text(text = stringResource(id = R.string.update_farm))
+            }
+            Button(
+                onClick = {
+                    showPermissionRequest.value = true
+                    if (!isLocationEnabled(context)) {
+                        showLocationDialog.value = true
+                    } else {
+                        if (isLocationEnabled(context) && context.hasLocationPermission()) {
+//                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
+                            if (size.toDoubleOrNull()
+                                    ?.let { convertSize(it, selectedUnit).toFloat() }
+                                    ?.let { it < 4f } == true
+                            ) {
+                                // Simulate collecting latitude and longitude
+                                if (context.hasLocationPermission()) {
+                                    val locationRequest =
+                                        LocationRequest.create().apply {
+                                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                                            interval = 10000 // Update interval in milliseconds
+                                            fastestInterval =
+                                                5000 // Fastest update interval in milliseconds
+                                        }
+
+                                    fusedLocationClient.requestLocationUpdates(
+                                        locationRequest,
+                                        object : LocationCallback() {
+                                            override fun onLocationResult(locationResult: LocationResult) {
+                                                locationResult.lastLocation?.let { lastLocation ->
+                                                    // Handle the new location
+                                                    latitude = "${lastLocation.latitude}"
+                                                    longitude = "${lastLocation.longitude}"
+                                                    // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                                }
+                                            }
+                                        },
+                                        Looper.getMainLooper(),
+                                    )
+                                }
+                            } else {
+                                if (isLocationEnabled(context)) {
+                                    navController.navigate("setPolygon")
+                                }
+                            }
+                        } else {
+                            showPermissionRequest.value = true
+                            showLocationDialog.value = true
+                        }
+                    }
+                },
+                modifier =
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth(0.7f)
+                    .padding(bottom = 5.dp)
+                    .height(50.dp),
+                enabled = size.toFloatOrNull() != null,
+            ) {
+                Text(
+                    // text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
+                    text =
+                    if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }
+                            ?.let { it < 4f } ==
+                        true
+                    ) {
+                        stringResource(id = R.string.get_coordinates)
+                    } else {
+                        stringResource(
+                            id = R.string.set_new_polygon,
+                        )
+                    },
+                )
+            }
+            Button(
+                onClick = {
+                    if (validateForm()) {
+                        showDialog.value = true
+                    } else {
+                        Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+            ) {
+                Text(text = stringResource(id = R.string.update_farm))
+            }
         }
     }
 }

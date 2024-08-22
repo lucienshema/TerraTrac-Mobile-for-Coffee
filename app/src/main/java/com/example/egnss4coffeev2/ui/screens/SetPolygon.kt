@@ -9,19 +9,23 @@ import android.location.Location
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -31,6 +35,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -60,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.Farm
 import com.example.egnss4coffeev2.hasLocationPermission
@@ -346,11 +353,11 @@ fun SetPolygon(
                 .fillMaxWidth()
                 .fillMaxHeight(
                     if (viewSelectFarm) {
-                        0.65f
+                        0.55f
                     } else if (accuracy.isNotEmpty()) {
-                        .87f
+                        .75f
                     } else {
-                        .93f
+                        .85f
                     },
                 ),
             verticalArrangement = Arrangement.Center,
@@ -388,101 +395,166 @@ fun SetPolygon(
             }
 
             FlowRow(
-                modifier =
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .fillMaxHeight()
                     .padding(bottom = 10.dp),
                 horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start,
             ) {
-                // Hiding some buttons depending on page usage. Viewing verse setting farm polygon
+                // Hiding some buttons depending on page usage. Viewing or setting farm polygon
                 if (viewSelectFarm) {
-                    Row {
-                        if (farmInfo != null) {
+                    Column(
+                        modifier = Modifier
+                            .background(backgroundColor)
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        // Display photo if available
+                        if (!farmInfo?.farmerPhoto.isNullOrEmpty()) {
+                            Image(
+                                painter = rememberImagePainter(farmInfo?.farmerPhoto),
+                                contentDescription = stringResource(id = R.string.farmer_photo),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp) // Adjust as needed
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.Gray)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp)) // Space between photo and text
+                        }
+
+                        Text(
+                            text = stringResource(id = R.string.farm_info),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(bottom = 8.dp) // Adjusted padding
+                        )
+
+                        Divider(
+                            color = Color.Black,
+                            thickness = 2.dp,
+                            modifier = Modifier
+                                .width(200.dp)
+                                .padding(bottom = 8.dp) // Added padding for spacing
+                        )
+
+                        // Display farm details in two columns
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Column(
-                                modifier =
-                                Modifier
-                                    .background(backgroundColor)
-                                    .padding(5.dp),
+                                modifier = Modifier.weight(1f).padding(end = 8.dp) // Adjust spacing as needed
                             ) {
                                 Text(
-                                    text = stringResource(id = R.string.farm_info),
-                                    style =
-                                    MaterialTheme.typography.bodySmall.copy(
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    ),
-                                    modifier = Modifier.padding(5.dp),
-                                )
-                                Column(
-                                    content = { },
-                                    modifier =
-                                    Modifier
-                                        .width(200.dp)
-                                        .background(Color.Black)
-                                        .height(2.dp),
-                                )
-                                Text(
-                                    text = "${stringResource(id = R.string.farm_name)}: ${farmInfo.farmerName}",
+                                    text = "${stringResource(id = R.string.farm_name)}: ${farmInfo?.farmerName}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
-                                    modifier = Modifier.padding(top = 5.dp),
+                                    modifier = Modifier.padding(vertical = 4.dp)
                                 )
                                 Text(
-                                    text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}",
+                                    text = "${stringResource(id = R.string.member_id)}: ${farmInfo?.memberId?.ifEmpty { "N/A" }}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
                                 )
                                 Text(
-                                    text = "${stringResource(id = R.string.village)}: ${farmInfo.village}",
+                                    text = "${stringResource(id = R.string.village)}: ${farmInfo?.village}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
                                 )
                                 Text(
-                                    text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
+                                    text = "${stringResource(id = R.string.district)}: ${farmInfo?.district}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
                                 )
-                                //if (farmInfo.coordinates?.isEmpty() == true) {
-                                Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
-                                Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
-                                //}
                                 Text(
-                                    text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo.size.toString()),9)} ${
-                                        stringResource(
-                                            id = R.string.ha,
-                                        )
+                                    text = "${stringResource(id = R.string.latitude)}: ${farmInfo?.latitude}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.longitude)}: ${farmInfo?.longitude}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp)) // Space between columns
+                            Column(
+                                modifier = Modifier.weight(1f).padding(start = 8.dp) // Adjust spacing as needed
+                            ) {
+                                Text(
+                                    text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo?.size.toString()), 9)} ${
+                                        stringResource(id = R.string.ha)
                                     }",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.age)}: ${farmInfo?.age}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.gender)}: ${farmInfo?.gender?.ifEmpty { "N/A" }}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.gov_id_number)}: ${farmInfo?.govtIdNumber?.ifEmpty { "N/A" }}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.number_of_trees)}: ${farmInfo?.numberOfTrees}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.phone)}: ${farmInfo?.phone?.ifEmpty { "N/A" }}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                    modifier = Modifier.padding(vertical = 4.dp)
                                 )
                             }
                         }
                     }
-                    Row {
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp) // Added padding for button row
+                    ) {
                         Button(
                             shape = RoundedCornerShape(10.dp),
-                            modifier =
-                            Modifier
+                            modifier = Modifier
                                 .width(120.dp)
-                                .fillMaxWidth(0.23f),
+                                .weight(1f) // Adjusted width for better spacing
+                                .padding(end = 8.dp),
                             onClick = {
                                 viewModel.clearCoordinates()
                                 navController.navigateUp()
-                            },
+                            }
                         ) {
                             Text(text = stringResource(id = R.string.close))
                         }
+
                         Button(
                             shape = RoundedCornerShape(10.dp),
-                            modifier =
-                            Modifier
+                            modifier = Modifier
                                 .width(150.dp)
-                                .fillMaxWidth(0.23f)
-                                .padding(start = 10.dp),
+                                .weight(1f) // Adjusted width for better spacing
+                                .padding(start = 8.dp),
                             onClick = {
-                                navController.navigate("updateFarm/${farmInfo?.id}")
-                            },
+                                if (farmInfo != null) {
+                                    navController.navigate("updateFarm/${farmInfo.id}")
+                                }
+                            }
                         ) {
                             Text(text = stringResource(id = R.string.update))
                         }
                     }
-                } else {
+                }
+            else {
                     ElevatedButton(
                         modifier =
                         Modifier

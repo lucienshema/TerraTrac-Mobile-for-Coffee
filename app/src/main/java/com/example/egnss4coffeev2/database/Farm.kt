@@ -54,6 +54,18 @@ data class Farm(
     var longitude: String,
     @ColumnInfo(name = "coordinates")
     var coordinates: List<Pair<Double?, Double?>>?,
+    @ColumnInfo(name = "age")
+    var age: Int?,  // New field
+    @ColumnInfo(name = "gender")
+    var gender: String?,  // New field
+    @ColumnInfo(name = "govtIdNumber")
+    var govtIdNumber: String?,  // New field
+    @ColumnInfo(name = "numberOfTrees")
+    var numberOfTrees: Int?,  // New field
+    @ColumnInfo(name = "phone")
+    var phone: String?,  // New field
+    @ColumnInfo(name = "photo")
+    var photo: String?,  // New field
     @ColumnInfo(name = "synced", defaultValue = "0")
     val synced: Boolean = false,
     @ColumnInfo(name = "scheduledForSync", defaultValue = "0")
@@ -94,6 +106,12 @@ data class Farm(
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.createTypedArrayList(ParcelablePair.CREATOR)?.map { Pair(it.first, it.second) },
+        parcel.readValue(Int::class.java.classLoader) as? Int,  // New field
+        parcel.readString(),  // New field
+        parcel.readString(),  // New field
+        parcel.readValue(Int::class.java.classLoader) as? Int,  // New field
+        parcel.readString(),  // New field
+        parcel.readString(),  // New field
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readLong(),
@@ -129,6 +147,12 @@ data class Farm(
                     }
                 }
             })
+            parcel.writeValue(age)  // New field
+            parcel.writeString(gender)  // New field
+            parcel.writeString(govtIdNumber)  // New field
+            parcel.writeValue(numberOfTrees)  // New field
+            parcel.writeString(phone)  // New field
+            parcel.writeString(photo)  // New field
             parcel.writeByte(if (synced) 1 else 0)
             parcel.writeByte(if (scheduledForSync) 1 else 0)
             parcel.writeLong(createdAt)
@@ -142,6 +166,7 @@ data class Farm(
         }
     }
 }
+
 
 data class FarmDto(
     val remote_id: UUID,
@@ -286,7 +311,7 @@ data class Akrabi(
     @ColumnInfo(name = "kebele") val kebele: String = "", // Added Kebele field
     @ColumnInfo(name = "govtIdNumber") val govtIdNumber: String = "", // Added Govt ID number field
     @ColumnInfo(name = "phone") val phone: String = "", // Added phone field
-    @ColumnInfo(name = "photoUri") val photoUri: String = "" // Added photo URI field
+    @ColumnInfo(name = "photoUri") val photoUri: String ?
 )
 
 

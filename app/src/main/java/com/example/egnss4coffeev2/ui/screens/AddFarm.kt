@@ -17,7 +17,6 @@ import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.IdRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,17 +37,14 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,7 +70,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.Farm
 import com.example.egnss4coffeev2.database.FarmViewModel
@@ -379,7 +374,13 @@ fun FarmForm(
             sizeInHa.toFloat(),
             latitude,
             longitude,
-            coordinates = coordinatesData?.plus(coordinatesData.first())
+            coordinates = coordinatesData?.plus(coordinatesData.first()),
+            age = age.toInt(),  // Default value if null
+            gender = gender ?: "",  // Default value if null
+            govtIdNumber = govtIdNumber ?: "",  // Default value if null
+            numberOfTrees = numberOfTrees.toInt(),  // Default value if null
+            phone = phone ?: "",  // Default value if null
+            photo = photo ?: "",  // Default value if null
         )
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
@@ -1034,27 +1035,42 @@ fun addFarm(
     size: Float,
     latitude: String,
     longitude: String,
-    coordinates: List<Pair<Double, Double>>?
+    coordinates: List<Pair<Double, Double>>?,
+    age: Int,  // New field
+    gender: String,  // New field
+    govtIdNumber: String,  // New field
+    numberOfTrees: Int,  // New field
+    phone: String,  // New field
+    photo: String  // New field
 ): Farm {
     val farm = Farm(
-        siteId,
-        remote_id,
-        farmerPhoto,
-        farmerName,
-        memberId,
-        village,
-        district,
-        purchases,
-        size,
-        latitude,
-        longitude,
-        coordinates,
+        siteId = siteId,
+        remoteId = remote_id,
+        farmerPhoto = farmerPhoto,
+        farmerName = farmerName,
+        memberId = memberId,
+        village = village,
+        district = district,
+        purchases = purchases,
+        size = size,
+        latitude = latitude,
+        longitude = longitude,
+        coordinates = coordinates,
+        age = age?:0,  // Default value if null
+        gender = gender ?: "",  // Default value if null
+        govtIdNumber = govtIdNumber ?: "",  // Default value if null
+        numberOfTrees = numberOfTrees,  // Default value if null
+        phone = phone ?: "",  // Default value if null
+        photo = photo ?: "",  // Default value if null
+        synced = false,
+        scheduledForSync = false,
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addFarm(farm,siteId)
+    farmViewModel.addFarm(farm, siteId)
     return farm
 }
+
 
 fun isLocationEnabled(context: Context): Boolean {
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager

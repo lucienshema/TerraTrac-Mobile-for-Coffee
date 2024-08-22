@@ -11,7 +11,7 @@ import com.example.egnss4coffeev2.database.converters.BitmapConverter
 import com.example.egnss4coffeev2.database.converters.DateConverter
 
 
-@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 8, exportSchema = true)
+@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 10, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -201,6 +201,56 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create a new table with the updated schema, where photoUri can accept NULL values
+                db.execSQL("""
+            CREATE TABLE IF NOT EXISTS new_Akrabis (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                akrabiNumber TEXT NOT NULL,
+                akrabiName TEXT NOT NULL,
+                siteName TEXT NOT NULL,
+                age INTEGER NOT NULL DEFAULT 0,
+                gender TEXT NOT NULL DEFAULT '',
+                woreda TEXT NOT NULL DEFAULT '',
+                kebele TEXT NOT NULL DEFAULT '',
+                govtIdNumber TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL DEFAULT '',
+                photoUri TEXT NULL
+            )
+        """.trimIndent())
+
+                // Copy data from the old table to the new table
+                db.execSQL("""
+            INSERT INTO new_Akrabis (
+                id, akrabiNumber, akrabiName, siteName, age, gender, woreda, kebele, govtIdNumber, phone, photoUri
+            )
+            SELECT
+                id, akrabiNumber, akrabiName, siteName, age, gender, woreda, kebele, govtIdNumber, phone, photoUri
+            FROM Akrabis
+        """.trimIndent())
+
+                // Drop the old table
+                db.execSQL("DROP TABLE Akrabis")
+
+                // Rename the new table to the original name
+                db.execSQL("ALTER TABLE new_Akrabis RENAME TO Akrabis")
+            }
+        }
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Farms ADD COLUMN age INTEGER")
+                db.execSQL("ALTER TABLE Farms ADD COLUMN gender TEXT")
+                db.execSQL("ALTER TABLE Farms ADD COLUMN govtIdNumber TEXT")
+                db.execSQL("ALTER TABLE Farms ADD COLUMN numberOfTrees INTEGER")
+                db.execSQL("ALTER TABLE Farms ADD COLUMN phone TEXT")
+                db.execSQL("ALTER TABLE Farms ADD COLUMN photo TEXT")
+            }
+        }
+
+
+
 
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
@@ -211,7 +261,7 @@ abstract class AppDatabase : RoomDatabase() {
                         context.applicationContext,
                         AppDatabase::class.java,
                         "farm_collector_database_for_coffee"
-                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8)
+                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8,MIGRATION_8_9,MIGRATION_9_10)
                         .build()
 
                     INSTANCE = instance

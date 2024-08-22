@@ -167,7 +167,7 @@ fun CollectionSiteList(navController: NavController) {
                                 },
                                 farmViewModel = farmViewModel,
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }
@@ -216,30 +216,22 @@ fun siteCard(
     val iconColor = if (isDarkTheme) Color.White else Color.Black
 
     Column(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(top = 8.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ElevatedCard(
-            elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 6.dp,
-            ),
-            modifier =
-            Modifier
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            modifier = Modifier
                 .background(backgroundColor)
-                .fillMaxWidth() // 90% of the screen width
+                .fillMaxWidth() // Adjusted to fill max width
                 .padding(8.dp),
-            onClick = {
-                onCardClick()
-            },
+            onClick = { onCardClick() },
         ) {
             Column(
-                modifier =
-                Modifier
+                modifier = Modifier
                     .background(backgroundColor)
                     .padding(16.dp),
             ) {
@@ -249,29 +241,31 @@ fun siteCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
-                        modifier =
-                        Modifier
+                        modifier = Modifier
                             .weight(1.1f)
                             .padding(bottom = 4.dp),
                     ) {
                         Text(
                             text = site.name,
-                            style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 18.sp,
+                            style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = textColor,
+                                fontSize = 20.sp,
+                                color = textColor
                             ),
-                            modifier =
-                            Modifier
-                                .padding(bottom = 1.dp),
+                            modifier = Modifier.padding(bottom = 4.dp),
                         )
                         Text(
                             text = "${stringResource(id = R.string.agent_name)}: ${site.agentName}",
                             style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                            modifier =
-                            Modifier
-                                .padding(bottom = 1.dp),
+                            modifier = Modifier.padding(bottom = 1.dp),
+                        )
+                        Text(
+                            text = "${stringResource(id = R.string.village)}: ${site.village}",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
+                        )
+                        Text(
+                            text = "${stringResource(id = R.string.district)}: ${site.district}",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
                         )
                         if (site.phoneNumber.isNotEmpty()) {
                             Text(
@@ -279,16 +273,19 @@ fun siteCard(
                                 style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             )
                         }
+                        if (site.email.isNotEmpty()) {
+                            Text(
+                                text = "${stringResource(id = R.string.email)}: ${site.email}",
+                                style = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                            )
+                        }
                     }
-                    // Edit collection sites name
+                    // Adjusted IconButton modifiers for tighter spacing
                     IconButton(
-                        onClick = {
-                            showDialog.value = true
-                        },
-                        modifier =
-                        Modifier
+                        onClick = { showDialog.value = true },
+                        modifier = Modifier
                             .size(24.dp)
-                            .padding(4.dp),
+                            .padding(end = 4.dp) // Reduced end padding
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -296,16 +293,13 @@ fun siteCard(
                             tint = iconColor,
                         )
                     }
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    // Delete collection sites name
+                    Spacer(modifier = Modifier.padding(4.dp)) // Reduced spacer padding
+                    // Adjusted IconButton modifiers for tighter spacing
                     IconButton(
-                        onClick = {
-                            onDeleteClick()
-                        },
-                        modifier =
-                        Modifier
+                        onClick = { onDeleteClick() },
+                        modifier = Modifier
                             .size(24.dp)
-                            .padding(4.dp),
+                            .padding(start = 4.dp) // Reduced start padding
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
@@ -318,3 +312,4 @@ fun siteCard(
         }
     }
 }
+

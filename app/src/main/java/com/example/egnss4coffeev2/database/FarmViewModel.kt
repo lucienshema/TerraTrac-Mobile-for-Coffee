@@ -366,6 +366,13 @@ class FarmViewModel(
                 val longitude =
                     properties.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
 
+                val age = properties.optString("age", "0").toIntOrNull() ?: 0
+                val gender = properties.optString("gender", "")
+                val govtIdNumber = properties.optString("govtIdNumber", "")
+                val numberOfTrees = properties.optString("numberOfTrees", "0").toIntOrNull() ?: 0
+                val phone = properties.optString("phone", "")
+                val photo = properties.optString("photo", "")
+
                 val currentTime = System.currentTimeMillis()
 
                 val createdAt =
@@ -400,27 +407,54 @@ class FarmViewModel(
                     coordinates = coordList
                 }
 
-                val newFarm =
-                    coordinates?.let {
-                        Farm(
-                            siteId = siteId,
-                            remoteId = remoteId,
-                            farmerPhoto = "farmer-photo",
-                            farmerName = farmerName,
-                            memberId = memberId,
-                            village = village,
-                            district = district,
-                            purchases = 2.30f,
-                            size = size.takeIf { !it.isNaN() } ?: 0f,
-                            latitude = latitude ?: "0.0",
-                            longitude = longitude ?: "0.0",
-                            coordinates = it,
-                            synced = false,
-                            scheduledForSync = false,
-                            createdAt = createdAt,
-                            updatedAt = updatedAt,
-                        )
-                    }
+//                val newFarm =
+//                    coordinates?.let {
+//                        Farm(
+//                            siteId = siteId,
+//                            remoteId = remoteId,
+//                            farmerPhoto = "farmer-photo",
+//                            farmerName = farmerName,
+//                            memberId = memberId,
+//                            village = village,
+//                            district = district,
+//                            purchases = 2.30f,
+//                            size = size.takeIf { !it.isNaN() } ?: 0f,
+//                            latitude = latitude ?: "0.0",
+//                            longitude = longitude ?: "0.0",
+//                            coordinates = it,
+//                            synced = false,
+//                            scheduledForSync = false,
+//                            createdAt = createdAt,
+//                            updatedAt = updatedAt,
+//                        )
+//                    }
+                val newFarm = coordinates?.let {
+                    Farm(
+                        siteId = siteId,
+                        remoteId = remoteId,
+                        farmerPhoto = "farmer-photo",
+                        farmerName = farmerName,
+                        memberId = memberId,
+                        village = village,
+                        district = district,
+                        purchases = 2.30f,
+                        size = size.takeIf { !it.isNaN() } ?: 0f,
+                        latitude = latitude ?: "0.0",
+                        longitude = longitude ?: "0.0",
+                        coordinates = it,
+                        age = age,
+                        gender = gender,
+                        govtIdNumber = govtIdNumber,
+                        numberOfTrees = numberOfTrees,
+                        phone = phone,
+                        photo = photo,
+                        synced = false,
+                        scheduledForSync = false,
+                        createdAt = createdAt,
+                        updatedAt = updatedAt,
+                    )
+                }
+
                 if (newFarm != null) {
 //                    farms.add(newFarm)
                     validFarms.add(newFarm)
@@ -611,6 +645,13 @@ class FarmViewModel(
                             val latitude = values.getOrNull(8)
                             val longitude = values.getOrNull(9)
 
+                            val age = values.getOrNull(5)
+                            val gender = values.getOrNull(5) ?: ""
+                            val govtIdNumber = values.getOrNull(5) ?: ""
+                            val numberOfTrees = values.getOrNull(5)
+                            val phone = values.getOrNull(5) ?: ""
+                            val photo = values.getOrNull(5) ?: ""
+
                             // Extract and parse coordinates
                             val coordinatesString =
                                 values.getOrNull(10)?.removeSurrounding("\"", "\"") ?: ""
@@ -649,6 +690,34 @@ class FarmViewModel(
                             // Process each record here
                             println("Processing record for remote ID: $remoteId")
 
+//                            val newFarm =
+//                                Farm(
+//                                    siteId = siteId,
+//                                    remoteId = remoteId,
+//                                    farmerPhoto = "farmer-photo",
+//                                    farmerName = farmerName,
+//                                    memberId = memberId,
+//                                    village = village,
+//                                    district = district,
+//                                    purchases = 2.30f,
+//                                    size = size ?: 0f, // Use 0 as default if size is null
+//                                    latitude =
+//                                    latitude
+//                                        ?: "0.0",
+//                                    // Use "0.0" as default if latitude is null
+//                                    longitude =
+//                                    longitude
+//                                        ?: "0.0",
+//                                    // Use "0.0" as default if longitude is null
+//                                    coordinates =
+//                                    coordinates
+//                                        ?: emptyList(),
+//                                    // Use empty list if coordinates are null
+//                                    synced = false,
+//                                    scheduledForSync = false,
+//                                    createdAt = createdAt,
+//                                    updatedAt = updatedAt,
+//                                )
                             val newFarm =
                                 Farm(
                                     siteId = siteId,
@@ -659,19 +728,16 @@ class FarmViewModel(
                                     village = village,
                                     district = district,
                                     purchases = 2.30f,
-                                    size = size ?: 0f, // Use 0 as default if size is null
-                                    latitude =
-                                    latitude
-                                        ?: "0.0",
-                                    // Use "0.0" as default if latitude is null
-                                    longitude =
-                                    longitude
-                                        ?: "0.0",
-                                    // Use "0.0" as default if longitude is null
-                                    coordinates =
-                                    coordinates
-                                        ?: emptyList(),
-                                    // Use empty list if coordinates are null
+                                    size =size ?: 0f,
+                                    latitude = latitude ?: "0.0",
+                                    longitude = longitude ?: "0.0",
+                                    coordinates = coordinates ?: emptyList(),
+                                    age = age?.toInt(),  // New field, default value if null
+                                    gender = gender ?: "",  // New field, default value if null
+                                    govtIdNumber = govtIdNumber ?: "",  // New field, default value if null
+                                    numberOfTrees = numberOfTrees?.toInt(),  // New field, default value if null
+                                    phone = phone ?: "",  // New field, default value if null
+                                    photo = photo ?: "",  // New field, default value if null
                                     synced = false,
                                     scheduledForSync = false,
                                     createdAt = createdAt,
