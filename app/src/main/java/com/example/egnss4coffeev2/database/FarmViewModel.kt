@@ -59,8 +59,12 @@ class FarmViewModel(
     val readAllSites: RefreshableLiveData<List<CollectionSite>>
     val readData: RefreshableLiveData<List<Farm>>
 
+
     private val _farms = MutableLiveData<List<Farm>>()
     val farms: LiveData<List<Farm>> get() = _farms
+
+    private val _filteredFarms = MutableLiveData<List<Farm>>()
+    val filteredFarms: LiveData<List<Farm>> get() = _filteredFarms
 
     private val _boughtItems = MutableStateFlow<List<BuyThroughAkrabi>>(emptyList())
     val boughtItems: StateFlow<List<BuyThroughAkrabi>> get() = _boughtItems
@@ -71,6 +75,10 @@ class FarmViewModel(
     private val _originalBoughtItems = MutableStateFlow<List<BuyThroughAkrabi>>(emptyList())
     private val _originalBoughtDirectItems = MutableStateFlow<List<DirectBuy>>(emptyList())
 
+    private val _selectedSiteIds = MutableLiveData<List<Long>>()
+    val selectedSiteIds: LiveData<List<Long>> get() = _selectedSiteIds
+
+
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
         repository = FarmRepository(farmDAO)
@@ -79,6 +87,19 @@ class FarmViewModel(
 
         // Load initial data
         loadBoughtItemsDirectBuy()
+
+        // Filter farms based on selected site IDs
+        filterFarmsBySiteIds()
+
+        // Observe data changes and filter farms
+        readData.observeForever { farms ->
+            _farms.value = farms
+            filterFarmsBySiteIds() // Ensure farms are filtered based on selectedSiteIds when data is loaded
+        }
+
+        _selectedSiteIds.observeForever { siteIds ->
+            filterFarmsBySiteIds() // Filter farms whenever selectedSiteIds change
+        }
 
     }
 
@@ -310,6 +331,42 @@ class FarmViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteListSite(ids)
         }
+    }
+
+
+    // Function to get the total number of farms for a site
+    fun getTotalFarms(siteId: Long): LiveData<Int> {
+        return repository.getTotalFarmsForSite(siteId)
+    }
+
+    // Function to get the number of farms with incomplete data for a site
+    fun getFarmsWithIncompleteData(siteId: Long): LiveData<Int> {
+        return repository.getFarmsWithIncompleteDataForSite(siteId)
+    }
+
+
+    private fun filterFarmsBySiteIds() {
+        val siteIds = _selectedSiteIds.value ?: emptyList()
+        _farms.value?.let { farms ->
+            _farms.value = farms.filter { farm ->
+                siteIds.contains(farm.siteId)
+            }
+        }
+    }
+
+    fun updateSelectedSiteIds(newSiteIds: List<Long>) {
+        _selectedSiteIds.value = newSiteIds
+    }
+
+    // Function to filter farms based on selected IDs
+    fun filterFarmsBySelectedIds(selectedIds: List<Long>) {
+        viewModelScope.launch {
+            _filteredFarms.value = repository.getFarmsBySelectedIds(selectedIds).value
+        }
+    }
+
+    fun getFilteredFarms(selectedIds: List<Long>): LiveData<List<Farm>> {
+        return repository.getFarmsBySelectedIds(selectedIds)
     }
 
     fun refreshData(siteId: Long) {

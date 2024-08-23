@@ -195,7 +195,8 @@
     <string name="gov_id_number">Government ID Number</string>
     <string name="phone">Phone</string>
     <string name="number_of_trees">Number of Trees</string>
-
+    <string name="total_farms">%1$d total farms</string>
+    <string name="total_farms_with_incomplete_data">%1$d with incomplete data</string>
 
 
 </resources>

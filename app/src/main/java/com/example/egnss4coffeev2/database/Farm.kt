@@ -221,6 +221,10 @@ data class CollectionSite(
     var village: String,
     @ColumnInfo(name = "district")
     var district: String,
+    @ColumnInfo(name = "totalFarms")
+    var totalFarms: Int = 0, // Added field for total farms
+    @ColumnInfo(name = "farmsWithIncompleteData")
+    var farmsWithIncompleteData: Int = 0 ,// Added field for farms with incomplete data
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
     val createdAt: Long,

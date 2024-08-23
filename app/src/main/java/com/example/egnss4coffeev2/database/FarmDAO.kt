@@ -142,4 +142,15 @@ interface FarmDAO {
     @Query("SELECT * FROM DirectBuy WHERE date BETWEEN :startDate AND :endDate")
     suspend fun getDirectBuysByDateRange(startDate: String, endDate: String): List<DirectBuy>
 
+    // Query to get the total number of farms for a site
+    @Query("SELECT COUNT(*) FROM Farms WHERE siteId = :siteId")
+    fun getTotalFarmsForSite(siteId: Long): LiveData<Int>
+
+    // Query to get the number of farms with incomplete data for a site
+    @Query("SELECT COUNT(*) FROM Farms WHERE siteId = :siteId AND needsUpdate = 1")
+    fun getFarmsWithIncompleteDataForSite(siteId: Long): LiveData<Int>
+
+    @Query("SELECT * FROM Farms WHERE siteId IN (:selectedIds)")
+    fun getFarmsBySelectedIds(selectedIds: List<Long>): LiveData<List<Farm>>
+
 }

@@ -1966,7 +1966,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.home),
-                                    icon = Icons.Default.Home,
+                                    painter = painterResource(R.drawable.home),
                                     onClick = {
                                         navController.navigate("shopping")
                                         drawerVisible = false
@@ -1976,7 +1976,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.akrabi_registration),
-                                    icon = Icons.Default.Person,
+                                    painter = painterResource(R.drawable.person_add),
                                     onClick = {
                                         navController.navigate("akrabi_list_screen")
                                         drawerVisible = false
@@ -1986,7 +1986,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.collection_site_registration),
-                                    icon = Icons.Default.LocationOn,
+                                    painter = painterResource(R.drawable.add_collection_site),
                                     onClick = {
                                         navController.navigate("siteList")
                                         drawerVisible = false
@@ -1996,7 +1996,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.farmer_registration),
-                                    icon = Icons.Default.Person,
+                                    painter = painterResource(R.drawable.person_add),
                                     onClick = {
                                         navController.navigate("siteList")
                                         drawerVisible = false
@@ -2056,7 +2056,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                 // Logout Item
                                 DrawerItem(
                                     text = stringResource(id = R.string.logout),
-                                    icon = Icons.Default.ExitToApp,
+                                    painter = painterResource(R.drawable.logout),
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI

@@ -195,9 +195,9 @@ class MainActivity : ComponentActivity() {
                                 Home(navController, languageViewModel, languages)
                             }
                             composable("siteList") {
-                                ScreenWithSidebar(navController) {
+                                //ScreenWithSidebar(navController) {
                                     CollectionSiteList(navController)
-                                }
+                               // }
                             }
                             composable("farmList/{siteId}") { backStackEntry ->
                                 val siteId = backStackEntry.arguments?.getString("siteId")

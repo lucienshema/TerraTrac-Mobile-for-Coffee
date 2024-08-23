@@ -84,12 +84,14 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -520,7 +522,7 @@ fun BoughtItemsList(
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.home),
-                                    icon = Icons.Default.Home,
+                                    painter = painterResource(R.drawable.home),
                                     onClick = {
                                         navController.currentBackStackEntry
                                         drawerVisible = false
@@ -530,7 +532,8 @@ fun BoughtItemsList(
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.akrabi_registration),
-                                    icon = Icons.Default.Person,
+                                    // icon = Icons.Default.Person,
+                                    painter = painterResource(R.drawable.person_add),
                                     onClick = {
                                         navController.navigate("akrabi_list_screen")
                                         drawerVisible = false
@@ -540,7 +543,7 @@ fun BoughtItemsList(
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.collection_site_registration),
-                                    icon = Icons.Default.LocationOn,
+                                    painter = painterResource(R.drawable.add_collection_site),
                                     onClick = {
                                         navController.navigate("siteList")
                                         drawerVisible = false
@@ -550,7 +553,7 @@ fun BoughtItemsList(
                             item {
                                 DrawerItem(
                                     text = stringResource(id = R.string.farmer_registration),
-                                    icon = Icons.Default.Person,
+                                    painter = painterResource(R.drawable.person_add),
                                     onClick = {
                                         val siteId = farmViewModel.getLastSiteId()
                                         navController.navigate("siteList")
@@ -610,7 +613,7 @@ fun BoughtItemsList(
                                 // Logout Item
                                 DrawerItem(
                                     text = stringResource(id = R.string.logout),
-                                    icon = Icons.Default.ExitToApp,
+                                    painter = painterResource(R.drawable.logout),
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI
@@ -848,7 +851,7 @@ fun BoughtItemsListDirectBuy(
                                 item {
                                     DrawerItem(
                                         text = stringResource(id = R.string.home),
-                                        icon = Icons.Default.Home,
+                                        painter = painterResource(R.drawable.home),
                                         onClick = {
                                             // navController.navigate("shopping")
                                             //navController.previousBackStackEntry
@@ -859,7 +862,7 @@ fun BoughtItemsListDirectBuy(
                                 item {
                                     DrawerItem(
                                         text = stringResource(id = R.string.akrabi_registration),
-                                        icon = Icons.Default.Person,
+                                        painter = painterResource(R.drawable.person_add),
                                         onClick = {
                                             navController.navigate("akrabi_list_screen")
                                             drawerVisible = false
@@ -869,7 +872,7 @@ fun BoughtItemsListDirectBuy(
                                 item {
                                     DrawerItem(
                                         text = stringResource(id = R.string.collection_site_registration),
-                                        icon = Icons.Default.LocationOn,
+                                        painter = painterResource(R.drawable.add_collection_site),
                                         onClick = {
                                             navController.navigate("siteList")
                                             drawerVisible = false
@@ -879,7 +882,7 @@ fun BoughtItemsListDirectBuy(
                                 item {
                                     DrawerItem(
                                         text = stringResource(id = R.string.farmer_registration),
-                                        icon = Icons.Default.Person,
+                                        painter = painterResource(R.drawable.person_add),
                                         onClick = {
                                             navController.navigate("siteList")
                                             drawerVisible = false
@@ -938,7 +941,7 @@ fun BoughtItemsListDirectBuy(
                                     // Logout Item
                                     DrawerItem(
                                         text = stringResource(id = R.string.logout),
-                                        icon = Icons.Default.ExitToApp,
+                                        painter = painterResource(R.drawable.logout),
                                         onClick = {
                                             // Call your logout function here
                                             // navigate to login screen or refresh UI
@@ -995,7 +998,7 @@ fun LanguageCardSideBar(language: Language, isSelected: Boolean, onSelect: (Stri
 
 
 @Composable
-fun DrawerItem(text: String, icon: ImageVector, onClick: () -> Unit) {
+fun DrawerItem(text: String, painter: Painter, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1004,7 +1007,7 @@ fun DrawerItem(text: String, icon: ImageVector, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = icon,
+            painter = painter,
             contentDescription = null,
             modifier = Modifier
                 .padding(end = 16.dp)

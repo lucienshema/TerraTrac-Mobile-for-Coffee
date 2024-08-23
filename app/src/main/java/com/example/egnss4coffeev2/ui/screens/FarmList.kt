@@ -336,38 +336,6 @@ fun FarmList(
     // State to control the visibility of BuyThroughAkrabiForm
     var isFormVisible by remember { mutableStateOf(false) }
 
-//    val collectionSites = listOf(
-//        CollectionSite(
-//            name = "Site 1",
-//            agentName = "Agent A",
-//            phoneNumber = "123-456-7890",
-//            email = "agentA@example.com",
-//            village = "Village A",
-//            district = "District A",
-//            updatedAt = 1263773,
-//            createdAt =126783
-//        ),
-//        CollectionSite(
-//            name = "Site 2",
-//            agentName = "Agent B",
-//            phoneNumber = "098-765-4321",
-//            email = "agentB@example.com",
-//            village = "Village B",
-//            district = "District B",
-//            updatedAt = 1263773,
-//            createdAt =126783
-//        ),
-//        CollectionSite(
-//            name = "Site 3",
-//            agentName = "Agent C",
-//            phoneNumber = "456-789-0123",
-//            email = "agentC@example.com",
-//            village = "Village C",
-//            district = "District C",
-//            updatedAt = 1263773,
-//            createdAt =126783
-//        )
-//    )
     val collectionSites by farmViewModel.readAllSites.observeAsState(emptyList())
     var akrabis by remember { mutableStateOf(listOf<Akrabi>()) }
 

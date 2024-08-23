@@ -111,6 +111,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.compose.android)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.media3.exoplayer)
     kapt(libs.hilt.compiler)
     implementation(libs.gms.play.services.ads.identifier)
     implementation(libs.maps.ktx)
@@ -118,6 +119,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     kapt(libs.androidx.room.compiler)
+
 //
 //    implementation(libs.google.accompanist.pager)
 //    implementation(libs.accompanist.pager.indicators)

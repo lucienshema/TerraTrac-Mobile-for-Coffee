@@ -11,7 +11,7 @@ import com.example.egnss4coffeev2.database.converters.BitmapConverter
 import com.example.egnss4coffeev2.database.converters.DateConverter
 
 
-@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 10, exportSchema = true)
+@Database(entities = [Farm::class, CollectionSite::class,BuyThroughAkrabi::class,DirectBuy::class,Akrabi::class], version = 11, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -249,8 +249,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-
-
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add the columns with default values and NOT NULL constraints
+                db.execSQL("ALTER TABLE CollectionSites ADD COLUMN totalFarms INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE CollectionSites ADD COLUMN farmsWithIncompleteData INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
@@ -261,7 +266,7 @@ abstract class AppDatabase : RoomDatabase() {
                         context.applicationContext,
                         AppDatabase::class.java,
                         "farm_collector_database_for_coffee"
-                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8,MIGRATION_8_9,MIGRATION_9_10)
+                    ) .addMigrations(MIGRATION_1_2,MIGRATION_2_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8,MIGRATION_8_9,MIGRATION_9_10,MIGRATION_10_11)
                         .build()
 
                     INSTANCE = instance

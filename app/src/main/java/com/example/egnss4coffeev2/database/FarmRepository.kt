@@ -91,6 +91,21 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteListSite(ids)
     }
 
+    // Function to get the total number of farms for a site
+    fun getTotalFarmsForSite(siteId: Long): LiveData<Int> {
+        return farmDAO.getTotalFarmsForSite(siteId)
+    }
+
+    // Function to get the number of farms with incomplete data for a site
+    fun getFarmsWithIncompleteDataForSite(siteId: Long): LiveData<Int> {
+        return farmDAO.getFarmsWithIncompleteDataForSite(siteId)
+    }
+
+    fun getFarmsBySelectedIds(selectedIds: List<Long>): LiveData<List<Farm>> {
+        return farmDAO.getFarmsBySelectedIds(selectedIds)
+    }
+
+
 //    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
 //        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) } != null
 //    }

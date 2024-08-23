@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -355,9 +356,9 @@ fun SetPolygon(
                     if (viewSelectFarm) {
                         0.55f
                     } else if (accuracy.isNotEmpty()) {
-                        .75f
+                        .87f
                     } else {
-                        .85f
+                        .93f
                     },
                 ),
             verticalArrangement = Arrangement.Center,
@@ -576,7 +577,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
+                            painter = if (isCapturingCoordinates) painterResource(R.drawable.finish) else painterResource(R.drawable.start),
                             contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp),
@@ -651,7 +652,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            painter = painterResource(R.drawable.add),
                             contentDescription = stringResource(id = R.string.add_point),
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp),
@@ -668,7 +669,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            painter = painterResource(R.drawable.clear),
                             contentDescription = stringResource(id = R.string.reset),
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp),
@@ -685,7 +686,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            painter = painterResource(R.drawable.drop),
                             contentDescription = stringResource(id = R.string.drop_point),
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp),
