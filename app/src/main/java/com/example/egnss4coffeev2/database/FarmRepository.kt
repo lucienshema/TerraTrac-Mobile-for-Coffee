@@ -1,7 +1,9 @@
 package com.example.egnss4coffeev2.database
 
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class FarmRepository(private val farmDAO: FarmDAO) {
@@ -104,6 +106,15 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     fun getFarmsBySelectedIds(selectedIds: List<Long>): LiveData<List<Farm>> {
         return farmDAO.getFarmsBySelectedIds(selectedIds)
     }
+
+
+    suspend fun getCollectionSites(page: Int, pageSize: Int): List<CollectionSite> {
+        val offset = (page - 1) * pageSize
+        return withContext(Dispatchers.IO) {
+            farmDAO.getCollectionSites(offset, pageSize)
+        }
+    }
+
 
 
 //    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {

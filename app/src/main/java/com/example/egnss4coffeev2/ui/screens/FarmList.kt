@@ -58,6 +58,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -1110,6 +1111,10 @@ fun FarmListHeader(
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
     showSearch: Boolean,
+    selectedItemsCount: Int,
+    selectAllEnabled: Boolean,
+    isAllSelected: Boolean,
+    onSelectAllChanged: (Boolean) -> Unit
 ) {
     // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
@@ -1155,6 +1160,14 @@ fun FarmListHeader(
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 }
             }
+
+            if (selectedItemsCount > 0 && selectAllEnabled) {
+                Checkbox(
+                    checked = isAllSelected,
+                    onCheckedChange = { onSelectAllChanged(it) }
+                )
+            }
+
         },
     )
     // Conditional rendering of the search field
@@ -1784,6 +1797,10 @@ fun UpdateFarmForm(
             onBackSearchClicked = {},
             showAdd = false,
             showSearch = false,
+            selectedItemsCount = 0,
+            selectAllEnabled = false,
+            isAllSelected =false,
+            onSelectAllChanged = { null}
         )
 
         Column(

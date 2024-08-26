@@ -112,6 +112,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose.android)
     implementation(libs.coil.compose)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.paging.common.android)
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.shimmer.compose.shimmer)
+
+
     kapt(libs.hilt.compiler)
     implementation(libs.gms.play.services.ads.identifier)
     implementation(libs.maps.ktx)

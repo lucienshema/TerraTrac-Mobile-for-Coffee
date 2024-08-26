@@ -62,7 +62,11 @@ fun AddSite(navController: NavController) {
             onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
             showAdd = false,
-            showSearch = false
+            showSearch = false,
+            selectedItemsCount = 0,
+            selectAllEnabled = false,
+            isAllSelected =false,
+            onSelectAllChanged = { null}
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)

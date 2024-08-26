@@ -128,6 +128,7 @@ import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.database.Farm
 import com.example.egnss4coffeev2.utils.Language
 import com.example.egnss4coffeev2.utils.LanguageViewModel
+import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.delay
 
 
@@ -1676,7 +1677,8 @@ fun CreateAkrabiFormScreen(navController: NavController,akrabiViewModel: AkrabiV
 }
 @Composable
 fun AkrabiListScreen(
-    akrabis: List<Akrabi>,
+    akrabis: List<Akrabi>?,
+    isLoading: Boolean, // Add a flag to indicate loading state
     onViewDetails: (Akrabi) -> Unit,
     onEdit: (Akrabi) -> Unit,
     onDelete: (Akrabi) -> Unit
@@ -1687,64 +1689,140 @@ fun AkrabiListScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        // Akrabi List
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 8.dp)
-        ) {
-            items(akrabis.size) { index ->
-                val akrabi = akrabis[index]
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .clickable { onViewDetails(akrabi) },
-                    elevation = CardDefaults.cardElevation(4.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
+        // Show Skeleton UI when loading
+        if (isLoading) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                items(5) { // Show a fixed number of skeleton items
+                    SkeletonAkrabiItem()
+                }
+            }
+        } else if (akrabis != null && akrabis.isNotEmpty()) {
+            // Akrabi List
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                items(akrabis.size) { index ->
+                    val akrabi = akrabis[index]
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 8.dp)
+                            .clickable { onViewDetails(akrabi) },
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "${stringResource(id=R.string.akrabi_number)}: ${akrabi.akrabiNumber}",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = "${stringResource(id=R.string.akrabi_name)}: ${akrabi.akrabiName}",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = "${stringResource(id=R.string.site_name)}: ${akrabi.siteName}",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-
-                        Row {
-                            IconButton(onClick = { onEdit(akrabi) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit",
-                                    tint = MaterialTheme.colorScheme.primary
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "${stringResource(id=R.string.akrabi_number)}: ${akrabi.akrabiNumber}",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "${stringResource(id=R.string.akrabi_name)}: ${akrabi.akrabiName}",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "${stringResource(id=R.string.site_name)}: ${akrabi.siteName}",
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
                             }
 
-                            IconButton(onClick = { onDelete(akrabi) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete",
-                                    tint = Color.Red
-                                )
+                            Row {
+                                IconButton(onClick = { onEdit(akrabi) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+
+                                IconButton(onClick = { onDelete(akrabi) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = Color.Red
+                                    )
+                                }
                             }
                         }
                     }
                 }
+            }
+        } else {
+            // Handle the empty state if no akrabis are available
+            Text(
+                text = stringResource(id = R.string.no_results_found),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+    }
+}
+
+@Composable
+fun SkeletonAkrabiItem() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .shimmer(), // Apply shimmer effect
+        elevation = CardDefaults.cardElevation(4.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+            }
+
+            Row {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
             }
         }
     }
@@ -1910,6 +1988,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
 
                         AkrabiListScreen(
                             akrabis = filteredItems,
+                            isLoading= isLoading,
                             onViewDetails = { akrabi ->
                                 // Navigate to the View Akrabi details screen
                                 navController.navigate("akrabiDetails/${akrabi.id}")

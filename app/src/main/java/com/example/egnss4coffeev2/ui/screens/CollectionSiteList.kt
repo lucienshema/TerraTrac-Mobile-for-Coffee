@@ -1,12 +1,13 @@
-
 package com.example.egnss4coffeev2.ui.screens
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,12 +26,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -46,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,11 +70,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.CollectionSite
 import com.example.egnss4coffeev2.database.FarmViewModel
 import com.example.egnss4coffeev2.database.FarmViewModelFactory
 import com.example.egnss4coffeev2.ui.composes.UpdateCollectionDialog
+import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.delay
 import java.io.BufferedWriter
 import java.io.File
@@ -358,7 +369,7 @@ import java.util.Locale
 //}
 
 
-
+@SuppressLint("AutoboxingStateCreation")
 @Composable
 fun CollectionSiteList(navController: NavController) {
     val context = LocalContext.current
@@ -380,16 +391,40 @@ fun CollectionSiteList(navController: NavController) {
 
     farmViewModel.updateSelectedSiteIds(selectedIds)
 
+    val lazyPagingItems = farmViewModel.pager.collectAsLazyPagingItems()
+
+    val pageSize = 3
+    val pagedData = farmViewModel.pager.collectAsLazyPagingItems()
+    var currentPage by remember { mutableIntStateOf(1) }
+    val totalPages = (pagedData.itemCount + pageSize - 1) / pageSize
+
+    val isLoadingPage = lazyPagingItems.loadState.append is LoadState.Loading
+    val isError = lazyPagingItems.loadState.refresh is LoadState.Error
+    val items = lazyPagingItems.itemSnapshotList.items
+
+    // print items size
+    println("items size ${lazyPagingItems.itemCount}")
+
+
     val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
+
+    val filteredList = cwsListItems.filter {
+        it.name.contains(searchQuery, ignoreCase = true)
+    }
     //val listItems by farmViewModel.readData.observeAsState(emptyList())
 
     val listItems by farmViewModel.getFilteredFarms(selectedIds).observeAsState(emptyList())
 
+    // Track the number of selected items
+    val selectedItemsCount = selectedIds.size
+
     // Simulate loading for demonstration purposes
     LaunchedEffect(Unit) {
+        Log.d("CollectionSiteList", "Items count: ${lazyPagingItems.itemCount}\"")
         delay(500)
         isLoading.value = false
     }
+
 
 
     fun onDelete() {
@@ -412,8 +447,24 @@ fun CollectionSiteList(navController: NavController) {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename =
-            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+
+
+        // Get names of all selected sites
+        val selectedSiteNames = cwsListItems
+            .filter { selectedIds.contains(it.siteId) }
+            .map { it.name }
+            .take(3)  // Limit to first 3 sites to avoid extremely long filenames
+            .joinToString("_") { it.replace(" ", "_") }
+
+        val additionalSitesCount = (selectedIds.size - 3).coerceAtLeast(0)
+        val siteNamesPart = if (additionalSitesCount > 0) {
+            "${selectedSiteNames}_and_${additionalSitesCount}_more"
+        } else {
+            selectedSiteNames
+        }
+        val fileExtension = if (exportFormat == "CSV") "csv" else "geojson"
+        val filename = "farms_${siteNamesPart}_$timestamp.$fileExtension"
+
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
         val downloadsDir =
@@ -431,8 +482,8 @@ fun CollectionSiteList(navController: NavController) {
                         val site = cwsListItems.find { it.siteId == siteId }
                         val siteName = site?.name ?: "Unknown"
                         listItems.filter { it.siteId == siteId }.forEach { farm ->
-                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                        val matches = regex.findAll(farm.coordinates.toString())
+                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                            val matches = regex.findAll(farm.coordinates.toString())
 //                        val reversedCoordinates =
 //                            matches
 //                                .map { match ->
@@ -454,32 +505,36 @@ fun CollectionSiteList(navController: NavController) {
 //                                }
 
 
-                        val reversedCoordinates =
-                            matches
-                                .map { match ->
-                                    val (lat, lon) = match.destructured
-                                    "[$lon, $lat]"
-                                }.toList()
-                                .let { coordinates ->
-                                    if (coordinates.isNotEmpty()) {
-                                        // Always include brackets, even for a single point
-                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
-                                    } else {
-                                        val lon = farm.longitude ?: "0.0"
-                                        val lat = farm.latitude ?: "0.0"
+                            val reversedCoordinates =
+                                matches
+                                    .map { match ->
+                                        val (lat, lon) = match.destructured
                                         "[$lon, $lat]"
+                                    }.toList()
+                                    .let { coordinates ->
+                                        if (coordinates.isNotEmpty()) {
+                                            // Always include brackets, even for a single point
+                                            coordinates.joinToString(
+                                                ", ",
+                                                prefix = "[",
+                                                postfix = "]"
+                                            )
+                                        } else {
+                                            val lon = farm.longitude ?: "0.0"
+                                            val lat = farm.latitude ?: "0.0"
+                                            "[$lon, $lat]"
+                                        }
                                     }
-                                }
 
-                        val line =
-                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-                                Date(
-                                    farm.createdAt,
-                                )
-                            },${Date(farm.updatedAt)}\n"
-                        writer.write(line)
-                    }
+                            val line =
+                                "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                    Date(
+                                        farm.createdAt,
+                                    )
+                                },${Date(farm.updatedAt)}\n"
+                            writer.write(line)
                         }
+                    }
                 } else {
                     val geoJson =
                         buildString {
@@ -488,23 +543,26 @@ fun CollectionSiteList(navController: NavController) {
                             selectedIds.forEachIndexed { index, siteId ->
                                 val site = cwsListItems.find { it.siteId == siteId }
                                 val siteName = site?.name ?: "Unknown"
-                                listItems.filter { it.siteId == siteId }.forEachIndexed { farmIndex, farm ->
+                                listItems.filter { it.siteId == siteId }
+                                    .forEachIndexed { farmIndex, farm ->
 
-                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                val matches = regex.findAll(farm.coordinates.toString())
-                                val geoJsonCoordinates =
-                                    matches
-                                        .map { match ->
-                                            val (lat, lon) = match.destructured
-                                            "[$lon, $lat]"
-                                        }.joinToString(", ", prefix = "[", postfix = "]")
-                                val latitude =
-                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-                                val longitude =
-                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                        val matches = regex.findAll(farm.coordinates.toString())
+                                        val geoJsonCoordinates =
+                                            matches
+                                                .map { match ->
+                                                    val (lat, lon) = match.destructured
+                                                    "[$lon, $lat]"
+                                                }.joinToString(", ", prefix = "[", postfix = "]")
+                                        val latitude =
+                                            farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 }
+                                                ?: 0.0
+                                        val longitude =
+                                            farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 }
+                                                ?: 0.0
 
-                                val feature =
-                                    """
+                                        val feature =
+                                            """
                                     {
                                         "type": "Feature",
                                         "properties": {
@@ -528,10 +586,12 @@ fun CollectionSiteList(navController: NavController) {
                                         }
                                     }
                                     """.trimIndent()
-                                append(feature)
-                                    if (farmIndex < listItems.filter { it.siteId == siteId }.size - 1 || (index < selectedIds.size - 1)) append(",")
+                                        append(feature)
+                                        if (farmIndex < listItems.filter { it.siteId == siteId }.size - 1 || (index < selectedIds.size - 1)) append(
+                                            ","
+                                        )
+                                    }
                             }
-                        }
                             append("]}")
                         }
                     writer.write(geoJson)
@@ -625,25 +685,28 @@ fun CollectionSiteList(navController: NavController) {
                                 selectedIds.forEachIndexed { index, siteId ->
                                     val site = cwsListItems.find { it.siteId == siteId }
                                     val siteName = site?.name ?: "Unknown"
-                                    listItems.filter { it.siteId == siteId }.forEachIndexed { farmIndex, farm ->
-                                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                        val matches = regex.findAll(farm.coordinates.toString())
-                                        val geoJsonCoordinates =
-                                            matches
-                                                .map { match ->
-                                                    val (lat, lon) = match.destructured
-                                                    "[$lon, $lat]"
-                                                }.joinToString(", ", prefix = "[", postfix = "]")
-                                        // Ensure latitude and longitude are not null
-                                        val latitude =
-                                            farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 }
-                                                ?: 0.0
-                                        val longitude =
-                                            farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 }
-                                                ?: 0.0
+                                    listItems.filter { it.siteId == siteId }
+                                        .forEachIndexed { farmIndex, farm ->
+                                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                            val matches = regex.findAll(farm.coordinates.toString())
+                                            val geoJsonCoordinates =
+                                                matches
+                                                    .map { match ->
+                                                        val (lat, lon) = match.destructured
+                                                        "[$lon, $lat]"
+                                                    }
+                                                    .joinToString(", ", prefix = "[", postfix = "]")
+                                            // Ensure latitude and longitude are not null
+                                            val latitude =
+                                                farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 }
+                                                    ?: 0.0
+                                            val longitude =
+                                                farm.longitude.toDoubleOrNull()
+                                                    ?.takeIf { it != 0.0 }
+                                                    ?: 0.0
 
-                                        val feature =
-                                            """
+                                            val feature =
+                                                """
                                         {
                                             "type": "Feature",
                                             "properties": {
@@ -667,9 +730,9 @@ fun CollectionSiteList(navController: NavController) {
                                             }
                                         }
                                         """.trimIndent()
-                                        append(feature)
-                                        if (index < listItems.size - 1) append(",")
-                                    }
+                                            append(feature)
+                                            if (index < listItems.size - 1) append(",")
+                                        }
                                 }
                                 append("]}")
                             }
@@ -699,16 +762,29 @@ fun CollectionSiteList(navController: NavController) {
 
     fun initiateFileCreation(activity: Activity) {
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-        val intent =
-            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = mimeType
-                val getSiteById = cwsListItems.find { it.siteId == siteID }
-                val siteName = getSiteById?.name ?: "SiteName"
-                val timestamp =
-                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val filename =
-                    if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mimeType
+
+            // Get names of all selected sites
+            val selectedSiteNames = cwsListItems
+                .filter { selectedIds.contains(it.siteId) }
+                .map { it.name }
+                .take(3)  // Limit to first 3 sites to avoid extremely long filenames
+                .joinToString("_") { it.replace(" ", "_") }
+
+            val additionalSitesCount = (selectedIds.size - 3).coerceAtLeast(0)
+            val siteNamesPart = if (additionalSitesCount > 0) {
+                "${selectedSiteNames}_and_${additionalSitesCount}_more"
+            } else {
+                selectedSiteNames
+            }
+
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileExtension = if (exportFormat == "CSV") "csv" else "geojson"
+            val filename = "farms_${siteNamesPart}_$timestamp.$fileExtension"
+
+
                 putExtra(Intent.EXTRA_TITLE, filename)
             }
         createDocumentLauncher.launch(intent)
@@ -783,11 +859,137 @@ fun CollectionSiteList(navController: NavController) {
         )
     }
 
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp)
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize()
+//        ) {
+//            FarmListHeader(
+//                title = stringResource(id = R.string.collection_site_list),
+//                onSearchQueryChanged = setSearchQuery,
+//                onAddFarmClicked = { navController.navigate("addSite") },
+//                onBackSearchClicked = { navController.navigate("siteList") },
+//                onBackClicked = { navController.navigate("shopping") },
+//                showAdd = true,
+//                showSearch = true,
+//                selectedItemsCount = selectedItemsCount,
+//                selectAllEnabled = cwsListItems.isNotEmpty(),
+//                isAllSelected = selectedIds.size == cwsListItems.size,
+//                onSelectAllChanged = { isSelected ->
+//                    if (isSelected) {
+//                        selectedIds.addAll(cwsListItems.map { it.siteId })
+//                    } else {
+//                        selectedIds.clear()
+//                    }
+//                }
+//            )
+//            Spacer(modifier = Modifier.height(8.dp))
+//
+//            // Show loader while data is loading
+//            if (isLoading.value) {
+//                // Show loading skeletons while data is loading
+//                LazyColumn {
+//                    items(4) { // Display 4 skeleton cards while loading
+//                        SkeletonSiteCard()
+//                        Spacer(modifier = Modifier.height(8.dp))
+//                    }
+//                }
+//            } else {
+//                if (cwsListItems.isNotEmpty()) {
+//                    Column(modifier = Modifier.weight(1f)) {
+//                        val filteredList = cwsListItems.filter {
+//                            it.name.contains(searchQuery, ignoreCase = true)
+//                        }
+//                        // Display number of items Selected
+//                        if(selectedIds.size >=1) {
+//                                Text(
+//                                    text = "${selectedIds.size} selected",
+//                                    modifier = Modifier
+//                                        .padding(top = 16.dp)
+//                                        .fillMaxWidth(),
+//                                    textAlign = TextAlign.Center,
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                )
+//                        }
+//                        Spacer(modifier = Modifier.height(8.dp))
+//                        // Display no results found message
+//                        if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
+//                            Text(
+//                                text = stringResource(R.string.no_results_found),
+//                                modifier = Modifier
+//                                    .padding(16.dp)
+//                                    .fillMaxWidth(),
+//                                textAlign = TextAlign.Center,
+//                                style = MaterialTheme.typography.bodyMedium,
+//                            )
+//                        } else {
+//                            LazyColumn {
+//                                items(filteredList) { site ->
+//                                    val isSelected = selectedIds.contains(site.siteId)
+//                                    siteCard(
+//                                        site = site,
+//                                        isSelected = isSelected,
+//                                        onCheckedChange = { isChecked ->
+//                                            toggleSelection(site.siteId, isChecked)
+//                                        },
+//                                        onCardClick = {
+//                                            navController.navigate("farmList/${site.siteId}")
+//                                        },
+//                                        totalFarms = farmViewModel.getTotalFarms(site.siteId).observeAsState(0).value,
+//                                        farmsWithIncompleteData= farmViewModel.getFarmsWithIncompleteData(site.siteId).observeAsState(0).value,
+//                                        farmViewModel = farmViewModel,
+//                                    )
+//                                    Spacer(modifier = Modifier.height(8.dp))
+//                                }
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    Spacer(modifier = Modifier.height(8.dp))
+//                    Image(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .align(Alignment.CenterHorizontally)
+//                            .padding(16.dp, 8.dp),
+//                        painter = painterResource(id = R.drawable.no_data2),
+//                        contentDescription = null,
+//                    )
+//                }
+//            }
+//        }
+//
+//        // Display the BottomActionBar anchored at the bottom of the screen
+//        if (selectedIds.isNotEmpty()) {
+//            BottomActionBar(
+//                modifier = Modifier
+//                    .align(Alignment.BottomCenter)
+//                    .fillMaxWidth(),
+//                onDeleteClick = { showDeleteDialog.value = true },
+//                onExportClicked = {
+//                    action = Action.Export
+//                    showFormatDialog = true
+//                },
+//                onShareClicked = {
+//                    action = Action.Share
+//                    showFormatDialog = true
+//                },
+//            )
+//        }
+//
+//        // Show delete confirmation dialog
+//        if (showDeleteDialog.value) {
+//            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+//        }
+//    }
+
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(8.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -800,27 +1002,53 @@ fun CollectionSiteList(navController: NavController) {
                 onBackClicked = { navController.navigate("shopping") },
                 showAdd = true,
                 showSearch = true,
+                selectedItemsCount = selectedItemsCount,
+                selectAllEnabled = filteredList.isNotEmpty(),
+                isAllSelected = selectedItemsCount == cwsListItems.size,
+                onSelectAllChanged = { isSelected ->
+                    if (isSelected) {
+                        selectedIds.clear() // Clear first to avoid duplicates
+                        selectedIds.addAll(cwsListItems.map { it.siteId })
+                    } else {
+                        selectedIds.clear()
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Show loader while data is loading
-            if (isLoading.value) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                if (cwsListItems.isNotEmpty()) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        val filteredList = cwsListItems.filter {
-                            it.name.contains(searchQuery, ignoreCase = true)
+            when {
+                pagedData.loadState.refresh is LoadState.Loading -> {
+                    LazyColumn {
+                        items(3) {
+                            SkeletonSiteCard()
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
-
-                        // Display no results found message
+                    }
+                }
+                pagedData.loadState.refresh is LoadState.Error -> {
+                    Text(
+                        text = stringResource(id = R.string.error_loading_more_sites),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Red
+                    )
+                }
+                cwsListItems.isNotEmpty() -> {
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (selectedItemsCount >= 1) {
+                            Text(
+                                text = "${selectedItemsCount} selected",
+                                modifier = Modifier
+                                    .padding(top = 8.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                         if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.no_results_found),
@@ -832,41 +1060,57 @@ fun CollectionSiteList(navController: NavController) {
                             )
                         } else {
                             LazyColumn {
-                                items(filteredList) { site ->
-                                    val isSelected = selectedIds.contains(site.siteId)
+                                val pageSize = 3
+                                val startIndex = (currentPage - 1) * pageSize
+                                val endIndex = minOf(startIndex + pageSize, filteredList.size)
+
+                                items(endIndex - startIndex) { index ->
+                                    val siteIndex = startIndex + index
+                                    val site = filteredList[siteIndex]
                                     siteCard(
                                         site = site,
-                                        isSelected = isSelected,
+                                        isSelected = selectedIds.contains(site.siteId),
                                         onCheckedChange = { isChecked ->
                                             toggleSelection(site.siteId, isChecked)
                                         },
                                         onCardClick = {
                                             navController.navigate("farmList/${site.siteId}")
                                         },
-                                        totalFarms = farmViewModel.getTotalFarms(site.siteId).observeAsState(0).value,
-                                        farmsWithIncompleteData= farmViewModel.getFarmsWithIncompleteData(site.siteId).observeAsState(0).value,
-                                        farmViewModel = farmViewModel,
+                                        totalFarms = farmViewModel.getTotalFarms(site.siteId)
+                                            .observeAsState(0).value,
+                                        farmsWithIncompleteData = farmViewModel.getFarmsWithIncompleteData(site.siteId)
+                                            .observeAsState(0).value,
+                                        farmViewModel = farmViewModel
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
+                                }
+
+                                item {
+                                    CustomPaginationControls(
+                                        currentPage = currentPage,
+                                        totalPages = (filteredList.size + pageSize - 1) / pageSize,
+                                        onPageChange = { newPage ->
+                                            currentPage = newPage
+                                        }
+                                    )
                                 }
                             }
                         }
                     }
-                } else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
+                }
+                else -> {
+                    Text(
+                        text = stringResource(R.string.no_results_found),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp, 8.dp),
-                        painter = painterResource(id = R.drawable.no_data2),
-                        contentDescription = null,
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
         }
 
-        // Display the BottomActionBar anchored at the bottom of the screen
         if (selectedIds.isNotEmpty()) {
             BottomActionBar(
                 modifier = Modifier
@@ -880,17 +1124,15 @@ fun CollectionSiteList(navController: NavController) {
                 onShareClicked = {
                     action = Action.Share
                     showFormatDialog = true
-                },
+                }
             )
         }
 
-        // Show delete confirmation dialog
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
     }
 }
-
 
 @Composable
 fun BottomActionBar(
@@ -910,18 +1152,21 @@ fun BottomActionBar(
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Delete",
+                    modifier = Modifier.size(24.dp),
                     tint = Color.Red,
                 )
             }
             IconButton(onClick = onExportClicked) {
                 Icon(
                     imageVector = Icons.Default.ExitToApp,
+                    modifier = Modifier.size(24.dp),
                     contentDescription = "Download",
                 )
             }
             IconButton(onClick = onShareClicked) {
                 Icon(
                     imageVector = Icons.Default.Share,
+                    modifier = Modifier.size(24.dp),
                     contentDescription = "Share",
                 )
             }
@@ -1038,7 +1283,6 @@ fun siteCard(
                             ),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Blue
                             ),
                         )
 
@@ -1049,7 +1293,7 @@ fun siteCard(
                             ),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Red
+                                color = Color.Blue
                             ),
                         )
                     }
@@ -1073,6 +1317,127 @@ fun siteCard(
     }
 }
 
+@Composable
+fun SkeletonSiteCard() {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val placeholderColor = if (isDarkTheme) Color.DarkGray else Color.LightGray
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ElevatedCard(
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            modifier = Modifier
+                .background(backgroundColor)
+                .fillMaxWidth()
+                .padding(2.dp)
+                .shimmer()
+        ) {
+            Column(
+                modifier = Modifier
+                    .background(backgroundColor)
+                    .padding(8.dp),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .background(backgroundColor)
+                        .padding(2.dp)
+                        .fillMaxWidth()
+                ) {
+                    // Checkbox placeholder with shimmer
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(placeholderColor, shape = CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Placeholder for site info
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 2.dp)
+                    ) {
+                        repeat(5) { // Repeat placeholders for each text line
+                            Spacer(
+                                modifier = Modifier
+                                    .height(16.dp)
+                                    .fillMaxWidth(0.8f)
+                                    .background(placeholderColor, shape = RoundedCornerShape(4.dp))
+                                    .padding(bottom = 4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Placeholder for farm info
+                        Box(
+                            modifier = Modifier
+                                .height(16.dp)
+                                .fillMaxWidth(0.5f)
+                                .background(placeholderColor, shape = RoundedCornerShape(4.dp))
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // Placeholder for farms with incomplete data
+                        Box(
+                            modifier = Modifier
+                                .height(16.dp)
+                                .fillMaxWidth(0.6f)
+                                .background(placeholderColor, shape = RoundedCornerShape(4.dp))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Icon placeholder with shimmer
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(placeholderColor, shape = CircleShape)
+                    )
+                }
+            }
+        }
+    }
+}
 
 
+    @Composable
+    fun CustomPaginationControls(
+        currentPage: Int,
+        totalPages: Int,
+        onPageChange: (Int) -> Unit
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = { if (currentPage > 1) onPageChange(currentPage - 1) },
+                enabled = currentPage > 1
+            ) {
+                Icon(painter = painterResource(R.drawable.previous), contentDescription = "Previous Page")
+            }
 
+            Text("Page $currentPage of $totalPages", modifier = Modifier.padding(horizontal = 16.dp))
+
+            IconButton(
+                onClick = { if (currentPage < totalPages) onPageChange(currentPage + 1) },
+                enabled = currentPage < totalPages
+            ) {
+                Icon(painter = painterResource(R.drawable.next), contentDescription = "Next Page")
+            }
+        }
+    }

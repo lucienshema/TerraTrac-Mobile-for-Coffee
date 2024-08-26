@@ -14,6 +14,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.egnss4coffeev2.R
 //import com.example.egnss4coffeev2.ui.screens.flagFarmersWithNewPlotInfo
 import kotlinx.coroutines.Dispatchers
@@ -375,6 +379,17 @@ class FarmViewModel(
             repository.readAllFarms(siteId)
         }
     }
+
+    val pager = Pager(PagingConfig(pageSize = 3)) {
+        MyPagingSource(this)
+    }.flow.cachedIn(viewModelScope)
+
+
+    suspend fun getCollectionSites(page: Int, pageSize: Int): List<CollectionSite> {
+        return repository.getCollectionSites(page, pageSize)
+    }
+
+
 
     private fun parseDateStringToTimestamp(dateString: String): Long {
         val dateFormatter =

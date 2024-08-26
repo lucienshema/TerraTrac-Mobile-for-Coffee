@@ -40,6 +40,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
@@ -57,12 +58,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -111,6 +116,7 @@ import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.database.FarmViewModel
 import com.example.egnss4coffeev2.utils.Language
 import com.example.egnss4coffeev2.utils.LanguageViewModel
+import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
@@ -448,7 +454,16 @@ fun BoughtItemsList(
                 ) {
                     when {
                         isLoading -> {
-                            CircularProgressIndicator() // Show a loading spinner
+                            // CircularProgressIndicator() // Show a loading spinner
+
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(5) {
+                                    SkeletonBoughtItemCardBuyThroughAkrabi()
+                                }
+                            }
                         }
 
                         filteredItems.isEmpty() -> {
@@ -780,7 +795,15 @@ fun BoughtItemsListDirectBuy(
                 ) {
                     when {
                         isLoading -> {
-                            CircularProgressIndicator()
+                            // CircularProgressIndicator()
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(5) {
+                                    SkeletonBoughtItemCardDirectBuy()
+                                }
+                            }
                         }
 
                         filteredItems.isEmpty() -> {
@@ -915,28 +938,112 @@ fun BoughtItemsListDirectBuy(
                                 item {
                                     Divider()
                                 }
+//                                item {
+//                                    // Language Selector
+//                                    Text(
+//                                        text = stringResource(id = R.string.select_language),
+//                                        style = MaterialTheme.typography.titleMedium
+//                                    )
+//                                    Column(
+//                                        modifier = Modifier.fillMaxWidth(),
+//                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+//                                        horizontalAlignment = Alignment.CenterHorizontally
+//                                    ) {
+//                                        languages.forEach { language ->
+//                                            LanguageCardSideBar(
+//                                                language = language,
+//                                                isSelected = language == currentLanguage,
+//                                                onSelect = {
+//                                                    languageViewModel.selectLanguage(language, context)
+//                                                }
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                                // Using Radion Button
+//                                item {
+//                                    Text(
+//                                        text = stringResource(id = R.string.select_language),
+//                                        style = MaterialTheme.typography.titleMedium,
+//                                        modifier = Modifier.padding(bottom = 8.dp)
+//                                    )
+//                                    Column(
+//                                        modifier = Modifier.fillMaxWidth(),
+//                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+//                                        horizontalAlignment = Alignment.Start
+//                                    ) {
+//                                        languages.forEach { language ->
+//                                            Row(
+//                                                verticalAlignment = Alignment.CenterVertically,
+//                                                modifier = Modifier
+//                                                    .fillMaxWidth()
+//                                                    .clickable { languageViewModel.selectLanguage(language, context) }
+//                                                    .padding(vertical = 4.dp)
+//                                            ) {
+//                                                RadioButton(
+//                                                    selected = language == currentLanguage,
+//                                                    onClick = { languageViewModel.selectLanguage(language, context) }
+//                                                )
+//                                                Spacer(modifier = Modifier.width(8.dp))
+//                                                Text(
+//                                                    text = language.displayName, // Assuming `language` has a `displayName` property
+//                                                    style = MaterialTheme.typography.bodyLarge
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+//                                }
+                                // using checkbox
+
                                 item {
-                                    // Language Selector
                                     Text(
                                         text = stringResource(id = R.string.select_language),
-                                        style = MaterialTheme.typography.titleMedium
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(bottom = 8.dp)
                                     )
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    Box(
+                                        modifier = Modifier
+                                            .width(230.dp)
+                                            .padding(8.dp)
                                     ) {
-                                        languages.forEach { language ->
-                                            LanguageCardSideBar(
-                                                language = language,
-                                                isSelected = language == currentLanguage,
-                                                onSelect = {
-                                                    languageViewModel.selectLanguage(language, context)
-                                                }
+                                        var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+                                        OutlinedButton(
+                                            onClick = { expanded = true },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text(text = currentLanguage.displayName)
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = null
                                             )
+                                        }
+                                        DropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false },
+                                            modifier = Modifier
+                                                .width(230.dp) // Set the width of the DropdownMenu to match the Box
+                                                .background(Color.White) // Set the background color to white for visibility
+                                        ) {
+                                            languages.forEach { language ->
+                                                DropdownMenuItem(
+                                                    text = {
+                                                        Text(
+                                                            text = language.displayName,
+                                                            color = Color.Black // Ensure text is visible against the white background
+                                                        )
+                                                    },
+                                                    onClick = {
+                                                        languageViewModel.selectLanguage(language, context)
+                                                        expanded = false
+                                                    },
+                                                    modifier = Modifier
+                                                        .background(Color.White) // Ensure each menu item has a white background
+                                                )
+                                            }
                                         }
                                     }
                                 }
+
                                 item {
                                     // Logout Item
                                     DrawerItem(
@@ -1434,6 +1541,150 @@ fun BoughtItemCardDirectBuy(
                         tint = Color.Red
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SkeletonBoughtItemCardDirectBuy() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .shimmer(), // Apply shimmer effect
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+            }
+            Row(
+                modifier = Modifier.padding(end = 0.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun SkeletonBoughtItemCardBuyThroughAkrabi() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .shimmer(), // Apply shimmer effect
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                // Skeleton for akrabiName
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Skeleton for siteName
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Skeleton for cherrySold
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Skeleton for totalPaid
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .height(20.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+            }
+
+            Row(
+                modifier = Modifier.padding(end = 0.dp)
+            ) {
+                // Skeleton for edit icon
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Skeleton for delete icon
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
             }
         }
     }

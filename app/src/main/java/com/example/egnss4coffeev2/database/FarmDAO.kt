@@ -91,7 +91,7 @@ interface FarmDAO {
     @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
     suspend fun getFarmBySiteId(siteId: Long): Farm?
 
-    @Query("DELETE FROM farms WHERE remote_id = :remoteId")
+    @Query("DELETE FROM Farms WHERE remote_id = :remoteId")
     suspend fun deleteFarmByRemoteId(remoteId: UUID)
 
     @Query("SELECT * FROM farms WHERE remote_id = :remoteId OR (farmerName = :farmerName AND village = :village AND district = :district) LIMIT 1")
@@ -152,5 +152,9 @@ interface FarmDAO {
 
     @Query("SELECT * FROM Farms WHERE siteId IN (:selectedIds)")
     fun getFarmsBySelectedIds(selectedIds: List<Long>): LiveData<List<Farm>>
+
+    @Query("SELECT * FROM CollectionSites LIMIT :limit OFFSET :offset")
+    fun getCollectionSites(offset: Int, limit: Int): List<CollectionSite>
+
 
 }
