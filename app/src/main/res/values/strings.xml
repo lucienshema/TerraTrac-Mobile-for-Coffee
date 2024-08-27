@@ -198,6 +198,9 @@
     <string name="total_farms">%1$d total farms</string>
     <string name="total_farms_with_incomplete_data">%1$d with incomplete data</string>
     <string name="error_loading_more_sites">Error Loading More Sites</string>
+    <string name="delete_all">Delete All</string>
+    <string name="delete_selected">Delete Selected</string>
+    <string name="share">Share</string>
 
 
 </resources>

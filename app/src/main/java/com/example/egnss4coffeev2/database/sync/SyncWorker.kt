@@ -25,6 +25,8 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.egnss4coffeev2.BuildConfig
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 
 class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
@@ -58,9 +60,16 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
         totalItems = unsyncedFarms.size
         Log.d(TAG, "Found ${unsyncedFarms.size} unsynced farms.")
 
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS) // Adjust the timeout as needed
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+
         val retrofit = Retrofit.Builder()
-//            .baseUrl("https://8e00-154-72-7-234.ngrok-free.app")
             .baseUrl(BuildConfig.BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
@@ -69,11 +78,17 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
         try {
             val deviceId = DeviceIdUtil.getDeviceId(applicationContext)
             val farmDtos = unsyncedFarms.toDtoList(deviceId, farmDao)
+
             Log.d("YourTag", "Device ID: $deviceId")
 
-            Log.d(TAG, "Syncing Farms: $farmDtos")
+            // Log the payload
+            Log.d(TAG, "Payload to send: ${farmDtos.joinToString(separator = "\n") { it.toString() }}")
+
+            Log.d(TAG, "Syncing Farms: ${farmDtos.size}")
 
             val response = api.syncFarms(farmDtos)
+            Log.d(TAG, "Response: $response")
+
             if (response.isSuccessful) {
                 showSyncNotification()
                 unsyncedFarms.forEach { farm ->

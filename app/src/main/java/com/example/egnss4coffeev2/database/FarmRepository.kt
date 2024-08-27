@@ -71,6 +71,9 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     suspend fun deleteFarmById(farm: Farm) {
         farmDAO.deleteFarmByRemoteId(farm.remoteId)
     }
+    suspend fun deleteById(farmId: Long) {
+        farmDAO.deleteFarmById(farmId)
+    }
 
 
     suspend fun deleteAllFarms() {

@@ -10,6 +10,7 @@ import androidx.room.TypeConverters
 import com.example.egnss4coffeev2.database.converters.CoordinateListConvert
 import com.example.egnss4coffeev2.database.converters.DateConverter
 import com.example.egnss4coffeev2.ui.screens.ParcelablePair
+import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 import java.time.LocalDate
@@ -167,45 +168,42 @@ data class Farm(
     }
 }
 
-
 data class FarmDto(
-    val remote_id: UUID,
+    val remote_id: String,
     val farmer_name: String,
+    val farm_size: Float,
+    val device_id: String,
+    val collection_site: String,
+    val agent_name: String,
     val farm_village: String,
     val farm_district: String,
-    val farm_size: Float,
-    val latitude: String,
-    val longitude: String,
-    val polygon: List<Pair<Double?, Double?>>,
-    val device_id: String,
-    val collection_site: Long,
-    val agent_name: String,
+    val latitude: Double,
+    val longitude: Double,
+    val polygon: List<List<Double?>>?// Each coordinate is a list [longitude, latitude]
 )
 
-fun List<Farm>.toDtoList(
-    deviceId: String,
-    farmDao: FarmDAO,
-): List<FarmDto> =
-    this.map { farm ->
+fun List<Farm>.toDtoList( deviceId: String,farmDao: FarmDAO): List<FarmDto> {
+    return this.mapNotNull { farm ->
         val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
-        val agentName = collectionSite?.agentName ?: "Unknown"
-
-        farm.remoteId?.let {
-            FarmDto(
-                remote_id = it,
-                farmer_name = farm.farmerName,
-                farm_village = farm.village,
-                farm_district = farm.district,
-                farm_size = farm.size,
-                latitude = farm.latitude,
-                longitude = farm.longitude,
-                polygon = farm.coordinates ?: emptyList(),
-                device_id = deviceId,
-                collection_site = farm.siteId,
-                agent_name = agentName,
-            )
-        }!!
+        collectionSite?.let { site ->
+            farm.remoteId?.let { remoteId ->
+                FarmDto(
+                    remote_id = remoteId.toString(),
+                    farmer_name = farm.farmerName,
+                    farm_size = farm.size,
+                    device_id = deviceId,
+                    collection_site = site.name,
+                    agent_name = site.agentName ?: "Unknown",
+                    farm_village = farm.village,
+                    farm_district = farm.district,
+                    latitude = farm.latitude.toDouble(),
+                    longitude = farm.longitude.toDouble(),
+                    polygon = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() // Convert coordinate pairs
+                )
+            }
+        }
     }
+}
 
 @Entity(tableName = "CollectionSites")
 data class CollectionSite(

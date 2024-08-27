@@ -92,6 +92,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
@@ -2109,25 +2110,75 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             item {
                                 Divider()
                             }
+//                            item {
+//                                // Language Selector
+//                                Text(
+//                                    text = stringResource(id = R.string.select_language),
+//                                    style = MaterialTheme.typography.titleMedium
+//                                )
+//                                Column(
+//                                    modifier = Modifier.fillMaxWidth(),
+//                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+//                                    horizontalAlignment = Alignment.CenterHorizontally
+//                                ) {
+//                                    languages.forEach { language ->
+//                                        LanguageCardSideBar(
+//                                            language = language,
+//                                            isSelected = language == currentLanguage,
+//                                            onSelect = {
+//                                                languageViewModel.selectLanguage(language, context)
+//                                            }
+//                                        )
+//                                    }
+//                                }
+//                            }
+                            // using checkbox
+
                             item {
-                                // Language Selector
                                 Text(
                                     text = stringResource(id = R.string.select_language),
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
                                 )
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Box(
+                                    modifier = Modifier
+                                        .width(230.dp)
+                                        .padding(8.dp)
                                 ) {
-                                    languages.forEach { language ->
-                                        LanguageCardSideBar(
-                                            language = language,
-                                            isSelected = language == currentLanguage,
-                                            onSelect = {
-                                                languageViewModel.selectLanguage(language, context)
-                                            }
+                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+                                    OutlinedButton(
+                                        onClick = { expanded = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = currentLanguage.displayName)
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = null
                                         )
+                                    }
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier
+                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+                                            .background(Color.White) // Set the background color to white for visibility
+                                    ) {
+                                        languages.forEach { language ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = language.displayName,
+                                                        color = Color.Black // Ensure text is visible against the white background
+                                                    )
+                                                },
+                                                onClick = {
+                                                    languageViewModel.selectLanguage(language, context)
+                                                    expanded = false
+                                                },
+                                                modifier = Modifier
+                                                    .background(Color.White) // Ensure each menu item has a white background
+                                            )
+                                        }
                                     }
                                 }
                             }

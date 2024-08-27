@@ -202,11 +202,11 @@ class MainActivity : ComponentActivity() {
                             composable("farmList/{siteId}") { backStackEntry ->
                                 val siteId = backStackEntry.arguments?.getString("siteId")
                                 if (siteId != null) {
-                                    ScreenWithSidebar(navController) {
+                                   // ScreenWithSidebar(navController) {
                                     FarmList(
                                         navController = navController, siteId = siteId.toLong()
                                     )
-                                    }
+                                  //  }
                                 }
                             }
                             composable("addFarm/{siteId}") { backStackEntry ->

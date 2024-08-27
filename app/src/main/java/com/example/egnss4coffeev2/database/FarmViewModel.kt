@@ -336,6 +336,11 @@ class FarmViewModel(
             repository.deleteListSite(ids)
         }
     }
+    fun deleteById(farmId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteById(farmId)
+        }
+    }
 
 
     // Function to get the total number of farms for a site

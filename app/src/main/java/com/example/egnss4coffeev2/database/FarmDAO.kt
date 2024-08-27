@@ -91,6 +91,9 @@ interface FarmDAO {
     @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
     suspend fun getFarmBySiteId(siteId: Long): Farm?
 
+    @Query("DELETE FROM Farms WHERE id = :id")
+    suspend fun deleteFarmById(id: Long)
+
     @Query("DELETE FROM Farms WHERE remote_id = :remoteId")
     suspend fun deleteFarmByRemoteId(remoteId: UUID)
 

@@ -2,6 +2,7 @@
 package com.example.egnss4coffeev2.ui.screens
 
 import android.Manifest
+import android.R.attr
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
@@ -133,6 +134,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
+import android.R.attr.checked
+import androidx.compose.foundation.shape.CircleShape
+
 
 var siteID = 0L
 
@@ -291,6 +295,65 @@ fun ConfirmationDialog(
     )
 }
 
+//@Composable
+//fun ConfirmationDialog(
+//    listItems: List<Farm>,
+//    selectedIds: List<Long>,
+//    action: Action,
+//    onConfirm: () -> Unit,
+//    onDismiss: () -> Unit,
+//) {
+//    fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
+//        val incompleteFarms = farms.filter { farm ->
+//            farm.farmerName.isEmpty() ||
+//                    farm.district.isEmpty() ||
+//                    farm.village.isEmpty() ||
+//                    farm.latitude == "0.0" ||
+//                    farm.longitude == "0.0" ||
+//                    farm.size == 0.0f ||
+//                    farm.remoteId.toString().isEmpty()
+//        }
+//        return Pair(farms.size, incompleteFarms)
+//    }
+//
+//    // Determine if we are working with all items or only selected items
+//    val farmsToProcess = if (selectedIds.isEmpty()) {
+//        listItems // Use all farms if nothing is selected
+//    } else {
+//        listItems.filter { it.id in selectedIds } // Only use selected farms
+//    }
+//
+//    // Validate the farms based on the selected scope
+//    val (totalFarms, incompleteFarms) = validateFarms(farmsToProcess)
+//
+//    // Generate the message based on the action type
+//    val message = when (action) {
+//        Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
+//        Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
+//    }
+//
+//    // Display the confirmation dialog
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text(text = stringResource(R.string.confirm)) },
+//        text = { Text(text = message) },
+//        confirmButton = {
+//            Button(onClick = {
+//                onConfirm()
+//                onDismiss()
+//            }) {
+//                Text(text = stringResource(R.string.yes))
+//            }
+//        },
+//        dismissButton = {
+//            Button(onClick = { onDismiss() }) {
+//                Text(text = stringResource(R.string.no))
+//            }
+//        },
+//    )
+//}
+
+
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
@@ -318,7 +381,19 @@ fun FarmList(
 
     var showImportDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+    var (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+
+
+    var currentPage by remember { mutableStateOf(1) }
+  //  val pageSize = 3 // Define page size
+//    val totalPages = (listItems.size + pageSize - 1) / pageSize
+//
+//    val filteredListItems = listItems.filter { it.farmerName.contains(searchQuery, ignoreCase = true) }
+//
+//    // Calculate total pages for the filtered list
+//    val pages = (filteredListItems.size + pageSize - 1) / pageSize
+
+
 
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs =
@@ -347,6 +422,136 @@ fun FarmList(
         delay(2000) // Adjust the delay as needed
         // After loading data, set isLoading to false
         isLoading.value = false
+    }
+
+
+    fun createFileForSharing(selectedFarms: List<Farm>): File? {
+        // Modify the existing logic to use selectedFarms instead of listItems
+        // (the rest of the code remains the same)
+
+        // Get the current date and time
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val getSiteById = cwsListItems.find { it.siteId == siteID }
+        val siteName = getSiteById?.name ?: "SiteName"
+        val filename =
+            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
+        // Get the Downloads directory
+        val downloadsDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val file = File(downloadsDir, filename)
+
+        try {
+            file.bufferedWriter().use { writer ->
+                if (exportFormat == "CSV") {
+                    writer.write(
+                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                    )
+                    selectedFarms.forEach { farm ->
+                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                        val matches = regex.findAll(farm.coordinates.toString())
+//                        val reversedCoordinates =
+//                            matches
+//                                .map { match ->
+//                                    val (lat, lon) = match.destructured
+//                                    "[$lon, $lat]"
+//                                }.toList() // Convert Sequence to List for easy handling
+//                                .let { coordinates ->
+//                                    if (coordinates.isNotEmpty()) {
+//                                        if (coordinates.size == 1) {
+//                                            // Single point, return without additional brackets
+//                                            coordinates.first()
+//                                        } else {
+//                                            // Multiple points, add enclosing brackets
+//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                        }
+//                                    } else {
+//                                        "" // Return an empty string if there are no coordinates
+//                                    }
+//                                }
+
+
+                        val reversedCoordinates =
+                            matches
+                                .map { match ->
+                                    val (lat, lon) = match.destructured
+                                    "[$lon, $lat]"
+                                }.toList()
+                                .let { coordinates ->
+                                    if (coordinates.isNotEmpty()) {
+                                        // Always include brackets, even for a single point
+                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                    } else {
+                                        val lon = farm.longitude ?: "0.0"
+                                        val lat = farm.latitude ?: "0.0"
+                                        "[$lon, $lat]"
+                                    }
+                                }
+
+                        val line =
+                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                Date(
+                                    farm.createdAt,
+                                )
+                            },${Date(farm.updatedAt)}\n"
+                        writer.write(line)
+                    }
+                } else {
+                    val geoJson =
+                        buildString {
+                            append("{\"type\": \"FeatureCollection\", \"features\": [")
+                            selectedFarms.forEachIndexed { index, farm ->
+                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                val matches = regex.findAll(farm.coordinates.toString())
+                                val geoJsonCoordinates =
+                                    matches
+                                        .map { match ->
+                                            val (lat, lon) = match.destructured
+                                            "[$lon, $lat]"
+                                        }.joinToString(", ", prefix = "[", postfix = "]")
+                                val latitude =
+                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                val longitude =
+                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+
+                                val feature =
+                                    """
+                                    {
+                                        "type": "Feature",
+                                        "properties": {
+                                            "remote_id": "${farm.remoteId ?: ""}",
+                                            "farmer_name": "${farm.farmerName ?: ""}",
+                                            "member_id": "${farm.memberId ?: ""}",
+                                            "collection_site": "${getSiteById?.name ?: ""}",
+                                            "agent_name": "${getSiteById?.agentName ?: ""}",
+                                            "farm_village": "${farm.village ?: ""}",
+                                            "farm_district": "${farm.district ?: ""}",
+                                             "farm_size": ${farm.size ?: 0.0},
+                                            "latitude": $latitude,
+                                            "longitude": $longitude,
+                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+                                            
+                                        },
+                                        "geometry": {
+                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                        }
+                                    }
+                                    """.trimIndent()
+                                append(feature)
+                                if (index < listItems.size - 1) append(",")
+                            }
+                            append("]}")
+                        }
+                    writer.write(geoJson)
+                }
+            }
+            return file
+        } catch (e: IOException) {
+            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+            return null
+        }
     }
 
     fun createFileForSharing(): File? {
@@ -665,24 +870,71 @@ fun FarmList(
         showConfirmationDialog = true
     }
 
+
+    fun deleteSelectedFarms() {
+        selectedIds.forEach { id ->
+            farmViewModel.deleteById(id)
+        }
+        selectedIds.clear()
+    }
+
+    fun exportSelectedFarms() {
+        val farmsToExport = listItems.filter { it.id in selectedIds }
+        // Proceed with the export logic using farmsToExport
+        createFileForSharing(farmsToExport)
+        selectedIds.clear()
+    }
+
+    fun shareSelectedFarms() {
+        val farmsToShare = listItems.filter { it.id in selectedIds }
+        val fileToShare = createFileForSharing(farmsToShare)
+
+        fileToShare?.let {
+            shareFile(it)
+        } ?: run {
+            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+        }
+
+        selectedIds.clear()
+    }
+
     if (showFormatDialog) {
         FormatSelectionDialog(
             onDismiss = { showFormatDialog = false },
             onFormatSelected = { format ->
                 exportFormat = format
                 showFormatDialog = false
+
                 when (action) {
-                    Action.Export -> exportFile(activity)
-                    Action.Share -> shareFileAction()
+                    Action.Export -> {
+                        if (selectedIds.isEmpty()) {
+                            // Export all farms
+                            exportFile(activity)
+                        } else {
+                            // Export only selected farms
+                            exportSelectedFarms()
+                        }
+                    }
+                    Action.Share -> {
+                        if (selectedIds.isEmpty()) {
+                            // Share all farms
+                            shareFileAction()
+                        } else {
+                            // Share only selected farms
+                            shareSelectedFarms()
+                        }
+                    }
                     else -> {}
                 }
-            },
+            }
         )
     }
+
     if (showConfirmationDialog) {
         ConfirmationDialog(
             listItems,
             action = action!!, // Ensure action is not null
+            // selectedIds = selectedIds,
             onConfirm = {
                 when (action) {
                     Action.Export -> initiateFileCreation(activity)
@@ -709,6 +961,10 @@ fun FarmList(
         )
     }
 
+
+
+
+
     fun onDelete() {
         selectedFarm.value?.let { farm ->
             val toDelete =
@@ -725,203 +981,203 @@ fun FarmList(
         }
     }
 
-//    fun onDelete() {
-//        val toDelete = mutableListOf<Long>()
-//        toDelete.addAll(selectedIds)
-//        farmViewModel.deleteList(toDelete)
-//        selectedIds.removeAll(selectedIds)
-//        showDeleteDialog.value = false
-//    }
-
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        FarmListHeaderPlots(
-            title = stringResource(id = R.string.farm_list),
-            onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-            onBackClicked = { navController.navigate("siteList") },
-            onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-            onExportClicked = {
-                action = Action.Export
-                showFormatDialog = true
-            },
-            onShareClicked = {
-                action = Action.Share
-                showFormatDialog = true
-            },
-            onSearchQueryChanged = setSearchQuery,
-            onBuyThroughAkrabiClicked = {
-//                isFormVisible = true
-                navController.navigate("shopping")
-            },
-            onImportClicked = { showImportDialog = true },
-            showAdd = true,
-            showExport = listItems.isNotEmpty(),
-            showShare = listItems.isNotEmpty(),
-            showSearch = listItems.isNotEmpty(),
-            showBuyThroughAkrabi = listItems.isNotEmpty(),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        Column {
+            FarmListHeaderPlots(
+                title = stringResource(id = R.string.farm_list),
+                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+                onBackClicked = { navController.navigate("siteList") },
+                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+                onExportClicked = {
+                    action = Action.Export
+                    showFormatDialog = true
+                },
+                onShareClicked = {
+                    action = Action.Share
+                    showFormatDialog = true
+                },
+                onSearchQueryChanged = { query ->
+                    searchQuery = query
+                    currentPage = 1 // Reset to first page on search query change
+                },
+                onBuyThroughAkrabiClicked = {
+                    navController.navigate("shopping")
+                },
+                onImportClicked = { showImportDialog = true },
+                showAdd = true,
+                showExport = listItems.isNotEmpty(),
+                showShare = listItems.isNotEmpty(),
+                showSearch = listItems.isNotEmpty(),
+                showBuyThroughAkrabi = listItems.isNotEmpty(),
+            )
 
+            Spacer(modifier = Modifier.height(8.dp))
 
-
-        if (isLoading.value) {
-            // Show loader while data is loading
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
-                CircularProgressIndicator()
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title) },
+                    )
+                }
             }
-        } else {
-            val hasData = listItems.isNotEmpty() // Check if there's data available
 
-            if (hasData) {
-                // Conditionally display BuyThroughAkrabiForm
-                if (isFormVisible) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        BuyThroughAkrabiForm(
-                            collectionSites = collectionSites,
-                            akrabis = akrabis,
-                            onCreateAkrabi = { newAkrabi ->
-                                // Navigate to CreateAkrabiForm
-                                navController.navigate("create_akrabi_form")
-                            },
-                            onSubmit = { buyThroughAkrabi ->
-                                farmViewModel.insertBoughtItem(buyThroughAkrabi)
-                                // Handle form submission
-                                Log.d("BuyThroughAkrabiForm", "Form submitted: $buyThroughAkrabi")
-                                // Hide the form after submission
-                                isFormVisible = false
-                            },
-                            navController
-                        )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (isLoading.value) {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(16.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    CircularProgressIndicator()
+//                }
+                LazyColumn {
+                    items(3) {
+                        FarmCardSkeleton()
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-                // Only show the TabRow and HorizontalPager if there is data
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            },
-                            text = { Text(title) },
-                        )
-                    }
+            } else {
+                val itemsPerPage = 3 // Adjust this value as needed
+                var currentPage by remember { mutableStateOf(1) }
+
+                // Filter items based on the selected tab
+                val filteredItems = if (selectedTabIndex == 0) {
+                    listItems
+                } else {
+                    listItems.filter { it.needsUpdate }
+                }.filter { farm ->
+                    farm.farmerName.contains(searchQuery, ignoreCase = true) ||
+                            farm.id.toString().contains(searchQuery, ignoreCase = true)
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                val totalPages = (filteredItems.size + itemsPerPage - 1) / itemsPerPage
+                val paginatedList = filteredItems.chunked(itemsPerPage).getOrNull(currentPage - 1) ?: emptyList()
 
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.weight(1f),
-                ) { page ->
-                    val filteredListItems = when (page) {
-                        1 -> listItems.filter { it.needsUpdate }
-                        else -> listItems
-                    }.filter {
-                        it.farmerName.contains(searchQuery, ignoreCase = true)
+
+                // Show number of selected items if any
+                if (selectedIds.isNotEmpty()) {
+                    Text(
+                        text = "${selectedIds.size} item(s) selected",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
+                if (filteredItems.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No results found",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
-                    if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
-                        // Show the list only when loading is complete
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                        ) {
-                            val filteredList = filteredListItems.filter {
-                                it.farmerName.contains(searchQuery, ignoreCase = true)
-                            }
-
-                            if (filteredList.isEmpty()) {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(16.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Top,
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.no_results_found),
-                                            modifier = Modifier
-                                                .padding(16.dp)
-                                                .fillMaxWidth(),
-                                            textAlign = TextAlign.Center,
-                                            style = MaterialTheme.typography.bodyMedium,
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(paginatedList) { farm ->
+                            FarmCard(
+                                farm = farm,
+                                navController = navController,
+                                isSelected = selectedIds.contains(farm.id),
+                                onCardClick = {
+                                    navController.currentBackStackEntry?.arguments?.apply {
+                                        putParcelableArrayList(
+                                            "coordinates",
+                                            farm.coordinates?.map {
+                                                it.first?.let { it1 ->
+                                                    it.second?.let { it2 ->
+                                                        ParcelablePair(it1, it2)
+                                                    }
+                                                }
+                                            }?.let { ArrayList(it) }
+                                        )
+                                        putParcelable(
+                                            "farmData",
+                                            ParcelableFarmData(farm, "view")
                                         )
                                     }
+                                    navController.navigate(route = "setPolygon")
+                                },
+                                onDeleteClick = {
+                                    selectedIds.add(farm.id)
+                                    selectedFarm.value = farm
+                                    showDeleteDialog.value = true
+                                },
+                                onToggleSelect = { id ->
+                                    if (selectedIds.contains(id)) {
+                                        selectedIds.remove(id)
+                                    } else {
+                                        selectedIds.add(id)
+                                    }
                                 }
-                            } else {
-                                items(filteredList) { farm ->
-                                    FarmCard(
-                                        farm = farm,
-                                        navController,
-                                        onCardClick = {
-                                            navController.currentBackStackEntry?.arguments?.apply {
-                                                putParcelableArrayList(
-                                                    "coordinates",
-                                                    farm.coordinates?.map {
-                                                        it.first?.let { it1 ->
-                                                            it.second?.let { it2 ->
-                                                                ParcelablePair(
-                                                                    it1, it2
-                                                                )
-                                                            }
-                                                        }
-                                                    }?.let { ArrayList(it) }
-                                                )
-                                                putParcelable(
-                                                    "farmData",
-                                                    ParcelableFarmData(farm, "view")
-                                                )
-                                            }
-                                            navController.navigate(route = "setPolygon")
-                                        },
-                                        onDeleteClick = {
-                                            selectedIds.add(farm.id)
-                                            selectedFarm.value = farm
-                                            showDeleteDialog.value = true
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-                            }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
-                    } else {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
+                if (listItems.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Image(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .align(Alignment.CenterHorizontally)
                                 .padding(16.dp, 8.dp),
                             painter = painterResource(id = R.drawable.no_data2),
                             contentDescription = null
                         )
                     }
                 }
-            } else {
-                // Display a message or image indicating no data available
-                Spacer(modifier = Modifier.height(8.dp))
-                Image(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                        .padding(16.dp, 8.dp),
-                    painter = painterResource(id = R.drawable.no_data2),
-                    contentDescription = null
-                )
+                if (filteredItems.isNotEmpty()) {
+                    CustomPaginationControls(
+                        currentPage = currentPage,
+                        totalPages = totalPages,
+                        onPageChange = { newPage ->
+                            currentPage = newPage
+                        }
+                    )
+                }
             }
+        }
+
+        if (selectedIds.isNotEmpty()) {
+            BottomActionBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+                onDeleteClick = {
+                    showDeleteDialog.value = true
+                },
+                onExportClicked = {
+                    action = Action.Export
+                    showFormatDialog = true
+                    exportSelectedFarms()
+                },
+                onShareClicked = {
+                    action = Action.Share
+                    showFormatDialog = true
+                    shareSelectedFarms()
+                }
+            )
         }
 
         if (showDeleteDialog.value) {
@@ -1071,11 +1327,43 @@ fun ImportFileDialog(
     )
 }
 
+//@Composable
+//fun DeleteAllDialogPresenter(
+//    showDeleteDialog: MutableState<Boolean>,
+//    onProceedFn: () -> Unit,
+//) {
+//    if (showDeleteDialog.value) {
+//        AlertDialog(
+//            modifier = Modifier.padding(horizontal = 32.dp),
+//            onDismissRequest = { showDeleteDialog.value = false },
+//            title = { Text(text = stringResource(id = R.string.delete_this_item)) },
+//            text = {
+//                Column {
+//                    Text(stringResource(id = R.string.are_you_sure))
+//                    Text(stringResource(id = R.string.item_will_be_deleted))
+//                }
+//            },
+//            confirmButton = {
+//                TextButton(onClick = { onProceedFn() }) {
+//                    Text(text = stringResource(id = R.string.yes))
+//                }
+//            },
+//            dismissButton = {
+//                TextButton(onClick = { showDeleteDialog.value = false }) {
+//                    Text(text = stringResource(id = R.string.no))
+//                }
+//            },
+//        )
+//    }
+//}
+
 @Composable
 fun DeleteAllDialogPresenter(
     showDeleteDialog: MutableState<Boolean>,
-    onProceedFn: () -> Unit,
+    onProceedFn: (deleteAll: Boolean) -> Unit,
 ) {
+    val (selectedOption, setSelectedOption) = remember { mutableStateOf(true) } // true for deleting all data, false for deleting selected data
+
     if (showDeleteDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -1085,10 +1373,36 @@ fun DeleteAllDialogPresenter(
                 Column {
                     Text(stringResource(id = R.string.are_you_sure))
                     Text(stringResource(id = R.string.item_will_be_deleted))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Options for deleting all data or only selected data
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = selectedOption,
+                            onClick = { setSelectedOption(true) }
+                        )
+                        Text(
+                            text = stringResource(id = R.string.delete_all),
+                            modifier = Modifier.clickable { setSelectedOption(true) }
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = !selectedOption,
+                            onClick = { setSelectedOption(false) }
+                        )
+                        Text(
+                            text = stringResource(id = R.string.delete_selected),
+                            modifier = Modifier.clickable { setSelectedOption(false) }
+                        )
+                    }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { onProceedFn() }) {
+                TextButton(onClick = {
+                    onProceedFn(selectedOption)
+                    showDeleteDialog.value = false
+                }) {
                     Text(text = stringResource(id = R.string.yes))
                 }
             },
@@ -1368,8 +1682,10 @@ fun FarmListHeaderPlots(
 fun FarmCard(
     farm: Farm,
     navController: NavController,
+    isSelected: Boolean,
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onToggleSelect: (Long) -> Unit
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
@@ -1390,9 +1706,18 @@ fun FarmCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onToggleSelect(farm.id) }
+                    .background(
+                        if (isSelected) Color.LightGray else Color.Transparent
+                    )
                     .padding(bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
+                Checkbox(
+                    checked= isSelected,
+                    onCheckedChange = { onToggleSelect(farm.id)}
+                )
 
                 // Farm Name and Village (Left Side)
                 Column(
@@ -1460,6 +1785,120 @@ fun FarmCard(
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun FarmCardSkeleton(
+    modifier: Modifier = Modifier
+) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+
+    ElevatedCard(
+        elevation = CardDefaults.cardElevation(6.dp),
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier
+                .background(backgroundColor)
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Skeleton checkbox
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(
+                            color = Color.LightGray,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+
+                // Skeleton farm info (Left Side)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
+                ) {
+                    // Skeleton for farm name
+                    Box(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .fillMaxWidth(0.5f)
+                            .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
+                            .padding(bottom = 4.dp)
+                    )
+
+                    // Skeleton for size
+                    Box(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .fillMaxWidth(0.4f)
+                            .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Skeleton for village
+                    Box(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .fillMaxWidth(0.6f)
+                            .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Skeleton for district
+                    Box(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .fillMaxWidth(0.4f)
+                            .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
+                    )
+                }
+
+                // Skeleton for action icons (Right Side)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    // Skeleton edit icon
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(Color.LightGray, shape = CircleShape)
+                            .padding(end = 2.dp)
+                    )
+
+                    // Skeleton delete icon
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(Color.LightGray, shape = CircleShape)
+                            .padding(end = 2.dp)
+                    )
+                }
+            }
+
+            // Skeleton for needs update label
+            Box(
+                modifier = Modifier
+                    .height(16.dp)
+                    .fillMaxWidth(0.3f)
+                    .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
+                    .padding(top = 4.dp)
+            )
         }
     }
 }

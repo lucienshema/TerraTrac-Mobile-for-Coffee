@@ -842,6 +842,7 @@ fun CollectionSiteList(navController: NavController) {
         ConfirmationDialog(
             listItems,
             action = action!!, // Ensure action is not null
+           // selectedIds = selectedIds,
             onConfirm = {
                 when (action) {
                     Action.Export -> initiateFileCreation(activity)
@@ -1040,7 +1041,7 @@ fun CollectionSiteList(navController: NavController) {
                     Column(modifier = Modifier.weight(1f)) {
                         if (selectedItemsCount >= 1) {
                             Text(
-                                text = "${selectedItemsCount} selected",
+                                text = "$selectedItemsCount selected",
                                 modifier = Modifier
                                     .padding(top = 8.dp)
                                     .fillMaxWidth(),
