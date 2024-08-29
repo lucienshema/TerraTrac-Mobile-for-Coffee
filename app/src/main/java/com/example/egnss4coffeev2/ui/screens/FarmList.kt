@@ -135,7 +135,25 @@ import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
 import android.R.attr.checked
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.collectAsState
+import com.example.egnss4coffeev2.map.MapViewModel
+import com.example.egnss4coffeev2.utils.Language
+import com.example.egnss4coffeev2.utils.LanguageViewModel
+import com.example.egnss4coffeev2.utils.LanguageViewModelFactory
+import com.example.egnss4coffeev2.utils.languages
 
 
 var siteID = 0L
@@ -354,12 +372,17 @@ fun ConfirmationDialog(
 //}
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3Api::class
+)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(
     navController: NavController,
     siteId: Long,
+    languageViewModel: LanguageViewModel,
+    darkMode: MutableState<Boolean>,
+    languages: List<Language>
 ) {
     siteID = siteId
     val context = LocalContext.current
@@ -381,7 +404,18 @@ fun FarmList(
 
     var showImportDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    var (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+    // var (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
+    var isSearchActive by remember { mutableStateOf(false) }
+    var drawerVisible by remember { mutableStateOf(false) }
+
+    val currentLanguage by languageViewModel.currentLanguage.collectAsState()
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
+
+    var isImportDisabled by remember { mutableStateOf(false) }
 
 
     var currentPage by remember { mutableStateOf(1) }
@@ -981,59 +1015,159 @@ fun FarmList(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Column {
-            FarmListHeaderPlots(
-                title = stringResource(id = R.string.farm_list),
-                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                onBackClicked = { navController.navigate("siteList") },
-                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-                onExportClicked = {
-                    action = Action.Export
-                    showFormatDialog = true
-                },
-                onShareClicked = {
-                    action = Action.Share
-                    showFormatDialog = true
-                },
-                onSearchQueryChanged = { query ->
-                    searchQuery = query
-                    currentPage = 1 // Reset to first page on search query change
-                },
-                onBuyThroughAkrabiClicked = {
-                    navController.navigate("shopping")
-                },
-                onImportClicked = { showImportDialog = true },
-                showAdd = true,
-                showExport = listItems.isNotEmpty(),
-                showShare = listItems.isNotEmpty(),
-                showSearch = listItems.isNotEmpty(),
-                showBuyThroughAkrabi = listItems.isNotEmpty(),
-            )
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp)
+//    ) {
+//        Column {
+//            FarmListHeaderPlots(
+//                title = stringResource(id = R.string.farm_list),
+//                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+//                onBackClicked = { navController.navigate("siteList") },
+//                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+//                onExportClicked = {
+//                    action = Action.Export
+//                    showFormatDialog = true
+//                },
+//                onShareClicked = {
+//                    action = Action.Share
+//                    showFormatDialog = true
+//                },
+//                searchQuery = searchQuery,
+//                isSearchVisible = isSearchVisible,
+//                onSearchQueryChanged = { query ->
+//                    searchQuery = query
+//                    currentPage = 1
+//                },
+//                onSearchVisibilityChanged = { isSearchVisible = it },
+//                onBuyThroughAkrabiClicked = {
+//                    navController.navigate("shopping")
+//                },
+//                onImportClicked = { showImportDialog = true },
+//                showAdd = true,
+//                showExport = listItems.isNotEmpty(),
+//                showShare = listItems.isNotEmpty(),
+//                showSearch = listItems.isNotEmpty(),
+//                showBuyThroughAkrabi = listItems.isNotEmpty(),
+//            )
+//
+//            Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) },
-                    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = stringResource(id = R.string.farm_list)) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigate("siteList")}, modifier = Modifier.size(36.dp)) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back to Site List")
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { /* Handle restore action */ },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Restore",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(1.dp))
+                        if (listItems.isNotEmpty()) {
+                            IconButton(onClick = {action = Action.Export;showFormatDialog = true}, modifier = Modifier.size(36.dp)) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.save),
+                                    contentDescription = "Export",
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(1.dp))
+                        }
+                        if (listItems.isNotEmpty()) {
+                            IconButton(onClick = {action = Action.Share;showFormatDialog = true}, modifier = Modifier.size(36.dp)) {
+                                Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
+                            }
+                            Spacer(modifier = Modifier.width(1.dp))
+                        }
+                        IconButton(
+                            onClick = {
+                                if (!isImportDisabled) {
+                                    showImportDialog = true
+                                    isImportDisabled = true // Disable the import icon after importing
+                                }
+                            },
+                            modifier = Modifier.size(36.dp),
+                            enabled = !isImportDisabled // Disable the button if import is completed
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icons8_import_file_48),
+                                contentDescription = "Import",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(1.dp))
+                        IconButton(onClick = { isSearchActive = !isSearchActive }, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                                contentDescription = if (isSearchActive) "Close Search" else "Search",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("addFarm/${siteId}")
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
                 }
-            }
+            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    // Search field below the header
+                    if (isSearchActive) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            label = { Text(stringResource(R.string.search)) },
+                            singleLine = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                cursorColor = MaterialTheme.colorScheme.onSurface,
+                            ),
+                        )
+                    }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                    TabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTabIndex == index,
+                                onClick = { selectedTabIndex = index },
+                                text = { Text(title) },
+                            )
+                        }
+                    }
 
-            if (isLoading.value) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (isLoading.value) {
 //                Box(
 //                    modifier = Modifier
 //                        .fillMaxSize()
@@ -1042,122 +1176,127 @@ fun FarmList(
 //                ) {
 //                    CircularProgressIndicator()
 //                }
-                LazyColumn {
-                    items(3) {
-                        FarmCardSkeleton()
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            } else {
-                val itemsPerPage = 3 // Adjust this value as needed
-                var currentPage by remember { mutableStateOf(1) }
+                        LazyColumn {
+                            items(3) {
+                                FarmCardSkeleton()
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    } else {
+                        val itemsPerPage = 3 // Adjust this value as needed
+                        var currentPage by remember { mutableStateOf(1) }
 
-                // Filter items based on the selected tab
-                val filteredItems = if (selectedTabIndex == 0) {
-                    listItems
-                } else {
-                    listItems.filter { it.needsUpdate }
-                }.filter { farm ->
-                    farm.farmerName.contains(searchQuery, ignoreCase = true) ||
-                            farm.id.toString().contains(searchQuery, ignoreCase = true)
-                }
+                        // Filter items based on the selected tab
+                        val filteredItems = if (selectedTabIndex == 0) {
+                            listItems
+                        } else {
+                            listItems.filter { it.needsUpdate }
+                        }.filter { farm ->
+                            farm.farmerName.contains(searchQuery, ignoreCase = true) ||
+                                    farm.id.toString().contains(searchQuery, ignoreCase = true)
+                        }
 
-                val totalPages = (filteredItems.size + itemsPerPage - 1) / itemsPerPage
-                val paginatedList = filteredItems.chunked(itemsPerPage).getOrNull(currentPage - 1) ?: emptyList()
+                        val totalPages = (filteredItems.size + itemsPerPage - 1) / itemsPerPage
+                        val paginatedList =
+                            filteredItems.chunked(itemsPerPage).getOrNull(currentPage - 1)
+                                ?: emptyList()
 
 
-                // Show number of selected items if any
-                if (selectedIds.isNotEmpty()) {
-                    Text(
-                        text = "${selectedIds.size} item(s) selected",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
+                        // Show number of selected items if any
+                        if (selectedIds.isNotEmpty()) {
+                            Text(
+                                text = "${selectedIds.size} item(s) selected",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
 
-                if (filteredItems.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No results found",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        items(paginatedList) { farm ->
-                            FarmCard(
-                                farm = farm,
-                                navController = navController,
-                                isSelected = selectedIds.contains(farm.id),
-                                onCardClick = {
-                                    navController.currentBackStackEntry?.arguments?.apply {
-                                        putParcelableArrayList(
-                                            "coordinates",
-                                            farm.coordinates?.map {
-                                                it.first?.let { it1 ->
-                                                    it.second?.let { it2 ->
-                                                        ParcelablePair(it1, it2)
-                                                    }
-                                                }
-                                            }?.let { ArrayList(it) }
-                                        )
-                                        putParcelable(
-                                            "farmData",
-                                            ParcelableFarmData(farm, "view")
-                                        )
-                                    }
-                                    navController.navigate(route = "setPolygon")
-                                },
-                                onDeleteClick = {
-                                    selectedIds.add(farm.id)
-                                    selectedFarm.value = farm
-                                    showDeleteDialog.value = true
-                                },
-                                onToggleSelect = { id ->
-                                    if (selectedIds.contains(id)) {
-                                        selectedIds.remove(id)
-                                    } else {
-                                        selectedIds.add(id)
-                                    }
+                        if (filteredItems.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No results found",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                items(paginatedList) { farm ->
+                                    FarmCard(
+                                        farm = farm,
+                                        navController = navController,
+                                        isSelected = selectedIds.contains(farm.id),
+                                        onCardClick = {
+                                            navController.currentBackStackEntry?.arguments?.apply {
+                                                putParcelableArrayList(
+                                                    "coordinates",
+                                                    farm.coordinates?.map {
+                                                        it.first?.let { it1 ->
+                                                            it.second?.let { it2 ->
+                                                                ParcelablePair(it1, it2)
+                                                            }
+                                                        }
+                                                    }?.let { ArrayList(it) }
+                                                )
+                                                putParcelable(
+                                                    "farmData",
+                                                    ParcelableFarmData(farm, "view")
+                                                )
+                                            }
+                                            navController.navigate(route = "setPolygon")
+                                        },
+                                        onDeleteClick = {
+                                            selectedIds.add(farm.id)
+                                            selectedFarm.value = farm
+                                            showDeleteDialog.value = true
+                                        },
+                                        onToggleSelect = { id ->
+                                            if (selectedIds.contains(id)) {
+                                                selectedIds.remove(id)
+                                            } else {
+                                                selectedIds.add(id)
+                                            }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                            }
+                        }
+
+                        if (listItems.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp, 8.dp),
+                                    painter = painterResource(id = R.drawable.no_data2),
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                        if (filteredItems.isNotEmpty()) {
+                            CustomPaginationControls(
+                                currentPage = currentPage,
+                                totalPages = totalPages,
+                                onPageChange = { newPage ->
+                                    currentPage = newPage
                                 }
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
-                }
-
-                if (listItems.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp, 8.dp),
-                            painter = painterResource(id = R.drawable.no_data2),
-                            contentDescription = null
-                        )
-                    }
-                }
-                if (filteredItems.isNotEmpty()) {
-                    CustomPaginationControls(
-                        currentPage = currentPage,
-                        totalPages = totalPages,
-                        onPageChange = { newPage ->
-                            currentPage = newPage
-                        }
-                    )
                 }
             }
-        }
+        )
+
 
         if (selectedIds.isNotEmpty()) {
             BottomActionBar(
@@ -1165,7 +1304,8 @@ fun FarmList(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter),
                 onDeleteClick = {
-                    showDeleteDialog.value = true
+                    // showDeleteDialog.value = true
+                    deleteSelectedFarms()
                 },
                 onExportClicked = {
                     action = Action.Export
@@ -1301,7 +1441,9 @@ fun ImportFileDialog(
                 Button(
                     onClick = { downloadTemplate() },
                     enabled = selectedFileType.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                 ) {
                     Text(stringResource(R.string.download_template))
                 }
@@ -1428,12 +1570,21 @@ fun FarmListHeader(
     selectedItemsCount: Int,
     selectAllEnabled: Boolean,
     isAllSelected: Boolean,
-    onSelectAllChanged: (Boolean) -> Unit
+    onSelectAllChanged: (Boolean) -> Unit,
+    navController: NavController,
+    darkMode: MutableState<Boolean>,
+    languageViewModel: LanguageViewModel,
+    languages: List<Language>
 ) {
     // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
 
-    var isSearchVisible by remember { mutableStateOf(false) }
+    var isSearchVisible by remember { mutableStateOf(false)}
+
+    val currentLanguage by languageViewModel.currentLanguage.collectAsState()
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
+    var drawerVisible by remember { mutableStateOf(false) }
 
     TopAppBar(
         modifier =
@@ -1441,8 +1592,8 @@ fun FarmListHeader(
             .background(MaterialTheme.colorScheme.primary)
             .fillMaxWidth(),
         navigationIcon = {
-            IconButton(onClick = onBackClicked) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+            IconButton(onClick = { drawerVisible = ! drawerVisible }) {
+                Icon(Icons.Default.Menu, contentDescription = "Menu")
             }
         },
         title = {
@@ -1531,7 +1682,202 @@ fun FarmListHeader(
             )
         }
     }
+
+    if (drawerVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0x99000000))
+                .clickable { drawerVisible = false },
+            contentAlignment = Alignment.TopStart
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(250.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(16.dp)
+                ) {
+                    // Header
+                    Text(
+                        text = stringResource(id = R.string.menu),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Divider()
+
+                    // Scrollable Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 64.dp)
+                        ) {
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.home),
+                                    painter = painterResource(R.drawable.home),
+                                    onClick = {
+                                        navController.navigate("shopping")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.collection_site_registration),
+                                    painter = painterResource(R.drawable.add_collection_site),
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.farmer_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                // Dark Mode Toggle
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.light_dark_theme),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Switch(
+                                        checked = darkMode.value,
+                                        onCheckedChange = {
+                                            darkMode.value = it
+                                            sharedPreferences.edit().putBoolean("dark_mode", it)
+                                                .apply()
+                                        }
+                                    )
+                                }
+                            }
+                            item {
+                                Divider()
+                            }
+//                            item {
+//                                // Language Selector
+//                                Text(
+//                                    text = stringResource(id = R.string.select_language),
+//                                    style = MaterialTheme.typography.titleMedium
+//                                )
+//                                Column(
+//                                    modifier = Modifier.fillMaxWidth(),
+//                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+//                                    horizontalAlignment = Alignment.CenterHorizontally
+//                                ) {
+//                                    languages.forEach { language ->
+//                                        LanguageCardSideBar(
+//                                            language = language,
+//                                            isSelected = language == currentLanguage,
+//                                            onSelect = {
+//                                                languageViewModel.selectLanguage(language, context)
+//                                            }
+//                                        )
+//                                    }
+//                                }
+//                            }
+                            // using checkbox
+
+                            item {
+                                Text(
+                                    text = stringResource(id = R.string.select_language),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .width(230.dp)
+                                        .padding(8.dp)
+                                ) {
+                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+                                    OutlinedButton(
+                                        onClick = { expanded = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = currentLanguage.displayName)
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = null
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier
+                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+                                            .background(Color.White) // Set the background color to white for visibility
+                                    ) {
+                                        languages.forEach { language ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = language.displayName,
+                                                        color = Color.Black // Ensure text is visible against the white background
+                                                    )
+                                                },
+                                                onClick = {
+                                                    languageViewModel.selectLanguage(language, context)
+                                                    expanded = false
+                                                },
+                                                modifier = Modifier
+                                                    .background(Color.White) // Ensure each menu item has a white background
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            item {
+                                // Logout Item
+                                DrawerItem(
+                                    text = stringResource(id = R.string.logout),
+                                    painter = painterResource(R.drawable.logout),
+                                    onClick = {
+                                        // Call your logout function here
+                                        // navigate to login screen or refresh UI
+                                        navController.popBackStack()
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1544,6 +1890,9 @@ fun FarmListHeaderPlots(
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    searchQuery: String, // Pass the search query as a parameter
+    isSearchVisible: Boolean, // Control search visibility from outside
+    onSearchVisibilityChanged: (Boolean) -> Unit ,// Add this
     onBuyThroughAkrabiClicked: () -> Unit, // Added this
     showAdd: Boolean,
     showExport: Boolean,
@@ -1553,9 +1902,9 @@ fun FarmListHeaderPlots(
 ) {
     val context = LocalContext.current as Activity
 
-    // State for holding the search query
-    var searchQuery by remember { mutableStateOf("") }
-    var isSearchVisible by remember { mutableStateOf(false) }
+//    // State for holding the search query
+//    var searchQuery by remember { mutableStateOf("") }
+//    var isSearchVisible by remember { mutableStateOf(false) }
 
     // State for tracking if import has been completed
     var isImportDisabled by remember { mutableStateOf(false) }
@@ -1630,7 +1979,8 @@ fun FarmListHeaderPlots(
             }
             if (showSearch) {
                 IconButton(onClick = {
-                    isSearchVisible = !isSearchVisible
+//                    isSearchVisible = !isSearchVisible
+                    onSearchVisibilityChanged(!isSearchVisible)
                 }, modifier = Modifier.size(24.dp)) {
                     Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
                 }
@@ -1638,41 +1988,68 @@ fun FarmListHeaderPlots(
         },
     )
 
+//    // Conditional rendering of the search field
+//    if (isSearchVisible && showSearch) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier =
+//            Modifier
+//                .padding(horizontal = 16.dp)
+//                .fillMaxWidth(),
+//        ) {
+//            OutlinedTextField(
+//                value = searchQuery,
+//                onValueChange = {
+//                    searchQuery = it
+//                    onSearchQueryChanged(it)
+//                },
+//                modifier =
+//                Modifier
+//                    .padding(start = 8.dp)
+//                    .weight(1f),
+//                label = { Text(stringResource(R.string.search)) },
+//                leadingIcon = {
+//                    IconButton(onClick = {
+//                        // onBackSearchClicked()
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                },
+//                singleLine = true,
+//                colors =
+//                TextFieldDefaults.outlinedTextFieldColors(
+//                    cursorColor = MaterialTheme.colorScheme.onSurface,
+//                ),
+//            )
+//        }
+//    }
+
     // Conditional rendering of the search field
     if (isSearchVisible && showSearch) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier =
-            Modifier
+            modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth(),
         ) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = {
-                    searchQuery = it
-                    onSearchQueryChanged(it)
-                },
-                modifier =
-                Modifier
+                onValueChange = onSearchQueryChanged,
+                modifier = Modifier
                     .padding(start = 8.dp)
                     .weight(1f),
                 label = { Text(stringResource(R.string.search)) },
                 leadingIcon = {
                     IconButton(onClick = {
-                        // onBackSearchClicked()
-                        searchQuery = ""
-                        onSearchQueryChanged("")
-                        isSearchVisible = !isSearchVisible
+                        onBackSearchClicked()
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 singleLine = true,
-                colors =
-                TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = MaterialTheme.colorScheme.onSurface,
-                ),
             )
         }
     }
@@ -1754,7 +2131,9 @@ fun FarmCard(
                 ) {
                     IconButton(
                         onClick = { navController.navigate("updateFarm/${farm.id}") },
-                        modifier = Modifier.padding(end = 2.dp).size(24.dp) // Reduced padding and set explicit size
+                        modifier = Modifier
+                            .padding(end = 2.dp)
+                            .size(24.dp) // Reduced padding and set explicit size
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -1764,7 +2143,9 @@ fun FarmCard(
                     }
                     IconButton(
                         onClick = onDeleteClick,
-                        modifier = Modifier.padding(end = 2.dp).size(24.dp) // Reduced padding and set explicit size
+                        modifier = Modifier
+                            .padding(end = 2.dp)
+                            .size(24.dp) // Reduced padding and set explicit size
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
@@ -1958,13 +2339,16 @@ private fun writeTextData(
     }
 }
 
-@SuppressLint("MissingPermission")
+@SuppressLint("MissingPermission", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun UpdateFarmForm(
     navController: NavController,
     farmId: Long?,
     listItems: List<Farm>,
+    languageViewModel: LanguageViewModel,
+    darkMode: MutableState<Boolean>,
+    languages: List<Language>
 ) {
     val floatValue = 123.45f
     val item = listItems.find { it.id == farmId } ?: Farm(
@@ -2203,6 +2587,12 @@ fun UpdateFarmForm(
     val buttonColor = if (isDarkTheme) Color.Black else Color.White
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
+    var drawerVisible by remember { mutableStateOf(false) }
+    val currentLanguage by languageViewModel.currentLanguage.collectAsState()
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
+
+
+
     if (showPermissionRequest.value) {
         LocationPermissionRequest(
             onLocationEnabled = {
@@ -2220,239 +2610,308 @@ fun UpdateFarmForm(
         )
     }
 
-    Column(
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .background(backgroundColor)
-            .padding(16.dp)
-//            .verticalScroll(state = scrollState),
-    ) {
-        FarmListHeader(
-            title = stringResource(id = R.string.update_farm),
-            onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackClicked = { navController.popBackStack() },
-            onBackSearchClicked = {},
-            showAdd = false,
-            showSearch = false,
-            selectedItemsCount = 0,
-            selectAllEnabled = false,
-            isAllSelected =false,
-            onSelectAllChanged = { null}
-        )
+//    Column(
+//        modifier =
+//        Modifier
+//            .fillMaxWidth()
+//            .background(backgroundColor)
+//            .padding(16.dp)
+////            .verticalScroll(state = scrollState),
+//    ) {
+//        FarmListHeader(
+//            title = stringResource(id = R.string.update_farm),
+//            onSearchQueryChanged = {},
+//            onAddFarmClicked = { /* Handle adding a farm here */ },
+//            onBackClicked = { navController.popBackStack() },
+//            onBackSearchClicked = {},
+//            showAdd = false,
+//            showSearch = false,
+//            selectedItemsCount = 0,
+//            selectAllEnabled = false,
+//            isAllSelected =false,
+//            onSelectAllChanged = { null},
+//            darkMode = darkMode,
+//            languages = languages,
+//            languageViewModel = languageViewModel,
+//            navController = navController
+//        )
+//
+//        Column(
+//            modifier =
+//            Modifier
+//                .fillMaxWidth()
+//                .background(backgroundColor)
+//                .padding(8.dp)
+//                .verticalScroll(state = scrollState),
+//        ) {
 
-        Column(
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(backgroundColor)
-                .padding(8.dp)
-            .verticalScroll(state = scrollState),
-        ) {
+    // Composable content
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = stringResource(id = R.string.update_farm)) },
+//                    navigationIcon = {
+//                        IconButton(onClick = { drawerVisible = !drawerVisible }) {
+//                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+//                        }
+//                    }
+//                    actions = {
+//                        IconButton(onClick = { isSearchActive = !isSearchActive }) {
+//                            Icon(
+//                                if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+//                                contentDescription = if (isSearchActive) "Close Search" else "Search"
+//                            )
+//                        }
+//                    }
+                )
+            },
+//            floatingActionButton = {
+//                FloatingActionButton(
+//                    onClick = {
+//                        navController.navigate("addSite")
+//                    },
+//                    modifier = Modifier.padding(16.dp)
+//                ) {
+//                    Icon(Icons.Default.Add, contentDescription = "Add Site")
+//                }
+//            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                        .padding(8.dp)
+                        .verticalScroll(state= rememberScrollState())
+                ) {
 
-            OutlinedTextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions =
-                KeyboardActions(
-                    onDone = { focusRequester1.requestFocus() },
-                ),
-                value = farmerName,
-                onValueChange = { farmerName = it },
-                label = { Text(stringResource(id = R.string.farm_name), color = inputLabelColor) },
-                isError = farmerName.isBlank(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                    errorLeadingIconColor = Color.Red,
-                    cursorColor = inputTextColor,
-                    errorCursorColor = Color.Red,
-                    focusedBorderColor = inputBorder,
-                    unfocusedBorderColor = inputBorder,
-                    errorBorderColor = Color.Red
-                ),
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .onKeyEvent {
-                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                            focusRequester1.requestFocus()
-                            true
-                        }
-                        false
-                    },
-            )
-            OutlinedTextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions =
-                KeyboardActions(
-                    onDone = { focusRequester1.requestFocus() },
-                ),
-                value = memberId,
-                onValueChange = { memberId = it },
-                label = { Text(stringResource(id = R.string.member_id), color = inputLabelColor) },
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .onKeyEvent {
-                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                            focusRequester1.requestFocus()
-                        }
-                        false
-                    },
-            )
-            OutlinedTextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions =
-                KeyboardActions(
-                    onDone = { focusRequester2.requestFocus() },
-                ),
-                value = village,
-                onValueChange = { village = it },
-                label = { Text(stringResource(id = R.string.village), color = inputLabelColor) },
-                isError = village.isBlank(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                    errorLeadingIconColor = Color.Red,
-                    cursorColor = inputTextColor,
-                    errorCursorColor = Color.Red,
-                    focusedBorderColor = inputBorder,
-                    unfocusedBorderColor = inputBorder,
-                    errorBorderColor = Color.Red
-                ),
-                modifier =
-                Modifier
-                    .focusRequester(focusRequester1)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-            )
-            OutlinedTextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions =
-                KeyboardActions(
-                    onDone = { focusRequester3.requestFocus() },
-                ),
-                value = district,
-                onValueChange = { district = it },
-                label = { Text(stringResource(id = R.string.district), color = inputLabelColor) },
-                isError = district.isBlank(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                    errorLeadingIconColor = Color.Red,
-                    cursorColor = inputTextColor,
-                    errorCursorColor = Color.Red,
-                    focusedBorderColor = inputBorder,
-                    unfocusedBorderColor = inputBorder,
-                    errorBorderColor = Color.Red
-                ),
-                modifier =
-                Modifier
-                    .focusRequester(focusRequester2)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-            )
+                    OutlinedTextField(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions =
+                        KeyboardActions(
+                            onDone = { focusRequester1.requestFocus() },
+                        ),
+                        value = farmerName,
+                        onValueChange = { farmerName = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.farm_name),
+                                color = inputLabelColor
+                            )
+                        },
+                        isError = farmerName.isBlank(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedBorderColor = inputBorder,
+                            unfocusedBorderColor = inputBorder,
+                            errorBorderColor = Color.Red
+                        ),
+                        modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .onKeyEvent {
+                                if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                                    focusRequester1.requestFocus()
+                                    true
+                                }
+                                false
+                            },
+                    )
+                    OutlinedTextField(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions =
+                        KeyboardActions(
+                            onDone = { focusRequester1.requestFocus() },
+                        ),
+                        value = memberId,
+                        onValueChange = { memberId = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.member_id),
+                                color = inputLabelColor
+                            )
+                        },
+                        modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                            .onKeyEvent {
+                                if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                                    focusRequester1.requestFocus()
+                                }
+                                false
+                            },
+                    )
+                    OutlinedTextField(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions =
+                        KeyboardActions(
+                            onDone = { focusRequester2.requestFocus() },
+                        ),
+                        value = village,
+                        onValueChange = { village = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.village),
+                                color = inputLabelColor
+                            )
+                        },
+                        isError = village.isBlank(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedBorderColor = inputBorder,
+                            unfocusedBorderColor = inputBorder,
+                            errorBorderColor = Color.Red
+                        ),
+                        modifier =
+                        Modifier
+                            .focusRequester(focusRequester1)
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                    )
+                    OutlinedTextField(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions =
+                        KeyboardActions(
+                            onDone = { focusRequester3.requestFocus() },
+                        ),
+                        value = district,
+                        onValueChange = { district = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.district),
+                                color = inputLabelColor
+                            )
+                        },
+                        isError = district.isBlank(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedBorderColor = inputBorder,
+                            unfocusedBorderColor = inputBorder,
+                            errorBorderColor = Color.Red
+                        ),
+                        modifier =
+                        Modifier
+                            .focusRequester(focusRequester2)
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                    )
 
-            OutlinedTextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions =
-                KeyboardActions(
-                    onDone = { focusRequester3.requestFocus() },
-                ),
-                value = age,
-                onValueChange = { age = it },
-                label = { Text(stringResource(id = R.string.age), color = inputLabelColor) },
-                isError = district.isBlank(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                    errorLeadingIconColor = Color.Red,
-                    cursorColor = inputTextColor,
-                    errorCursorColor = Color.Red,
-                    focusedBorderColor = inputBorder,
-                    unfocusedBorderColor = inputBorder,
-                    errorBorderColor = Color.Red
-                ),
-                modifier =
-                Modifier
-                    .focusRequester(focusRequester2)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-            )
+                    OutlinedTextField(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions =
+                        KeyboardActions(
+                            onDone = { focusRequester3.requestFocus() },
+                        ),
+                        value = age,
+                        onValueChange = { age = it },
+                        label = {
+                            Text(
+                                stringResource(id = R.string.age),
+                                color = inputLabelColor
+                            )
+                        },
+                        isError = district.isBlank(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedBorderColor = inputBorder,
+                            unfocusedBorderColor = inputBorder,
+                            errorBorderColor = Color.Red
+                        ),
+                        modifier =
+                        Modifier
+                            .focusRequester(focusRequester2)
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                    )
 
 
-            // Gender (Dropdown)
-            gender?.let {
-                GenderDropdown(
-                    gender = it,
-                    onGenderSelected =
-                    { selectedGender ->
-                        gender = selectedGender
+                    // Gender (Dropdown)
+                    gender?.let {
+                        GenderDropdown(
+                            gender = it,
+                            onGenderSelected =
+                            { selectedGender ->
+                                gender = selectedGender
+                            }
+                        )
                     }
-                )
-            }
 
-            // Govt ID Number
-            govtIdNumber?.let {
-                OutlinedTextField(
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    value = it,
-                    onValueChange = { govtIdNumber = it },
-                    label = { Text("Govt ID Number", color = inputLabelColor) },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = backgroundColor,
-                        cursorColor = inputTextColor,
-                        focusedBorderColor = inputBorder,
-                        unfocusedBorderColor = inputBorder
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
-                )
-            }
+                    // Govt ID Number
+                    govtIdNumber?.let {
+                        OutlinedTextField(
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            value = it,
+                            onValueChange = { govtIdNumber = it },
+                            label = { Text("Govt ID Number", color = inputLabelColor) },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = backgroundColor,
+                                cursorColor = inputTextColor,
+                                focusedBorderColor = inputBorder,
+                                unfocusedBorderColor = inputBorder
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp)
+                        )
+                    }
 
-            // Number of Trees
-            OutlinedTextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                value = numberOfTrees,
-                onValueChange = { numberOfTrees = it },
-                label = { Text("Number of Trees", color = inputLabelColor) },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = backgroundColor,
-                    cursorColor = inputTextColor,
-                    focusedBorderColor = inputBorder,
-                    unfocusedBorderColor = inputBorder
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-            )
+                    // Number of Trees
+                    OutlinedTextField(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        value = numberOfTrees,
+                        onValueChange = { numberOfTrees = it },
+                        label = { Text("Number of Trees", color = inputLabelColor) },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = backgroundColor,
+                            cursorColor = inputTextColor,
+                            focusedBorderColor = inputBorder,
+                            unfocusedBorderColor = inputBorder
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                    )
 
-            // Phone
-            phone?.let {
-                OutlinedTextField(
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    value = it,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone", color = inputLabelColor) },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = backgroundColor,
-                        cursorColor = inputTextColor,
-                        focusedBorderColor = inputBorder,
-                        unfocusedBorderColor = inputBorder
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
-                )
-            }
+                    // Phone
+                    phone?.let {
+                        OutlinedTextField(
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            value = it,
+                            onValueChange = { phone = it },
+                            label = { Text("Phone", color = inputLabelColor) },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = backgroundColor,
+                                cursorColor = inputTextColor,
+                                focusedBorderColor = inputBorder,
+                                unfocusedBorderColor = inputBorder
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp)
+                        )
+                    }
 
 //            // Pick Image Button
 //            ImagePicker { uri ->
@@ -2460,17 +2919,17 @@ fun UpdateFarmForm(
 //                photo = uri?.toString() ?: ""
 //            }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                OutlinedTextField(
-                    singleLine = true,
-                    value = truncateToDecimalPlaces(size, 9),
-                    onValueChange = {
-                        size = it
-                    },
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        OutlinedTextField(
+                            singleLine = true,
+                            value = truncateToDecimalPlaces(size, 9),
+                            onValueChange = {
+                                size = it
+                            },
 //                value =  truncateToDecimalPlaces(formatInput(size),9),
 //                onValueChange = { inputValue ->
 //                    val formattedValue = when {
@@ -2485,202 +2944,389 @@ fun UpdateFarmForm(
 //                    // Update the size state with the formatted value
 //                    size = formattedValue
 //                },
-                    keyboardOptions =
-                    KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number,
-                    ),
-                    label = {
-                        Text(
-                            stringResource(id = R.string.size_in_hectares) + " (*)",
-                            color = inputLabelColor
+                            keyboardOptions =
+                            KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                            ),
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.size_in_hectares) + " (*)",
+                                    color = inputLabelColor
+                                )
+                            },
+                            isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
+                            colors =
+                            TextFieldDefaults.textFieldColors(
+                                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red,
+                            ),
+                            modifier =
+                            Modifier
+                                .focusRequester(focusRequester3)
+                                .weight(1f)
+                                .padding(bottom = 4.dp),
                         )
-                    },
-                    isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
-                    colors =
-                    TextFieldDefaults.textFieldColors(
-                        containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
-                        errorLeadingIconColor = Color.Red,
-                        cursorColor = inputTextColor,
-                        errorCursorColor = Color.Red,
-                        focusedIndicatorColor = inputBorder,
-                        unfocusedIndicatorColor = inputBorder,
-                        errorIndicatorColor = Color.Red,
-                    ),
-                    modifier =
-                    Modifier
-                        .focusRequester(focusRequester3)
-                        .weight(1f)
-                        .padding(bottom = 4.dp),
-                )
 
-                Spacer(modifier = Modifier.width(8.dp))
-                // Size measure
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = {
-                        expanded = !expanded
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = selectedUnit,
-                        onValueChange = { },
-                        label = { Text(stringResource(R.string.unit)) },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = expanded,
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Size measure
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = {
+                                expanded = !expanded
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            OutlinedTextField(
+                                readOnly = true,
+                                value = selectedUnit,
+                                onValueChange = { },
+                                label = { Text(stringResource(R.string.unit)) },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = expanded,
+                                    )
+                                },
+                                colors = TextFieldDefaults.outlinedTextFieldColors(
+                                    containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                                ),
+                                modifier = Modifier.menuAnchor(),
                             )
-                        },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
-                        ),
-                        modifier = Modifier.menuAnchor(),
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = {
-                            expanded = false
-                        },
-                    ) {
-                        items.forEach { selectionOption ->
-                            DropdownMenuItem(
-                                { Text(text = selectionOption) },
-                                onClick = {
-                                    selectedUnit = selectionOption
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = {
                                     expanded = false
                                 },
-                            )
-                        }
-                    }
-                }
-            }
-
-//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-            if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }
-                    ?: 0f) < 4f) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = latitude,
-                        onValueChange = { latitude = it },
-                        label = {
-                            Text(
-                                stringResource(id = R.string.latitude),
-                                color = inputLabelColor
-                            )
-                        },
-                        modifier =
-                        Modifier
-                            .weight(1f)
-                            .padding(bottom = 4.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp)) // Add space between the latitude and longitude input fields
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = longitude,
-                        onValueChange = { longitude = it },
-                        label = {
-                            Text(
-                                stringResource(id = R.string.longitude),
-                                color = inputLabelColor
-                            )
-                        },
-                        modifier =
-                        Modifier
-                            .weight(1f)
-                            .padding(bottom = 16.dp),
-                    )
-                }
-            }
-            Button(
-                onClick = {
-                    showPermissionRequest.value = true
-                    if (!isLocationEnabled(context)) {
-                        showLocationDialog.value = true
-                    } else {
-                        if (isLocationEnabled(context) && context.hasLocationPermission()) {
-//                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
-                            if (size.toDoubleOrNull()
-                                    ?.let { convertSize(it, selectedUnit).toFloat() }
-                                    ?.let { it < 4f } == true
                             ) {
-                                // Simulate collecting latitude and longitude
-                                if (context.hasLocationPermission()) {
-                                    val locationRequest =
-                                        LocationRequest.create().apply {
-                                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                                            interval = 10000 // Update interval in milliseconds
-                                            fastestInterval =
-                                                5000 // Fastest update interval in milliseconds
-                                        }
-
-                                    fusedLocationClient.requestLocationUpdates(
-                                        locationRequest,
-                                        object : LocationCallback() {
-                                            override fun onLocationResult(locationResult: LocationResult) {
-                                                locationResult.lastLocation?.let { lastLocation ->
-                                                    // Handle the new location
-                                                    latitude = "${lastLocation.latitude}"
-                                                    longitude = "${lastLocation.longitude}"
-                                                    // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
-                                                }
-                                            }
+                                items.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        { Text(text = selectionOption) },
+                                        onClick = {
+                                            selectedUnit = selectionOption
+                                            expanded = false
                                         },
-                                        Looper.getMainLooper(),
                                     )
                                 }
-                            } else {
-                                if (isLocationEnabled(context)) {
-                                    navController.navigate("setPolygon")
-                                }
                             }
-                        } else {
-                            showPermissionRequest.value = true
-                            showLocationDialog.value = true
                         }
                     }
-                },
-                modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(0.7f)
-                    .padding(bottom = 5.dp)
-                    .height(50.dp),
-                enabled = size.toFloatOrNull() != null,
-            ) {
-                Text(
-                    // text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
-                    text =
-                    if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }
-                            ?.let { it < 4f } ==
-                        true
-                    ) {
-                        stringResource(id = R.string.get_coordinates)
-                    } else {
-                        stringResource(
-                            id = R.string.set_new_polygon,
-                        )
-                    },
-                )
-            }
-            Button(
-                onClick = {
-                    if (validateForm()) {
-                        showDialog.value = true
-                    } else {
-                        Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+
+//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
+                    if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }
+                            ?: 0f) < 4f) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            OutlinedTextField(
+                                readOnly = true,
+                                value = latitude,
+                                onValueChange = { latitude = it },
+                                label = {
+                                    Text(
+                                        stringResource(id = R.string.latitude),
+                                        color = inputLabelColor
+                                    )
+                                },
+                                modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .padding(bottom = 4.dp),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp)) // Add space between the latitude and longitude input fields
+                            OutlinedTextField(
+                                readOnly = true,
+                                value = longitude,
+                                onValueChange = { longitude = it },
+                                label = {
+                                    Text(
+                                        stringResource(id = R.string.longitude),
+                                        color = inputLabelColor
+                                    )
+                                },
+                                modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .padding(bottom = 16.dp),
+                            )
+                        }
                     }
-                },
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
+                    Button(
+                        onClick = {
+                            showPermissionRequest.value = true
+                            if (!isLocationEnabled(context)) {
+                                showLocationDialog.value = true
+                            } else {
+                                if (isLocationEnabled(context) && context.hasLocationPermission()) {
+//                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
+                                    if (size.toDoubleOrNull()
+                                            ?.let { convertSize(it, selectedUnit).toFloat() }
+                                            ?.let { it < 4f } == true
+                                    ) {
+                                        // Simulate collecting latitude and longitude
+                                        if (context.hasLocationPermission()) {
+                                            val locationRequest =
+                                                LocationRequest.create().apply {
+                                                    priority =
+                                                        LocationRequest.PRIORITY_HIGH_ACCURACY
+                                                    interval =
+                                                        10000 // Update interval in milliseconds
+                                                    fastestInterval =
+                                                        5000 // Fastest update interval in milliseconds
+                                                }
+
+                                            fusedLocationClient.requestLocationUpdates(
+                                                locationRequest,
+                                                object : LocationCallback() {
+                                                    override fun onLocationResult(locationResult: LocationResult) {
+                                                        locationResult.lastLocation?.let { lastLocation ->
+                                                            // Handle the new location
+                                                            latitude = "${lastLocation.latitude}"
+                                                            longitude = "${lastLocation.longitude}"
+                                                            // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                                        }
+                                                    }
+                                                },
+                                                Looper.getMainLooper(),
+                                            )
+                                        }
+                                    } else {
+                                        if (isLocationEnabled(context)) {
+                                            navController.navigate("setPolygon")
+                                        }
+                                    }
+                                } else {
+                                    showPermissionRequest.value = true
+                                    showLocationDialog.value = true
+                                }
+                            }
+                        },
+                        modifier =
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(0.7f)
+                            .padding(bottom = 5.dp),
+                        enabled = size.toFloatOrNull() != null,
+                    ) {
+                        Text(
+                            // text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
+                            text =
+                            if (size.toDoubleOrNull()
+                                    ?.let { convertSize(it, selectedUnit).toFloat() }
+                                    ?.let { it < 4f } ==
+                                true
+                            ) {
+                                stringResource(id = R.string.get_coordinates)
+                            } else {
+                                stringResource(
+                                    id = R.string.set_new_polygon,
+                                )
+                            },
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 5.dp),
+                        horizontalArrangement = Arrangement.Center // Ensures buttons are spaced evenly
+                    ) {
+
+                        Button(onClick = { navController.popBackStack()},
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                            Text(text = stringResource(id = R.string.cancel), color = Color.White)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp)) // Adds some space between the buttons
+                        Button(
+                            onClick = {
+                                if (validateForm()) {
+                                    showDialog.value = true
+                                } else {
+                                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        ) {
+                            Text(text = stringResource(id = R.string.update_farm))
+                        }
+                    }
+
+
+
+                }
+            }
+        )
+    }
+
+
+    if (drawerVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0x99000000))
+                .clickable { drawerVisible = false },
+            contentAlignment = Alignment.TopStart
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(250.dp)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
-                Text(text = stringResource(id = R.string.update_farm))
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(16.dp)
+                ) {
+                    // Header
+                    Text(
+                        text = stringResource(id = R.string.menu),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Divider()
+
+                    // Scrollable Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 64.dp)
+                        ) {
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.home),
+                                    painter = painterResource(R.drawable.home),
+                                    onClick = {
+                                        navController.navigate("shopping")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.collection_site_registration),
+                                    painter = painterResource(R.drawable.add_collection_site),
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.farmer_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                // Dark Mode Toggle
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.light_dark_theme),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Switch(
+                                        checked = darkMode.value,
+                                        onCheckedChange = {
+                                            darkMode.value = it
+                                            sharedPreferences.edit().putBoolean("dark_mode", it)
+                                                .apply()
+                                        }
+                                    )
+                                }
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                Text(
+                                    text = stringResource(id = R.string.select_language),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .width(230.dp)
+                                        .padding(8.dp)
+                                ) {
+                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+                                    OutlinedButton(
+                                        onClick = { expanded = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = currentLanguage.displayName)
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = null
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier
+                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+                                            .background(Color.White) // Set the background color to white for visibility
+                                    ) {
+                                        languages.forEach { language ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = language.displayName,
+                                                        color = Color.Black // Ensure text is visible against the white background
+                                                    )
+                                                },
+                                                onClick = {
+                                                    languageViewModel.selectLanguage(language, context)
+                                                    expanded = false
+                                                },
+                                                modifier = Modifier
+                                                    .background(Color.White) // Ensure each menu item has a white background
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            item {
+                                // Logout Item
+                                DrawerItem(
+                                    text = stringResource(id = R.string.logout),
+                                    painter = painterResource(R.drawable.logout),
+                                    onClick = {
+                                        // Call your logout function here
+                                        // navigate to login screen or refresh UI
+                                        navController.popBackStack()
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,10 +47,14 @@ import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.CollectionSite
 import com.example.egnss4coffeev2.database.FarmViewModel
 import com.example.egnss4coffeev2.database.FarmViewModelFactory
+import com.example.egnss4coffeev2.utils.Language
+import com.example.egnss4coffeev2.utils.LanguageViewModel
 import org.joda.time.Instant
 
 @Composable
-fun AddSite(navController: NavController) {
+fun AddSite(navController: NavController, languageViewModel: LanguageViewModel,
+            darkMode: MutableState<Boolean>,
+            languages: List<Language>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +71,11 @@ fun AddSite(navController: NavController) {
             selectedItemsCount = 0,
             selectAllEnabled = false,
             isAllSelected =false,
-            onSelectAllChanged = { null}
+            onSelectAllChanged = { null},
+            darkMode = darkMode,
+            languages = languages,
+            languageViewModel = languageViewModel,
+            navController = navController
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)

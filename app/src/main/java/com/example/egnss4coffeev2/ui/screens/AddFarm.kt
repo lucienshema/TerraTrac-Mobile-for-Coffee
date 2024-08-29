@@ -18,33 +18,56 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +82,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -77,6 +101,8 @@ import com.example.egnss4coffeev2.database.FarmViewModelFactory
 import com.example.egnss4coffeev2.hasLocationPermission
 import com.example.egnss4coffeev2.map.MapViewModel
 import com.example.egnss4coffeev2.map.getCenterOfPolygon
+import com.example.egnss4coffeev2.utils.Language
+import com.example.egnss4coffeev2.utils.LanguageViewModel
 import com.example.egnss4coffeev2.utils.convertSize
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -103,8 +129,11 @@ import javax.inject.Inject
 
 private const val REQUEST_CHECK_SETTINGS = 1000
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddFarm(navController: NavController, siteId: Long) {
+fun AddFarm(navController: NavController, siteId: Long, languageViewModel: LanguageViewModel,
+            darkMode: MutableState<Boolean>,
+            languages: List<Language>) {
     var coordinatesData: List<Pair<Double, Double>>? = null
 //    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
 //        coordinatesData =
@@ -120,26 +149,271 @@ fun AddFarm(navController: NavController, siteId: Long) {
         coordinatesData = parcelableCoordinates?.map { Pair(it.first, it.second) }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        FarmListHeader(
-            title = stringResource(id = R.string.add_farm),
-            onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackSearchClicked = {},
-            onBackClicked = { navController.popBackStack() },
-            showAdd = false,
-            selectedItemsCount = 0,
-            showSearch = false,
-            selectAllEnabled = false,
-            isAllSelected =false,
-            onSelectAllChanged = { null}
+    // State for holding the search query
+    // var searchQuery by remember { mutableStateOf("") }
+
+
+
+    // State variables
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var drawerVisible by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val currentLanguage by languageViewModel.currentLanguage.collectAsState()
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
+
+//    Column(
+////        modifier = Modifier
+////            .fillMaxSize()
+////            .padding(16.dp)
+////    ) {
+////        FarmListHeader(
+////            title = stringResource(id = R.string.add_farm),
+////            onSearchQueryChanged = {},
+////            onAddFarmClicked = { /* Handle adding a farm here */ },
+////            onBackSearchClicked = {},
+////            onBackClicked = { navController.popBackStack() },
+////            showAdd = false,
+////            selectedItemsCount = 0,
+////            showSearch = false,
+////            selectAllEnabled = false,
+////            isAllSelected =false,
+////            onSelectAllChanged = { null},
+////            darkMode = darkMode,
+////            languages = languages,
+////            languageViewModel = languageViewModel,
+////            navController = navController
+////        )
+//        Spacer(modifier = Modifier.height(16.dp))
+
+    // Composable content
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = stringResource(id = R.string.add_farm)) },
+                    navigationIcon = {
+                        IconButton(onClick = {navController.popBackStack()}) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back to Farm List")
+                        }
+                    }
+//                    actions = {
+//                        IconButton(onClick = { isSearchActive = !isSearchActive }) {
+//                            Icon(
+//                                if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+//                                contentDescription = if (isSearchActive) "Close Search" else "Search"
+//                            )
+//                        }
+//                    }
+                )
+            },
+//            floatingActionButton = {
+//                FloatingActionButton(
+//                    onClick = {
+//                        navController.navigate("addSite")
+//                    },
+//                    modifier = Modifier.padding(16.dp)
+//                ) {
+//                    Icon(Icons.Default.Add, contentDescription = "Add Site")
+//                }
+//            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+//                    // Search field below the header
+//                    if (isSearchActive) {
+//                        OutlinedTextField(
+//                            value = searchQuery,
+//                            onValueChange = { searchQuery = it },
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(horizontal = 16.dp, vertical = 8.dp),
+//                            label = { Text(stringResource(R.string.search)) },
+//                            singleLine = true,
+//                            colors = TextFieldDefaults.outlinedTextFieldColors(
+//                                cursorColor = MaterialTheme.colorScheme.onSurface,
+//                            ),
+//                        )
+//                    }
+
+                    // Call the FarmForm composable with the necessary parameters
+                    FarmForm(navController, siteId, coordinatesData)
+                }
+            }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        FarmForm(navController, siteId, coordinatesData)
+    }
+
+    if (drawerVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0x99000000))
+                .clickable { drawerVisible = false },
+            contentAlignment = Alignment.TopStart
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(250.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(16.dp)
+                ) {
+                    // Header
+                    Text(
+                        text = stringResource(id = R.string.menu),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Divider()
+
+                    // Scrollable Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 64.dp)
+                        ) {
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.home),
+                                    painter = painterResource(R.drawable.home),
+                                    onClick = {
+                                        navController.navigate("shopping")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.collection_site_registration),
+                                    painter = painterResource(R.drawable.add_collection_site),
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.farmer_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("siteList")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                // Dark Mode Toggle
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.light_dark_theme),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Switch(
+                                        checked = darkMode.value,
+                                        onCheckedChange = {
+                                            darkMode.value = it
+                                            sharedPreferences.edit().putBoolean("dark_mode", it)
+                                                .apply()
+                                        }
+                                    )
+                                }
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                Text(
+                                    text = stringResource(id = R.string.select_language),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .width(230.dp)
+                                        .padding(8.dp)
+                                ) {
+                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+                                    OutlinedButton(
+                                        onClick = { expanded = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = currentLanguage.displayName)
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = null
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier
+                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+                                            .background(Color.White) // Set the background color to white for visibility
+                                    ) {
+                                        languages.forEach { language ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = language.displayName,
+                                                        color = Color.Black // Ensure text is visible against the white background
+                                                    )
+                                                },
+                                                onClick = {
+                                                    languageViewModel.selectLanguage(language, context)
+                                                    expanded = false
+                                                },
+                                                modifier = Modifier
+                                                    .background(Color.White) // Ensure each menu item has a white background
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            item {
+                                // Logout Item
+                                DrawerItem(
+                                    text = stringResource(id = R.string.logout),
+                                    painter = painterResource(R.drawable.logout),
+                                    onClick = {
+                                        // Call your logout function here
+                                        // navigate to login screen or refresh UI
+                                        navController.popBackStack()
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 // Helper function to truncate a string representation of a number to a specific number of decimal places

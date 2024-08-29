@@ -659,23 +659,6 @@ fun SetPolygon(
                         )
                     }
                     ElevatedButton(
-                        modifier =
-                        Modifier
-                            .fillMaxWidth(0.22f),
-                        shape = RoundedCornerShape(0.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White),
-                        onClick = {
-                            showClearMapDialog.value = true
-                        },
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.clear),
-                            contentDescription = stringResource(id = R.string.reset),
-                            tint = Color.Black,
-                            modifier = Modifier.padding(4.dp),
-                        )
-                    }
-                    ElevatedButton(
                         modifier = Modifier.fillMaxWidth(0.28f),
 //                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
                         colors = ButtonDefaults.buttonColors(Color.White),
@@ -692,6 +675,24 @@ fun SetPolygon(
                             modifier = Modifier.padding(4.dp),
                         )
                     }
+                    ElevatedButton(
+                        modifier =
+                        Modifier
+                            .fillMaxWidth(0.22f),
+                        shape = RoundedCornerShape(0.dp),
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        onClick = {
+                            showClearMapDialog.value = true
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.clear),
+                            contentDescription = stringResource(id = R.string.reset),
+                            tint = Color.Red,
+                            modifier = Modifier.padding(4.dp),
+                        )
+                    }
+
                 }
             }
         }

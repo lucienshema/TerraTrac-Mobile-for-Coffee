@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
                             val currentRoute = currentRoute(navController)
                             if (currentRoute in listOf(
 //                                    "shopping",
-                                    "akrabi_list_screen",
+//                                    "akrabi_list_screen",
                                     "bought_items_direct_buy",
                                     "bought_items_buy_through_Akrabi",
                                     BottomNavItem.DirectBuy.route,
@@ -196,7 +196,9 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("siteList") {
                                 //ScreenWithSidebar(navController) {
-                                    CollectionSiteList(navController)
+                                    CollectionSiteList(navController,languageViewModel = languageViewModel,
+                                        darkMode = darkMode,
+                                        languages = languages)
                                // }
                             }
                             composable("farmList/{siteId}") { backStackEntry ->
@@ -204,7 +206,9 @@ class MainActivity : ComponentActivity() {
                                 if (siteId != null) {
                                    // ScreenWithSidebar(navController) {
                                     FarmList(
-                                        navController = navController, siteId = siteId.toLong()
+                                        navController = navController, siteId = siteId.toLong(),languageViewModel = languageViewModel,
+                                        darkMode = darkMode,
+                                        languages = languages
                                     )
                                   //  }
                                 }
@@ -212,11 +216,15 @@ class MainActivity : ComponentActivity() {
                             composable("addFarm/{siteId}") { backStackEntry ->
                                 val siteId = backStackEntry.arguments?.getString("siteId")
                                 if (siteId != null) {
-                                    AddFarm(navController = navController, siteId = siteId.toLong())
+                                    AddFarm(navController = navController, siteId = siteId.toLong(),   languageViewModel = languageViewModel,
+                                        darkMode = darkMode,
+                                        languages = languages)
                                 }
                             }
                             composable("addSite") {
-                                AddSite(navController)
+                                AddSite(navController,languageViewModel = languageViewModel,
+                                    darkMode = darkMode,
+                                    languages = languages)
                             }
                             composable("shopping") {
                                 ShoppingScreen(navController, farmViewModel = farmViewModel, darkMode,
@@ -411,7 +419,10 @@ class MainActivity : ComponentActivity() {
                                     UpdateFarmForm(
                                         navController = navController,
                                         farmId = farmId.toLong(),
-                                        listItems = listItems
+                                        listItems = listItems,
+                                        languageViewModel = languageViewModel,
+                                        darkMode = darkMode,
+                                        languages = languages
                                     )
                                 }
                             }
