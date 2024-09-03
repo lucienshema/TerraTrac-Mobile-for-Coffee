@@ -202,5 +202,8 @@
     <string name="delete_selected">Delete Selected</string>
     <string name="share">Share</string>
 
+    <string name="confirm_export_items">You are about to export %1$d items. %2$d items have incomplete data. Do you want to proceed?</string>
+    <string name="confirm_share_items">You are about to share %1$d items. %2$d items have incomplete data. Do you want to proceed?</string>
+
 
 </resources>

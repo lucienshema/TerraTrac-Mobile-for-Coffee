@@ -149,6 +149,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.collectAsState
+import com.example.egnss4coffeev2.database.BuyThroughAkrabi
+import com.example.egnss4coffeev2.database.DirectBuy
 import com.example.egnss4coffeev2.map.MapViewModel
 import com.example.egnss4coffeev2.utils.Language
 import com.example.egnss4coffeev2.utils.LanguageViewModel
@@ -292,6 +294,90 @@ fun ConfirmationDialog(
         when (action) {
             Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
             Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
+        }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.confirm)) },
+        text = { Text(text = message) },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm()
+                onDismiss()
+            }) {
+                Text(text = stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text(text = stringResource(R.string.no))
+            }
+        },
+    )
+}
+
+@Composable
+fun ConfirmationDialogDirectBuy(
+    listItems: List<DirectBuy>,
+    action: Action,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    fun validateDirectBuy(directBuyItems: List<DirectBuy>): Pair<Int, List<DirectBuy>> {
+        val incompletedirectBuyItems =
+            directBuyItems.filter { directBuy ->
+                directBuy.farmerName.isEmpty() ||
+                        directBuy.siteName.isEmpty()||
+                        directBuy.location.isEmpty()
+            }
+        return Pair(directBuyItems.size, incompletedirectBuyItems)
+    }
+    val (totaldirectBuyItems, incompletedirectBuyItems) = validateDirectBuy(listItems)
+    val message =
+        when (action) {
+            Action.Export -> stringResource(R.string.confirm_export_items, totaldirectBuyItems, incompletedirectBuyItems.size)
+            Action.Share -> stringResource(R.string.confirm_share_items, totaldirectBuyItems, incompletedirectBuyItems.size)
+        }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.confirm)) },
+        text = { Text(text = message) },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm()
+                onDismiss()
+            }) {
+                Text(text = stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text(text = stringResource(R.string.no))
+            }
+        },
+    )
+}
+
+@Composable
+fun ConfirmationDialogBuyThroughAkrabi(
+    listItems: List<BuyThroughAkrabi>,
+    action: Action,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    fun validateBuyThroughAkrabi(buyThroughAkrabiItems: List<BuyThroughAkrabi>): Pair<Int, List<BuyThroughAkrabi>> {
+        val incompletebuyThroughAkrabiItems =
+            buyThroughAkrabiItems.filter { buyThroughAkrabiItem ->
+                buyThroughAkrabiItem.akrabiName.isEmpty() ||
+                        buyThroughAkrabiItem.siteName.isEmpty()||
+                        buyThroughAkrabiItem.location.isEmpty()
+            }
+        return Pair(buyThroughAkrabiItems.size, incompletebuyThroughAkrabiItems)
+    }
+    val (totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems) = validateBuyThroughAkrabi(listItems)
+    val message =
+        when (action) {
+            Action.Export -> stringResource(R.string.confirm_export_items, totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems.size)
+            Action.Share -> stringResource(R.string.confirm_share_items, totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems.size)
         }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -985,6 +1071,7 @@ fun FarmList(
             onDismiss = { showConfirmationDialog = false },
         )
     }
+
     if (showImportDialog) {
         println("site ID am Using: $siteId")
         // ImportFileDialog( siteId,onDismiss = { showImportDialog = false ; refreshTrigger = !refreshTrigger},navController = navController)
