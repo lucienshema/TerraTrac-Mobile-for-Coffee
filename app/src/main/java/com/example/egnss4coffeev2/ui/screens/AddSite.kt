@@ -8,6 +8,7 @@ import android.content.Intent
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,12 +20,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -51,34 +58,59 @@ import com.example.egnss4coffeev2.utils.Language
 import com.example.egnss4coffeev2.utils.LanguageViewModel
 import org.joda.time.Instant
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSite(navController: NavController, languageViewModel: LanguageViewModel,
             darkMode: MutableState<Boolean>,
             languages: List<Language>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        FarmListHeader(
-            title = stringResource(id = R.string.add_site),
-            onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackSearchClicked = {},
-            onBackClicked = { navController.popBackStack() },
-            showAdd = false,
-            showSearch = false,
-            selectedItemsCount = 0,
-            selectAllEnabled = false,
-            isAllSelected =false,
-            onSelectAllChanged = { null},
-            darkMode = darkMode,
-            languages = languages,
-            languageViewModel = languageViewModel,
-            navController = navController
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp)
+//    ) {
+//        FarmListHeader(
+//            title = stringResource(id = R.string.add_site),
+//            onSearchQueryChanged = {},
+//            onAddFarmClicked = { /* Handle adding a farm here */ },
+//            onBackSearchClicked = {},
+//            onBackClicked = { navController.popBackStack() },
+//            showAdd = false,
+//            showSearch = false,
+//            selectedItemsCount = 0,
+//            selectAllEnabled = false,
+//            isAllSelected =false,
+//            onSelectAllChanged = { null},
+//            darkMode = darkMode,
+//            languages = languages,
+//            languageViewModel = languageViewModel,
+//            navController = navController
+//        )
+    // Composable content
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = stringResource(id = R.string.add_site)) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back to Site List")
+                        }
+                    }
+                )
+            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SiteForm(navController)
+                }
+            }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        SiteForm(navController)
+
     }
 }
 
