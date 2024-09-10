@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
 
 
         // Start the service when the activity is created
-        startSyncService()
+//        startSyncService()
         setContent {
             val navController = rememberNavController()
             val currentLanguage by languageViewModel.currentLanguage.collectAsState()
@@ -448,10 +448,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun startSyncService() {
-        val serviceIntent = Intent(this, SyncService::class.java)
-        ContextCompat.startForegroundService(this, serviceIntent)
-    }
+//    private fun startSyncService() {
+//        val serviceIntent = Intent(this, SyncService::class.java)
+//        ContextCompat.startForegroundService(this, serviceIntent)
+//    }
 
 
 

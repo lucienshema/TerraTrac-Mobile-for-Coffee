@@ -1391,7 +1391,7 @@ fun FarmList(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter),
                 onDeleteClick = {
-                    // showDeleteDialog.value = true
+                    showDeleteDialog.value = true
                     deleteSelectedFarms()
                 },
                 onExportClicked = {
@@ -2228,18 +2228,18 @@ fun FarmCard(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    IconButton(
-                        onClick = onDeleteClick,
-                        modifier = Modifier
-                            .padding(end = 2.dp)
-                            .size(24.dp) // Reduced padding and set explicit size
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(id = R.string.delete),
-                            tint = Color.Red
-                        )
-                    }
+//                    IconButton(
+//                        onClick = onDeleteClick,
+//                        modifier = Modifier
+//                            .padding(end = 2.dp)
+//                            .size(24.dp) // Reduced padding and set explicit size
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Delete,
+//                            contentDescription = stringResource(id = R.string.delete),
+//                            tint = Color.Red
+//                        )
+//                    }
                 }
             }
 

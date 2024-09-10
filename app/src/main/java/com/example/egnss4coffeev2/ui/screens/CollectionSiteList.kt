@@ -1033,14 +1033,27 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                             }
                         }
                         else -> {
-                            Text(
-                                text = stringResource(R.string.no_results_found),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
+//                            Text(
+//                                text = stringResource(R.string.no_results_found),
+//                                modifier = Modifier
+//                                    .fillMaxSize()
+//                                    .padding(16.dp),
+//                                color = MaterialTheme.colorScheme.onSurface,
+//                                textAlign = TextAlign.Center,
+//                                style = MaterialTheme.typography.bodyMedium,
+//                            )
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp, 8.dp),
+                                    painter = painterResource(id = R.drawable.no_data2),
+                                    contentDescription = null
+                                )
+                            }
                         }
                     }
                 }

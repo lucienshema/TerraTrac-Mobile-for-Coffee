@@ -738,6 +738,18 @@ fun BoughtItemsList(
 
                         filteredItems.isEmpty() -> {
                             Text(text = stringResource(id = R.string.no_bought_items))
+//                            Box(
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Image(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(16.dp, 8.dp),
+//                                    painter = painterResource(id = R.drawable.no_data2),
+//                                    contentDescription = null
+//                                )
+//                            }
                         }
 
                         else -> {
@@ -1344,6 +1356,7 @@ fun BoughtItemsListDirectBuy(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1361,7 +1374,20 @@ fun BoughtItemsListDirectBuy(
                         }
 
                         filteredItems.isEmpty() -> {
-                            Text(stringResource(id = R.string.no_bought_items))
+                            Text(stringResource(id = R.string.no_bought_items),
+                            color = MaterialTheme.colorScheme.onSurface)
+//                            Box(
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Image(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(16.dp, 8.dp),
+//                                    painter = painterResource(id = R.drawable.no_data2),
+//                                    contentDescription = null
+//                                )
+//                            }
                         }
 
                         else -> {
@@ -1492,61 +1518,6 @@ fun BoughtItemsListDirectBuy(
                                 item {
                                     Divider()
                                 }
-//                                item {
-//                                    // Language Selector
-//                                    Text(
-//                                        text = stringResource(id = R.string.select_language),
-//                                        style = MaterialTheme.typography.titleMedium
-//                                    )
-//                                    Column(
-//                                        modifier = Modifier.fillMaxWidth(),
-//                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-//                                        horizontalAlignment = Alignment.CenterHorizontally
-//                                    ) {
-//                                        languages.forEach { language ->
-//                                            LanguageCardSideBar(
-//                                                language = language,
-//                                                isSelected = language == currentLanguage,
-//                                                onSelect = {
-//                                                    languageViewModel.selectLanguage(language, context)
-//                                                }
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                                // Using Radion Button
-//                                item {
-//                                    Text(
-//                                        text = stringResource(id = R.string.select_language),
-//                                        style = MaterialTheme.typography.titleMedium,
-//                                        modifier = Modifier.padding(bottom = 8.dp)
-//                                    )
-//                                    Column(
-//                                        modifier = Modifier.fillMaxWidth(),
-//                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-//                                        horizontalAlignment = Alignment.Start
-//                                    ) {
-//                                        languages.forEach { language ->
-//                                            Row(
-//                                                verticalAlignment = Alignment.CenterVertically,
-//                                                modifier = Modifier
-//                                                    .fillMaxWidth()
-//                                                    .clickable { languageViewModel.selectLanguage(language, context) }
-//                                                    .padding(vertical = 4.dp)
-//                                            ) {
-//                                                RadioButton(
-//                                                    selected = language == currentLanguage,
-//                                                    onClick = { languageViewModel.selectLanguage(language, context) }
-//                                                )
-//                                                Spacer(modifier = Modifier.width(8.dp))
-//                                                Text(
-//                                                    text = language.displayName, // Assuming `language` has a `displayName` property
-//                                                    style = MaterialTheme.typography.bodyLarge
-//                                                )
-//                                            }
-//                                        }
-//                                    }
-//                                }
                                 // using checkbox
 
                                 item {

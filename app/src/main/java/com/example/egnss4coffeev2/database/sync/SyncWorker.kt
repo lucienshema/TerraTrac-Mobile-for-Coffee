@@ -45,7 +45,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
     override suspend fun doWork(): Result {
 
         if (checkNotificationPermission()) {
-            sendSyncNotification()
+            // sendSyncNotification()
             //showSyncNotification()
         } else {
             Log.d(TAG, "Notification permission not granted.")
@@ -90,12 +90,14 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
             Log.d(TAG, "Response: $response")
 
             if (response.isSuccessful) {
-                showSyncNotification()
+                // showSyncNotification()
                 unsyncedFarms.forEach { farm ->
                     farmDao.updateFarmSyncStatus(farm.copy(synced = true))
                 }
-                Log.d(TAG, "Farms synced successfully.")
-                createNotificationChannelAndShowCompleteNotification() // Notify sync success
+                if(totalItems > 0) {
+                    Log.d(TAG, "Farms synced successfully.")
+                    createNotificationChannelAndShowCompleteNotification() // Notify sync success
+                }
             } else {
                 Log.d(TAG, "Failed to sync farms: ${response.message()}")
                 createSyncFailedNotification() // Notify sync failure

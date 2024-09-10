@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,6 +33,9 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavController
 import com.example.egnss4coffeev2.R
+import com.example.egnss4coffeev2.ui.theme.Teal
+import com.example.egnss4coffeev2.ui.theme.Turquoise
+import com.example.egnss4coffeev2.ui.theme.White
 import com.example.egnss4coffeev2.utils.Language
 import com.example.egnss4coffeev2.utils.LanguageSelector
 import com.example.egnss4coffeev2.utils.LanguageViewModel
@@ -49,13 +53,14 @@ fun Home(
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        add language selector here and align on right
+        // Add language selector here and align on the right
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
             LanguageSelector(viewModel = languageViewModel, languages = languages)
         }
+
         Column(
             Modifier
                 .fillMaxWidth()
@@ -65,7 +70,7 @@ fun Home(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.app_icon),
-                null,
+                contentDescription = null,
                 modifier = Modifier
                     .width(80.dp)
                     .height(80.dp)
@@ -77,33 +82,35 @@ fun Home(
                     .padding(top = 10.dp)
                     .align(Alignment.CenterHorizontally),
                 fontWeight = FontWeight.Bold,
-                color = colorResource(id = R.color.light_blue_900),
+                color = Turquoise, // Using the custom Turquoise color
                 style = TextStyle(fontSize = 24.sp)
             )
         }
+
         Box(
             modifier = Modifier
                 .padding(30.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Teal,
                     shape = RoundedCornerShape(10.dp)
                 )
                 .clickable {
                     navController.navigate("shopping")
                 }
-                .padding(16.dp) // Additional padding to make the clickable area similar to a button
+                .padding(16.dp)
         ) {
             Text(
                 text = stringResource(id = R.string.get_started),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary // Ensure text color contrasts with background
+                    color = White
                 ),
                 modifier = Modifier.align(Alignment.Center)
             )
         }
 
         Spacer(modifier = Modifier.fillMaxHeight(0.2f))
+
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -112,13 +119,16 @@ fun Home(
             Text(
                 text = stringResource(id = R.string.app_intro),
                 style = TextStyle(
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black // Use DarkGray for the intro text
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
+
         Spacer(modifier = Modifier.height(10.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -126,152 +136,23 @@ fun Home(
         ) {
             Text(
                 modifier = Modifier.padding(start = 20.dp, end = 5.dp),
-                text = stringResource(id = R.string.developed_by)
+                text = stringResource(id = R.string.developed_by),
+                color = Teal // Apply Teal color for the developer label
             )
             Image(
                 painter = painterResource(id = R.drawable.tns_labs),
-                null,
+                contentDescription = null,
                 modifier = Modifier
                     .width(130.dp)
                     .height(20.dp)
             )
         }
+
         Spacer(modifier = Modifier.height(5.dp))
     }
 }
 
-/* Testing Constraint Layout so that the screen will be responsive on landscape devices*/
-//@Composable
-//fun Home(
-//    navController: NavController,
-//    languageViewModel: LanguageViewModel,
-//    languages: List<Language>
-//) {
-//    ConstraintLayout(
-//        Modifier
-//            .padding(top = 20.dp)
-//            .fillMaxSize()
-//    ) {
-//        val (languageSelector, logo, appName, getStartedButton, appIntro, developedByText, tnsLabsImage) = createRefs()
-//
-//        // Language Selector
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .constrainAs(languageSelector) {
-//                    top.linkTo(parent.top)
-//                    end.linkTo(parent.end)
-//                },
-//            horizontalArrangement = Arrangement.End
-//        ) {
-//            LanguageSelector(viewModel = languageViewModel, languages = languages)
-//        }
-//
-//        // App Icon and Name
-//        Column(
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            modifier = Modifier
-//                .constrainAs(logo) {
-//                    top.linkTo(languageSelector.bottom, margin = 30.dp)
-//                    start.linkTo(parent.start)
-//                    end.linkTo(parent.end)
-//                }
-//        ) {
-//            Image(
-//                painter = painterResource(id = R.drawable.app_icon),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .width(80.dp)
-//                    .height(80.dp)
-//                    .padding(bottom = 10.dp)
-//            )
-//            Text(
-//                text = stringResource(id = R.string.app_name),
-//                fontWeight = FontWeight.Bold,
-//                color = colorResource(id = R.color.light_blue_900),
-//                style = TextStyle(fontSize = 24.sp)
-//            )
-//        }
-//
-//        // Get Started Button
-//        Box(
-//            modifier = Modifier
-//                .padding(30.dp)
-//                .background(
-//                    color = MaterialTheme.colorScheme.primary,
-//                    shape = RoundedCornerShape(10.dp)
-//                )
-//                .clickable {
-//                    navController.navigate("siteList")
-//                }
-//                .padding(16.dp)
-//                .constrainAs(getStartedButton) {
-//                    top.linkTo(logo.bottom, margin = 30.dp)
-//                    start.linkTo(parent.start)
-//                    end.linkTo(parent.end)
-//                }
-//        ) {
-//            Text(
-//                text = stringResource(id = R.string.get_started),
-//                style = TextStyle(
-//                    fontWeight = FontWeight.Bold,
-//                    color = MaterialTheme.colorScheme.onPrimary
-//                ),
-//                modifier = Modifier.align(Alignment.Center)
-//            )
-//        }
-//
-//        // App Intro Text
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth(0.8f)
-//                .padding(20.dp)
-//                .constrainAs(appIntro) {
-//                    top.linkTo(getStartedButton.bottom, margin = 30.dp)
-//                    start.linkTo(parent.start)
-//                    end.linkTo(parent.end)
-//                }
-//        ) {
-//            Text(
-//                text = stringResource(id = R.string.app_intro),
-//                style = TextStyle(
-//                    fontWeight = FontWeight.Bold
-//                ),
-//                textAlign = TextAlign.Center,
-//                modifier = Modifier.align(Alignment.Center)
-//            )
-//        }
-//
-//        // Developed By Text and Image
-//        Row(
-//            modifier = Modifier
-//                .constrainAs(developedByText) {
-//                    bottom.linkTo(parent.bottom, margin = 10.dp)
-//                    start.linkTo(parent.start)
-//                    end.linkTo(tnsLabsImage.start)
-//                }
-//                .padding(start = 20.dp, end = 5.dp),
-//            horizontalArrangement = Arrangement.Center,
-//            verticalAlignment = Alignment.Bottom
-//        ) {
-//            Text(
-//                text = stringResource(id = R.string.developed_by)
-//            )
-//        }
-//
-//        Image(
-//            painter = painterResource(id = R.drawable.tns_labs),
-//            contentDescription = null,
-//            modifier = Modifier
-//                .width(130.dp)
-//                .height(20.dp)
-//                .constrainAs(tnsLabsImage) {
-//                    bottom.linkTo(parent.bottom, margin = 10.dp)
-//                    end.linkTo(parent.end, margin = 20.dp)
-//                }
-//        )
-//    }
-//}
+
 
 
 

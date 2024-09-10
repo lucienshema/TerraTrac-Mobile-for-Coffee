@@ -1765,6 +1765,7 @@ fun AkrabiListScreen(
             // Handle the empty state if no akrabis are available
             Text(
                 text = stringResource(id = R.string.no_results_found),
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
@@ -1971,7 +1972,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
 
 
                     if (filteredItems.isEmpty()) {
-                        // Show "List not found" message
+                         // Show "List not found" message
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -1981,9 +1982,21 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             Text(
                                 text = stringResource(id = R.string.no_results_found),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onBackground
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
+//                        Box(
+//                            modifier = Modifier.fillMaxSize(),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Image(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .padding(16.dp, 8.dp),
+//                                painter = painterResource(id = R.drawable.no_data2),
+//                                contentDescription = null
+//                            )
+//                        }
                     } else {
 
 
