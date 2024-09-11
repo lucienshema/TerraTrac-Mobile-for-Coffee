@@ -661,6 +661,17 @@ fun BuyThroughAkrabiForm(
                             )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = akrabiSearch,
+                            onValueChange = { akrabiSearch = it },
+                            label = { Text("Akrabi Search") },
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction =  ImeAction.Next,
+                                keyboardType = KeyboardType.Number
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     // Cherry sold input
@@ -835,6 +846,7 @@ fun DirectBuyForm(
     var location by remember { mutableStateOf("") }
     var selectedSiteName by remember { mutableStateOf("") }
     var selectedSiteId by remember { mutableLongStateOf(0L) } // Store selected site ID
+    var selectedFarmer by remember { mutableStateOf<Farm?>(null) }
     var farmerSearch by remember { mutableStateOf("") }
     var farmerNumber by remember { mutableStateOf("") }
     var farmerName by remember { mutableStateOf("") }
@@ -1126,7 +1138,10 @@ fun DirectBuyForm(
                         DropdownMenuItem(
                             text = { Text(farmer.farmerName) },
                             onClick = {
-                                farmerName = farmer.farmerName
+                                selectedFarmer = farmer
+                                farmerName= farmer.farmerName
+                                farmerNumber= ""
+                                farmerSearch = ""
                                 expandedFarmers = false
                             }
                         )
@@ -1150,6 +1165,32 @@ fun DirectBuyForm(
 
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Farmer Number input (for new Farmer)
+            if (selectedFarmer != null) {
+                OutlinedTextField(
+                    value = farmerNumber,
+                    onValueChange = { farmerNumber = it },
+                    label = { Text("Farmer Number") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction =  ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = farmerSearch,
+                    onValueChange = {  farmerSearch = it },
+                    label = { Text("Farmer Search") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction =  ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Cherry sold input
             OutlinedTextField(
