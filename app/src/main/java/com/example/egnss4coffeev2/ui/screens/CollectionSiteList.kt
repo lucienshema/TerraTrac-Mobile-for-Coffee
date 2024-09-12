@@ -1122,17 +1122,8 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                     text = stringResource(id = R.string.home),
                                     painter = painterResource(R.drawable.home),
                                     onClick = {
-                                        navController.navigate("shopping")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
+                                        // navController.navigate("shopping")
+                                        //navController.previousBackStackEntry
                                         drawerVisible = false
                                     }
                                 )
@@ -1157,6 +1148,18 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                     }
                                 )
                             }
+
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+
                             item {
                                 Divider()
                             }
@@ -1175,8 +1178,7 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                         checked = darkMode.value,
                                         onCheckedChange = {
                                             darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it)
-                                                .apply()
+                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
                                         }
                                     )
                                 }
@@ -1184,11 +1186,13 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                             item {
                                 Divider()
                             }
+                            // using checkbox
+
                             item {
                                 Text(
                                     text = stringResource(id = R.string.select_language),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Box(
                                     modifier = Modifier
@@ -1200,10 +1204,12 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                         onClick = { expanded = true },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(text = currentLanguage.displayName)
+                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+
                                         Icon(
                                             imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                     DropdownMenu(
@@ -1211,14 +1217,14 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                         onDismissRequest = { expanded = false },
                                         modifier = Modifier
                                             .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(Color.White) // Set the background color to white for visibility
+                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
                                     ) {
                                         languages.forEach { language ->
                                             DropdownMenuItem(
                                                 text = {
                                                     Text(
                                                         text = language.displayName,
-                                                        color = Color.Black // Ensure text is visible against the white background
+                                                        color = MaterialTheme.colorScheme.onBackground
                                                     )
                                                 },
                                                 onClick = {
@@ -1226,12 +1232,13 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                                     expanded = false
                                                 },
                                                 modifier = Modifier
-                                                    .background(Color.White) // Ensure each menu item has a white background
+                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
                                             )
                                         }
                                     }
                                 }
                             }
+
                             item {
                                 // Logout Item
                                 DrawerItem(
@@ -1240,7 +1247,7 @@ fun CollectionSiteList(navController: NavController, languageViewModel: Language
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI
-                                        navController.popBackStack()
+                                        navController.navigate("home")
                                         drawerVisible = false
                                     }
                                 )
@@ -1375,26 +1382,26 @@ fun siteCard(
                             style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             modifier = Modifier.padding(bottom = 1.dp),
                         )
-                        Text(
-                            text = "${stringResource(id = R.string.village)}: ${site.village}",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
-                        )
-                        Text(
-                            text = "${stringResource(id = R.string.district)}: ${site.district}",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
-                        )
+//                        Text(
+//                            text = "${stringResource(id = R.string.village)}: ${site.village}",
+//                            style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
+//                        )
+//                        Text(
+//                            text = "${stringResource(id = R.string.district)}: ${site.district}",
+//                            style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
+//                        )
                         if (site.phoneNumber.isNotEmpty()) {
                             Text(
                                 text = "${stringResource(id = R.string.phone_number)}: ${site.phoneNumber}",
                                 style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             )
                         }
-                        if (site.email.isNotEmpty()) {
-                            Text(
-                                text = "${stringResource(id = R.string.email)}: ${site.email}",
-                                style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                            )
-                        }
+//                        if (site.email.isNotEmpty()) {
+//                            Text(
+//                                text = "${stringResource(id = R.string.email)}: ${site.email}",
+//                                style = MaterialTheme.typography.bodySmall.copy(color = textColor),
+//                            )
+//                        }
 
                         Text(
                             text = stringResource(

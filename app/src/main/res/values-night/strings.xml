@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CAFE TRAC</string>
+    <string name="app_name">CafeTrac</string>
     <string name="farm_list">Plots List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
     <string name="developed_by">Developed By</string>

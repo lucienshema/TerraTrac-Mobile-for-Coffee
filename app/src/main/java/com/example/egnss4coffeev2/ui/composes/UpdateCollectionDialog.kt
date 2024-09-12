@@ -3,11 +3,13 @@ package com.example.egnss4coffeev2.ui.composes
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -91,11 +93,14 @@ fun UpdateCollectionDialog(
 
     if (showDialog.value) {
         AlertDialog(
-            modifier = Modifier.padding(horizontal = 10.dp),
+           // modifier = Modifier.padding(horizontal = 10.dp).background(MaterialTheme.colorScheme.background),
             onDismissRequest = { showDialog.value = false },
-            title = { Text(stringResource(id = R.string.update_site)) },
+            title = { Text(stringResource(id = R.string.update_site), color = MaterialTheme.colorScheme.onBackground) },
             text = {
-                Column {
+                Column(
+                   // modifier = Modifier.padding(horizontal = 10.dp).background(MaterialTheme.colorScheme.background)
+                )
+                {
                     Text(stringResource(id = R.string.confirm_update_site))
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     OutlinedTextField(
@@ -103,6 +108,10 @@ fun UpdateCollectionDialog(
                         onValueChange = { name = it },
                         label = { Text(stringResource(id = R.string.site_name)) },
                         isError = name.isBlank(),
+                        colors =
+                        TextFieldDefaults.textFieldColors(
+                            errorLeadingIconColor = Color.Red,
+                        ),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -110,6 +119,10 @@ fun UpdateCollectionDialog(
                         onValueChange = { agentName = it },
                         label = { Text(stringResource(id = R.string.agent_name)) },
                         isError = agentName.isBlank(),
+                        colors =
+                        TextFieldDefaults.textFieldColors(
+                            errorLeadingIconColor = Color.Red,
+                        ),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -145,6 +158,10 @@ fun UpdateCollectionDialog(
                         onValueChange = { village = it },
                         label = { Text(stringResource(id = R.string.village)) },
                         isError = village.isBlank(),
+                        colors =
+                        TextFieldDefaults.textFieldColors(
+                            errorLeadingIconColor = Color.Red,
+                        ),
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -152,6 +169,10 @@ fun UpdateCollectionDialog(
                         onValueChange = { district = it },
                         label = { Text(stringResource(id = R.string.district)) },
                         isError = district.isBlank(),
+                        colors =
+                        TextFieldDefaults.textFieldColors(
+                            errorLeadingIconColor = Color.Red,
+                        ),
                     )
                 }
             },
@@ -163,22 +184,25 @@ fun UpdateCollectionDialog(
                         Toast.makeText(context, R.string.fill_form, Toast.LENGTH_SHORT).show()
                     }
                 }) {
-                    Text(text = stringResource(id = R.string.yes))
+                    Text(text = stringResource(id = R.string.yes),color = MaterialTheme.colorScheme.onBackground)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog.value = false }) {
-                    Text(text = stringResource(id = R.string.no))
+                    Text(text = stringResource(id = R.string.no),color = MaterialTheme.colorScheme.onBackground)
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
-            title = { Text(stringResource(id = R.string.confirm_update)) },
-            text = { Text(stringResource(id = R.string.are_you_sure_update)) },
+            modifier = Modifier.padding(horizontal = 10.dp).background(MaterialTheme.colorScheme.background),
+            title = { Text(stringResource(id = R.string.confirm_update),color = MaterialTheme.colorScheme.onBackground) },
+            text = { Text(stringResource(id = R.string.are_you_sure_update),color = MaterialTheme.colorScheme.onBackground) },
             confirmButton = {
                 TextButton(onClick = {
                     site.name = name
@@ -191,12 +215,12 @@ fun UpdateCollectionDialog(
                     showConfirmDialog = false
                     showDialog.value = false
                 }) {
-                    Text(text = stringResource(id = R.string.yes))
+                    Text(text = stringResource(id = R.string.yes),color = MaterialTheme.colorScheme.onBackground)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = false }) {
-                    Text(text = stringResource(id = R.string.no))
+                    Text(text = stringResource(id = R.string.no),color = MaterialTheme.colorScheme.onBackground)
                 }
             },
         )

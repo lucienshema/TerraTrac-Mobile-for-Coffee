@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -276,6 +277,8 @@ fun SetPolygon(
                     mapViewModel.clearCoordinates()
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -577,7 +580,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            painter = if (isCapturingCoordinates) painterResource(R.drawable.finish) else painterResource(R.drawable.start),
+                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
                             contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp),
@@ -652,7 +655,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.add),
+                            imageVector = Icons.Default.Add,
                             contentDescription = stringResource(id = R.string.add_point),
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp),
@@ -668,12 +671,19 @@ fun SetPolygon(
                             viewModel.removeLastCoordinate()
                         },
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.drop),
-                            contentDescription = stringResource(id = R.string.drop_point),
-                            tint = Color.Black,
-                            modifier = Modifier.padding(4.dp),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize(), // Fills the available space
+                            contentAlignment = Alignment.Center // Centers the content within the Box
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.drop),
+                                contentDescription = stringResource(id = R.string.drop_point),
+                                tint = Color.Black,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
+
                     }
                     ElevatedButton(
                         modifier =
@@ -686,7 +696,7 @@ fun SetPolygon(
                         },
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.clear),
+                            imageVector = Icons.Default.Delete,
                             contentDescription = stringResource(id = R.string.reset),
                             tint = Color.Red,
                             modifier = Modifier.padding(4.dp),

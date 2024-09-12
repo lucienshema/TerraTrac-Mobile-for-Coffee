@@ -4,6 +4,7 @@ package com.example.egnss4coffeev2.ui.composes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,7 +43,9 @@ fun ConfirmDialog(
                 TextButton(onClick = { showDialog.value = false }) {
                     Text(text = stringResource(id = R.string.no))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 }

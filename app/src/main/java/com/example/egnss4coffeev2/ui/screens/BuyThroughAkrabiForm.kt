@@ -1010,32 +1010,32 @@ fun DirectBuyForm(
 //                }
 //            )
 //            Spacer(modifier = Modifier.height(8.dp))
-            // Location input
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text(stringResource(id = R.string.location)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequesterLocation),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        onNextFocus(focusRequesterLocation, focusRequesterSite)
-                    }
-                ),
-                isError = validationErrors.contains(stringResource(id = R.string.location))
-            )
-            if (validationErrors.contains(stringResource(id = R.string.location))) {
-                Text(
-                    text = stringResource(id = R.string.required_field),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+//            // Location input
+//            OutlinedTextField(
+//                value = location,
+//                onValueChange = { location = it },
+//                label = { Text(stringResource(id = R.string.location)) },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .focusRequester(focusRequesterLocation),
+//                keyboardOptions = KeyboardOptions.Default.copy(
+//                    imeAction = ImeAction.Next
+//                ),
+//                keyboardActions = KeyboardActions(
+//                    onNext = {
+//                        onNextFocus(focusRequesterLocation, focusRequesterSite)
+//                    }
+//                ),
+//                isError = validationErrors.contains(stringResource(id = R.string.location))
+//            )
+//            if (validationErrors.contains(stringResource(id = R.string.location))) {
+//                Text(
+//                    text = stringResource(id = R.string.required_field),
+//                    color = MaterialTheme.colorScheme.error,
+//                    style = MaterialTheme.typography.bodySmall
+//                )
+//            }
+//            Spacer(modifier = Modifier.height(8.dp))
 
             // Dropdown for selecting site name
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -1156,6 +1156,37 @@ fun DirectBuyForm(
                 }
             }
             if (validationErrors.contains(selectFarmerLabel)) {
+                Text(
+                    text = stringResource(id = R.string.required_field),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            // Location input
+            OutlinedTextField(
+                value = if (selectedFarmer != null) {
+                    "${selectedFarmer!!.latitude}, ${selectedFarmer!!.longitude}"
+                } else {
+                    ""
+                },
+                onValueChange = { location = it }, // Handle the input change
+                label = { Text(stringResource(id = R.string.location)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequesterLocation),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        onNextFocus(focusRequesterLocation, focusRequesterSite)
+                    }
+                ),
+                isError = validationErrors.contains(stringResource(id = R.string.location))
+            )
+
+            if (validationErrors.contains(stringResource(id = R.string.location))) {
                 Text(
                     text = stringResource(id = R.string.required_field),
                     color = MaterialTheme.colorScheme.error,
@@ -1949,7 +1980,9 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                 ) {
                     Text(text=stringResource(id=R.string.cancel))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -2102,17 +2135,8 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                     text = stringResource(id = R.string.home),
                                     painter = painterResource(R.drawable.home),
                                     onClick = {
-                                        navController.navigate("shopping")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
+                                        // navController.navigate("shopping")
+                                        //navController.previousBackStackEntry
                                         drawerVisible = false
                                     }
                                 )
@@ -2137,6 +2161,18 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                     }
                                 )
                             }
+
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+
                             item {
                                 Divider()
                             }
@@ -2155,8 +2191,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                         checked = darkMode.value,
                                         onCheckedChange = {
                                             darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it)
-                                                .apply()
+                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
                                         }
                                     )
                                 }
@@ -2164,35 +2199,13 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                             item {
                                 Divider()
                             }
-//                            item {
-//                                // Language Selector
-//                                Text(
-//                                    text = stringResource(id = R.string.select_language),
-//                                    style = MaterialTheme.typography.titleMedium
-//                                )
-//                                Column(
-//                                    modifier = Modifier.fillMaxWidth(),
-//                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-//                                    horizontalAlignment = Alignment.CenterHorizontally
-//                                ) {
-//                                    languages.forEach { language ->
-//                                        LanguageCardSideBar(
-//                                            language = language,
-//                                            isSelected = language == currentLanguage,
-//                                            onSelect = {
-//                                                languageViewModel.selectLanguage(language, context)
-//                                            }
-//                                        )
-//                                    }
-//                                }
-//                            }
                             // using checkbox
 
                             item {
                                 Text(
                                     text = stringResource(id = R.string.select_language),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Box(
                                     modifier = Modifier
@@ -2204,10 +2217,12 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                         onClick = { expanded = true },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(text = currentLanguage.displayName)
+                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+
                                         Icon(
                                             imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                     DropdownMenu(
@@ -2215,14 +2230,14 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                         onDismissRequest = { expanded = false },
                                         modifier = Modifier
                                             .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(Color.White) // Set the background color to white for visibility
+                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
                                     ) {
                                         languages.forEach { language ->
                                             DropdownMenuItem(
                                                 text = {
                                                     Text(
                                                         text = language.displayName,
-                                                        color = Color.Black // Ensure text is visible against the white background
+                                                        color = MaterialTheme.colorScheme.onBackground
                                                     )
                                                 },
                                                 onClick = {
@@ -2230,12 +2245,13 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                                     expanded = false
                                                 },
                                                 modifier = Modifier
-                                                    .background(Color.White) // Ensure each menu item has a white background
+                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
                                             )
                                         }
                                     }
                                 }
                             }
+
                             item {
                                 // Logout Item
                                 DrawerItem(
@@ -2244,7 +2260,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI
-                                        navController.popBackStack()
+                                        navController.navigate("home")
                                         drawerVisible = false
                                     }
                                 )

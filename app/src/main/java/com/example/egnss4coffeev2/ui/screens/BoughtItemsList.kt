@@ -626,7 +626,9 @@ fun BoughtItemsList(
                 ) {
                     Text(text = stringResource(id = R.string.cancel))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
     Box(modifier = Modifier.fillMaxSize()) {
@@ -821,18 +823,8 @@ fun BoughtItemsList(
                                     text = stringResource(id = R.string.home),
                                     painter = painterResource(R.drawable.home),
                                     onClick = {
-                                        navController.currentBackStackEntry
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    // icon = Icons.Default.Person,
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
+                                        // navController.navigate("shopping")
+                                        //navController.previousBackStackEntry
                                         drawerVisible = false
                                     }
                                 )
@@ -852,12 +844,23 @@ fun BoughtItemsList(
                                     text = stringResource(id = R.string.farmer_registration),
                                     painter = painterResource(R.drawable.person_add),
                                     onClick = {
-                                        val siteId = farmViewModel.getLastSiteId()
                                         navController.navigate("siteList")
                                         drawerVisible = false
                                     }
                                 )
                             }
+
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+
                             item {
                                 Divider()
                             }
@@ -885,11 +888,12 @@ fun BoughtItemsList(
                                 Divider()
                             }
                             // using checkbox
+
                             item {
                                 Text(
                                     text = stringResource(id = R.string.select_language),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Box(
                                     modifier = Modifier
@@ -901,10 +905,12 @@ fun BoughtItemsList(
                                         onClick = { expanded = true },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(text = currentLanguage.displayName)
+                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+
                                         Icon(
                                             imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                     DropdownMenu(
@@ -912,14 +918,14 @@ fun BoughtItemsList(
                                         onDismissRequest = { expanded = false },
                                         modifier = Modifier
                                             .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(Color.White) // Set the background color to white for visibility
+                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
                                     ) {
                                         languages.forEach { language ->
                                             DropdownMenuItem(
                                                 text = {
                                                     Text(
                                                         text = language.displayName,
-                                                        color = Color.Black // Ensure text is visible against the white background
+                                                        color = MaterialTheme.colorScheme.onBackground
                                                     )
                                                 },
                                                 onClick = {
@@ -927,12 +933,13 @@ fun BoughtItemsList(
                                                     expanded = false
                                                 },
                                                 modifier = Modifier
-                                                    .background(Color.White) // Ensure each menu item has a white background
+                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
                                             )
                                         }
                                     }
                                 }
                             }
+
                             item {
                                 // Logout Item
                                 DrawerItem(
@@ -941,7 +948,7 @@ fun BoughtItemsList(
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI
-                                        navController.popBackStack()
+                                        navController.navigate("home")
                                         drawerVisible = false
                                     }
                                 )
@@ -1258,7 +1265,9 @@ fun BoughtItemsListDirectBuy(
                 ) {
                     Text(text = stringResource(id = R.string.cancel))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -1464,16 +1473,6 @@ fun BoughtItemsListDirectBuy(
                                 }
                                 item {
                                     DrawerItem(
-                                        text = stringResource(id = R.string.akrabi_registration),
-                                        painter = painterResource(R.drawable.person_add),
-                                        onClick = {
-                                            navController.navigate("akrabi_list_screen")
-                                            drawerVisible = false
-                                        }
-                                    )
-                                }
-                                item {
-                                    DrawerItem(
                                         text = stringResource(id = R.string.collection_site_registration),
                                         painter = painterResource(R.drawable.add_collection_site),
                                         onClick = {
@@ -1492,6 +1491,18 @@ fun BoughtItemsListDirectBuy(
                                         }
                                     )
                                 }
+
+                                item {
+                                    DrawerItem(
+                                        text = stringResource(id = R.string.akrabi_registration),
+                                        painter = painterResource(R.drawable.person_add),
+                                        onClick = {
+                                            navController.navigate("akrabi_list_screen")
+                                            drawerVisible = false
+                                        }
+                                    )
+                                }
+
                                 item {
                                     Divider()
                                 }
@@ -1524,7 +1535,7 @@ fun BoughtItemsListDirectBuy(
                                     Text(
                                         text = stringResource(id = R.string.select_language),
                                         style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(bottom = 8.dp)
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Box(
                                         modifier = Modifier
@@ -1536,10 +1547,12 @@ fun BoughtItemsListDirectBuy(
                                             onClick = { expanded = true },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text(text = currentLanguage.displayName)
+                                            Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+
                                             Icon(
                                                 imageVector = Icons.Default.ArrowDropDown,
-                                                contentDescription = null
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onBackground
                                             )
                                         }
                                         DropdownMenu(
@@ -1547,14 +1560,14 @@ fun BoughtItemsListDirectBuy(
                                             onDismissRequest = { expanded = false },
                                             modifier = Modifier
                                                 .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                                .background(Color.White) // Set the background color to white for visibility
+                                                .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
                                         ) {
                                             languages.forEach { language ->
                                                 DropdownMenuItem(
                                                     text = {
                                                         Text(
                                                             text = language.displayName,
-                                                            color = Color.Black // Ensure text is visible against the white background
+                                                            color = MaterialTheme.colorScheme.onBackground
                                                         )
                                                     },
                                                     onClick = {
@@ -1562,7 +1575,7 @@ fun BoughtItemsListDirectBuy(
                                                         expanded = false
                                                     },
                                                     modifier = Modifier
-                                                        .background(Color.White) // Ensure each menu item has a white background
+                                                        .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
                                                 )
                                             }
                                         }
@@ -1778,7 +1791,9 @@ fun DirectBuyDetailScreen(directBuy: DirectBuy, onBack: () -> Unit, navControlle
                     TextButton(onClick = { showDialog = false }) {
                         Text(text = stringResource(id = R.string.cancel))
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
         }
     }
@@ -1909,7 +1924,9 @@ fun BoughtItemDetailScreen(buyThroughAkrabi: BuyThroughAkrabi, onBack: () -> Uni
                     TextButton(onClick = { showDialog = false }) {
                         Text(text = stringResource(id = R.string.cancel))
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
         }
     }
@@ -2370,7 +2387,9 @@ fun EditDirectBuyForm(
                 ) {
                     Text(text= stringResource(id= R.string.cancel))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -2777,7 +2796,9 @@ fun EditBuyThroughAkrabiForm(
                 ) {
                     Text(text = stringResource(id = R.string.cancel))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 

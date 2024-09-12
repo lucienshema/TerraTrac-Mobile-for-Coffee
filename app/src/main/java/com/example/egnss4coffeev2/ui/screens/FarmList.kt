@@ -146,7 +146,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.collectAsState
 import com.example.egnss4coffeev2.database.BuyThroughAkrabi
@@ -239,17 +241,32 @@ fun FormatSelectionDialog(
                     RadioButton(
                         selected = selectedFormat == "CSV",
                         onClick = { selectedFormat = "CSV" },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = MaterialTheme.colorScheme.surface, // Adapts to light/dark mode
+                            unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) // Slightly transparent for unselected
+                        )
                     )
-                    Text(stringResource(R.string.csv))
+                    Text(
+                        text = stringResource(R.string.csv),
+                        color = MaterialTheme.colorScheme.onSurface // Adapts to light/dark mode
+                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = selectedFormat == "GeoJSON",
                         onClick = { selectedFormat = "GeoJSON" },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = MaterialTheme.colorScheme.surface, // Adapts to light/dark mode
+                            unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) // Slightly transparent for unselected
+                        )
                     )
-                    Text(stringResource(R.string.geojson))
+                    Text(
+                        text = stringResource(R.string.geojson),
+                        color = MaterialTheme.colorScheme.onSurface // Adapts to light/dark mode
+                    )
                 }
             }
+
         },
         confirmButton = {
             Button(
@@ -266,6 +283,8 @@ fun FormatSelectionDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -312,6 +331,8 @@ fun ConfirmationDialog(
                 Text(text = stringResource(R.string.no))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -1459,7 +1480,11 @@ fun ImportFileDialog(
                     try {
                         farmViewModel.saveFileToUri(context, it, templateContent)
                     } catch (e: Exception) {
-                        Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            R.string.template_download_failed,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     onDismiss() // Dismiss the dialog
                 }
@@ -1479,82 +1504,121 @@ fun ImportFileDialog(
                     },
                 )
             } catch (e: Exception) {
-                Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = stringResource(R.string.import_file)) },
+        title = {
+            Text(
+                text = stringResource(R.string.import_file),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground // Adapts to light/dark themes
+            )
+        },
         text = {
             Column(
-                modifier =
-                Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
+                // File type selection
                 Text(
                     text = stringResource(R.string.select_file_type),
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Box(
-                    modifier =
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .background(MaterialTheme.colorScheme.background)
                         .clickable { isDropdownMenuExpanded = true }
                         .padding(16.dp),
                 ) {
                     Text(
-                        text = if (selectedFileType.isNotEmpty()) selectedFileType else stringResource(R.string.select_file_type),
-                        color = if (selectedFileType.isNotEmpty()) Color.Black else Color.Gray,
+                        text = if (selectedFileType.isNotEmpty()) selectedFileType else stringResource(
+                            R.string.select_file_type
+                        ),
+                        color = if (selectedFileType.isNotEmpty()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0.6f
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     DropdownMenu(
                         expanded = isDropdownMenuExpanded,
-                        onDismissRequest = { isDropdownMenuExpanded = false },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                        onDismissRequest = { isDropdownMenuExpanded = false }
                     ) {
                         DropdownMenuItem(onClick = {
-                            selectedFileType = "csv"
+                            selectedFileType = "CSV"
                             isDropdownMenuExpanded = false
                         }, text = { Text("CSV") })
                         DropdownMenuItem(onClick = {
-                            selectedFileType = "geojson"
+                            selectedFileType = "GeoJSON"
                             isDropdownMenuExpanded = false
                         }, text = { Text("GeoJSON") })
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Download template button
                 Button(
                     onClick = { downloadTemplate() },
                     enabled = selectedFileType.isNotEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.download_template))
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // File selection
                 Text(
                     text = stringResource(R.string.select_file_to_import),
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
         },
         confirmButton = {
-            Button(onClick = {
-                importLauncher.launch("*/*")
-            }) {
-                Text(stringResource(R.string.select_file))
+            Button(
+                onClick = { importLauncher.launch("*/*") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            ) {
+                Text(stringResource(R.string.select_file),color = MaterialTheme.colorScheme.onBackground)
             }
         },
         dismissButton = {
-            Button(onClick = { onDismiss() }) {
-                Text(stringResource(R.string.cancel))
+            OutlinedButton(
+                onClick = { onDismiss() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
+
 
 //@Composable
 //fun DeleteAllDialogPresenter(
@@ -1769,7 +1833,6 @@ fun FarmListHeader(
             )
         }
     }
-
     if (drawerVisible) {
         Box(
             modifier = Modifier
@@ -1809,17 +1872,8 @@ fun FarmListHeader(
                                     text = stringResource(id = R.string.home),
                                     painter = painterResource(R.drawable.home),
                                     onClick = {
-                                        navController.navigate("shopping")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
+                                        // navController.navigate("shopping")
+                                        //navController.previousBackStackEntry
                                         drawerVisible = false
                                     }
                                 )
@@ -1844,6 +1898,18 @@ fun FarmListHeader(
                                     }
                                 )
                             }
+
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+
                             item {
                                 Divider()
                             }
@@ -1862,8 +1928,7 @@ fun FarmListHeader(
                                         checked = darkMode.value,
                                         onCheckedChange = {
                                             darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it)
-                                                .apply()
+                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
                                         }
                                     )
                                 }
@@ -1871,35 +1936,13 @@ fun FarmListHeader(
                             item {
                                 Divider()
                             }
-//                            item {
-//                                // Language Selector
-//                                Text(
-//                                    text = stringResource(id = R.string.select_language),
-//                                    style = MaterialTheme.typography.titleMedium
-//                                )
-//                                Column(
-//                                    modifier = Modifier.fillMaxWidth(),
-//                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-//                                    horizontalAlignment = Alignment.CenterHorizontally
-//                                ) {
-//                                    languages.forEach { language ->
-//                                        LanguageCardSideBar(
-//                                            language = language,
-//                                            isSelected = language == currentLanguage,
-//                                            onSelect = {
-//                                                languageViewModel.selectLanguage(language, context)
-//                                            }
-//                                        )
-//                                    }
-//                                }
-//                            }
                             // using checkbox
 
                             item {
                                 Text(
                                     text = stringResource(id = R.string.select_language),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Box(
                                     modifier = Modifier
@@ -1911,10 +1954,12 @@ fun FarmListHeader(
                                         onClick = { expanded = true },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(text = currentLanguage.displayName)
+                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+
                                         Icon(
                                             imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                     DropdownMenu(
@@ -1922,14 +1967,14 @@ fun FarmListHeader(
                                         onDismissRequest = { expanded = false },
                                         modifier = Modifier
                                             .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(Color.White) // Set the background color to white for visibility
+                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
                                     ) {
                                         languages.forEach { language ->
                                             DropdownMenuItem(
                                                 text = {
                                                     Text(
                                                         text = language.displayName,
-                                                        color = Color.Black // Ensure text is visible against the white background
+                                                        color = MaterialTheme.colorScheme.onBackground
                                                     )
                                                 },
                                                 onClick = {
@@ -1937,12 +1982,13 @@ fun FarmListHeader(
                                                     expanded = false
                                                 },
                                                 modifier = Modifier
-                                                    .background(Color.White) // Ensure each menu item has a white background
+                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
                                             )
                                         }
                                     }
                                 }
                             }
+
                             item {
                                 // Logout Item
                                 DrawerItem(
@@ -1951,7 +1997,7 @@ fun FarmListHeader(
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI
-                                        navController.popBackStack()
+                                        navController.navigate("home")
                                         drawerVisible = false
                                     }
                                 )
@@ -3248,7 +3294,6 @@ fun UpdateFarmForm(
         )
     }
 
-
     if (drawerVisible) {
         Box(
             modifier = Modifier
@@ -3288,17 +3333,8 @@ fun UpdateFarmForm(
                                     text = stringResource(id = R.string.home),
                                     painter = painterResource(R.drawable.home),
                                     onClick = {
-                                        navController.navigate("shopping")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
+                                        // navController.navigate("shopping")
+                                        //navController.previousBackStackEntry
                                         drawerVisible = false
                                     }
                                 )
@@ -3323,6 +3359,18 @@ fun UpdateFarmForm(
                                     }
                                 )
                             }
+
+                            item {
+                                DrawerItem(
+                                    text = stringResource(id = R.string.akrabi_registration),
+                                    painter = painterResource(R.drawable.person_add),
+                                    onClick = {
+                                        navController.navigate("akrabi_list_screen")
+                                        drawerVisible = false
+                                    }
+                                )
+                            }
+
                             item {
                                 Divider()
                             }
@@ -3341,8 +3389,7 @@ fun UpdateFarmForm(
                                         checked = darkMode.value,
                                         onCheckedChange = {
                                             darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it)
-                                                .apply()
+                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
                                         }
                                     )
                                 }
@@ -3350,11 +3397,13 @@ fun UpdateFarmForm(
                             item {
                                 Divider()
                             }
+                            // using checkbox
+
                             item {
                                 Text(
                                     text = stringResource(id = R.string.select_language),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Box(
                                     modifier = Modifier
@@ -3366,10 +3415,12 @@ fun UpdateFarmForm(
                                         onClick = { expanded = true },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(text = currentLanguage.displayName)
+                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+
                                         Icon(
                                             imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                     DropdownMenu(
@@ -3377,14 +3428,14 @@ fun UpdateFarmForm(
                                         onDismissRequest = { expanded = false },
                                         modifier = Modifier
                                             .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(Color.White) // Set the background color to white for visibility
+                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
                                     ) {
                                         languages.forEach { language ->
                                             DropdownMenuItem(
                                                 text = {
                                                     Text(
                                                         text = language.displayName,
-                                                        color = Color.Black // Ensure text is visible against the white background
+                                                        color = MaterialTheme.colorScheme.onBackground
                                                     )
                                                 },
                                                 onClick = {
@@ -3392,12 +3443,13 @@ fun UpdateFarmForm(
                                                     expanded = false
                                                 },
                                                 modifier = Modifier
-                                                    .background(Color.White) // Ensure each menu item has a white background
+                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
                                             )
                                         }
                                     }
                                 }
                             }
+
                             item {
                                 // Logout Item
                                 DrawerItem(
@@ -3406,7 +3458,7 @@ fun UpdateFarmForm(
                                     onClick = {
                                         // Call your logout function here
                                         // navigate to login screen or refresh UI
-                                        navController.popBackStack()
+                                        navController.navigate("home")
                                         drawerVisible = false
                                     }
                                 )

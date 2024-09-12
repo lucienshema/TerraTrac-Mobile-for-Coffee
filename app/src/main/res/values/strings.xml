@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CAFE TRAC</string>
+    <string name="app_name">CafeTrac</string>
     <string name="farm_list">Plots List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
     <string name="developed_by">Developed By</string>
@@ -167,9 +167,9 @@
     <string name="edit_akrabi_form">Edit Akrabi Form</string>
     <string name="menu">Menu</string>
     <string name="home">Home</string>
-    <string name="akrabi_registration">Akrabi  Registration</string>
-    <string name="collection_site_registration">Collection Site Registaration</string>
-    <string name="farmer_registration">Farmer Registaration</string>
+    <string name="akrabi_registration">Akrabi </string>
+    <string name="collection_site_registration">Collection Site </string>
+    <string name="farmer_registration">Farmer </string>
     <string name="search_placeholder">"Search...</string>
     <string name="item_details_title">Item Details</string>
     <string name="back">Back</string>
