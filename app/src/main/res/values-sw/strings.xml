@@ -167,9 +167,9 @@
     <string name="edit_akrabi_form">Fomu ya Hariri Akrabi</string>
     <string name="menu">Menyu</string>
     <string name="home">Nyumbani</string>
-    <string name="akrabi_registration">Usajili wa Akrabi</string>
-    <string name="collection_site_registration">Usajili wa Tovuti ya Mkusanyiko</string>
-    <string name="farmer_registration">Usajili wa Mkulima</string>
+    <string name="akrabi_registration">Akrabi</string>
+    <string name="collection_site_registration">Tovuti ya Mkusanyiko</string>
+    <string name="farmer_registration">Mkulima</string>
     <string name="search_placeholder">Tafuta...</string>
     <string name="item_details_title">Maelezo ya Kipengee</string>
     <string name="back">Rudi</string>

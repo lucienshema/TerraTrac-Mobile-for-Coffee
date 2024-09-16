@@ -454,7 +454,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable("privacy_policy") {
-                                PrivacyPolicyScreen("https://www.technoserve.org/", onAgree = {
+                                PrivacyPolicyScreen(BuildConfig.DATA_PRIVACY_URL, onAgree = {
                                     navController.navigate("shopping") {
                                         popUpTo("home") { inclusive = true } // Optional: clear back stack
                                     }

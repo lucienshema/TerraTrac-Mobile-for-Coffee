@@ -42,6 +42,18 @@ android {
                 }
             }
             buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+
+            // Load DATA_PRIVACY_URL from local.properties
+            val dataPrivacyUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("DATA_PRIVACY_URL") ?: "https://www.default-privacy-url.com/"
+                } else {
+                    "https://www.default-privacy-url.com/"
+                }
+            }
+            buildConfigField("String", "DATA_PRIVACY_URL", "\"$dataPrivacyUrl\"")
         }
         release {
             isMinifyEnabled = false
@@ -58,8 +70,21 @@ android {
                 }
             }
             buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+
+            // Load DATA_PRIVACY_URL from local.properties
+            val dataPrivacyUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("DATA_PRIVACY_URL") ?: "https://www.default-privacy-url.com/"
+                } else {
+                    "https://www.default-privacy-url.com/"
+                }
+            }
+            buildConfigField("String", "DATA_PRIVACY_URL", "\"$dataPrivacyUrl\"")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

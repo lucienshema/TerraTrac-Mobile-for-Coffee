@@ -167,9 +167,9 @@
     <string name="edit_akrabi_form">Formulario de Edición de Akrabi</string>
     <string name="menu">Menú</string>
     <string name="home">Inicio</string>
-    <string name="akrabi_registration">Registro de Akrabi</string>
-    <string name="collection_site_registration">Registro de Sitio de Recogida</string>
-    <string name="farmer_registration">Registro de Agricultor</string>
+    <string name="akrabi_registration">Akrabi</string>
+    <string name="collection_site_registration">Sitio de Recogida</string>
+    <string name="farmer_registration">Agricultor</string>
     <string name="search_placeholder">Buscar...</string>
     <string name="item_details_title">Detalles del Artículo</string>
     <string name="back">Atrás</string>

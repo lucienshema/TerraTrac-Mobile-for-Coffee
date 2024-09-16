@@ -2135,7 +2135,7 @@ fun AkrabiListScreenScreen(navController: NavController, darkMode: MutableState<
                                     text = stringResource(id = R.string.home),
                                     painter = painterResource(R.drawable.home),
                                     onClick = {
-                                        // navController.navigate("shopping")
+                                        navController.navigate("shopping")
                                         //navController.previousBackStackEntry
                                         drawerVisible = false
                                     }
