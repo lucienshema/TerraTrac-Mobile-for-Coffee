@@ -46,6 +46,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.example.egnss4coffeev2.database.FarmViewModel
 import com.example.egnss4coffeev2.database.FarmViewModelFactory
+import com.example.egnss4coffeev2.database.PreferencesManager
 import com.example.egnss4coffeev2.database.sync.SyncService
 import com.example.egnss4coffeev2.map.MapViewModel
 import com.example.egnss4coffeev2.ui.screens.AddFarm
@@ -65,6 +66,8 @@ import com.example.egnss4coffeev2.ui.screens.EditBuyThroughAkrabiForm
 import com.example.egnss4coffeev2.ui.screens.EditDirectBuyForm
 import com.example.egnss4coffeev2.ui.screens.FarmList
 import com.example.egnss4coffeev2.ui.screens.Home
+import com.example.egnss4coffeev2.ui.screens.PrivacyPolicyScreen
+import com.example.egnss4coffeev2.ui.screens.PrivacyPolicyWebView
 import com.example.egnss4coffeev2.ui.screens.ScreenWithSidebar
 import com.example.egnss4coffeev2.ui.screens.SetPolygon
 import com.example.egnss4coffeev2.ui.screens.SettingsScreen
@@ -148,6 +151,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                val preferencesManager = PreferencesManager(this)
+
                 val multiplePermissionsState = rememberMultiplePermissionsState(permissions)
 
                 LaunchedEffect(Unit) {
@@ -227,9 +232,15 @@ class MainActivity : ComponentActivity() {
                                     languages = languages)
                             }
                             composable("shopping") {
-                                ShoppingScreen(navController, farmViewModel = farmViewModel, darkMode,
-                                    languageViewModel=languageViewModel,
-                                    languages)
+                                // Check if user has agreed to terms
+                                if (preferencesManager.hasAgreedToTerms) {
+                                    ShoppingScreen(navController, farmViewModel = farmViewModel, darkMode,
+                                        languageViewModel=languageViewModel,
+                                        languages)
+                                } else {
+                                    // Redirect to privacy policy screen if not agreed
+                                    navController.navigate("privacy_policy")
+                                }
                             }
 
                             composable("create_akrabi_form") {
@@ -441,6 +452,14 @@ class MainActivity : ComponentActivity() {
                                     languageViewModel,
                                     languages
                                 )
+                            }
+                            composable("privacy_policy") {
+                                PrivacyPolicyScreen("https://www.technoserve.org/", onAgree = {
+                                    navController.navigate("shopping") {
+                                        popUpTo("home") { inclusive = true } // Optional: clear back stack
+                                    }
+
+                                })
                             }
                         }
                     }
