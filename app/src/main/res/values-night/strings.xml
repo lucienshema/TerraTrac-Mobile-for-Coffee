@@ -186,4 +186,23 @@
     <string name="no_photo_selected">No Photo Selected</string>
     <string name="logout">Logout</string>
 
+    <string name="akrabi_list">Akrabi List</string>
+    <string name="akrabi_details">Akrabi Details</string>
+    <string name="age">Age</string>
+    <string name="edit">Edit</string>
+    <string name="gender">Gender</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Government ID Number</string>
+    <string name="phone">Phone</string>
+    <string name="number_of_trees">Number of Trees</string>
+    <string name="total_farms">%1$d total farms</string>
+    <string name="total_farms_with_incomplete_data">%1$d with incomplete data</string>
+    <string name="error_loading_more_sites">Error Loading More Sites</string>
+    <string name="delete_all">Delete All</string>
+    <string name="delete_selected">Delete Selected</string>
+    <string name="share">Share</string>
+    <string name="confirm_export_items">You are about to export %1$d items. %2$d items have incomplete data. Do you want to proceed?</string>
+    <string name="confirm_share_items">You are about to share %1$d items. %2$d items have incomplete data. Do you want to proceed?</string>
+
 </resources>

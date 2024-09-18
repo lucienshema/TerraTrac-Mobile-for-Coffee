@@ -185,6 +185,26 @@
     <string name="no_photo_selected">Hakuna Picha Imechaguliwa</string>
     <string name="logout">Ondoka</string>
 
+    <string name="akrabi_list">Orodha ya Akrabi</string>
+    <string name="akrabi_details">Maelezo ya Akrabi</string>
+    <string name="age">Umri</string>
+    <string name="edit">Hariri</string>
+    <string name="gender">Jinsia</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Nambari ya Kitambulisho cha Serikali</string>
+    <string name="phone">Simu</string>
+    <string name="number_of_trees">Idadi ya miti</string>
+    <string name="total_farms">%1$d mashamba kwa jumla</string>
+    <string name="total_farms_with_incomplete_data">%1$d yana data zisizokamilika</string>
+    <string name="error_loading_more_sites">Hitilafu kupakia maeneo zaidi</string>
+    <string name="delete_all">Futa Zote</string>
+    <string name="delete_selected">Futa Zilizochaguliwa</string>
+    <string name="share">Shiriki</string>
+    <string name="confirm_export_items">Unakaribia kusafirisha vitu %1$d. Vitu %2$d vina data zisizokamilika. Unataka kuendelea?</string>
+    <string name="confirm_share_items">Unakaribia kushiriki vitu %1$d. Vitu %2$d vina data zisizokamilika. Unataka kuendelea?</string>
+
+
 
 
 </resources>

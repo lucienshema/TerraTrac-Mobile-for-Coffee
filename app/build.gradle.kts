@@ -6,8 +6,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("kotlin-parcelize")
-    //id("com.google.devtools.ksp")
-    // alias(libs.plugins.ksp)
+//    alias(libs.plugins.ksp)
 }
 
 android {
@@ -150,14 +149,7 @@ dependencies {
     implementation(libs.converter.gson)
     kapt(libs.androidx.room.compiler)
 
-//
-//    implementation(libs.google.accompanist.pager)
-//    implementation(libs.accompanist.pager.indicators)
-
-
     //ksp(libs.androidx.room.compiler)  // Correctly added KSP dependency
-
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

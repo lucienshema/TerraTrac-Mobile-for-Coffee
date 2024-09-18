@@ -566,9 +566,223 @@ fun FarmList(
     }
 
 
-    fun createFileForSharing(selectedFarms: List<Farm>): File? {
-        // Modify the existing logic to use selectedFarms instead of listItems
-        // (the rest of the code remains the same)
+//    fun createFileForSharing(selectedFarms: List<Farm>): File? {
+//        // Modify the existing logic to use selectedFarms instead of listItems
+//        // (the rest of the code remains the same)
+//
+//        // Get the current date and time
+//        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+//        val getSiteById = cwsListItems.find { it.siteId == siteID }
+//        val siteName = getSiteById?.name ?: "SiteName"
+//        val filename =
+//            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+//        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
+//        // Get the Downloads directory
+//        val downloadsDir =
+//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+//        val file = File(downloadsDir, filename)
+//
+//        try {
+//            file.bufferedWriter().use { writer ->
+//                if (exportFormat == "CSV") {
+//                    writer.write(
+//                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+//                    )
+//                    selectedFarms.forEach { farm ->
+//                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+//                        val matches = regex.findAll(farm.coordinates.toString())
+//                        val reversedCoordinates =
+//                            matches
+//                                .map { match ->
+//                                    val (lat, lon) = match.destructured
+//                                    "[$lon, $lat]"
+//                                }.toList()
+//                                .let { coordinates ->
+//                                    if (coordinates.isNotEmpty()) {
+//                                        // Always include brackets, even for a single point
+//                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                    } else {
+//                                        val lon = farm.longitude ?: "0.0"
+//                                        val lat = farm.latitude ?: "0.0"
+//                                        "[$lon, $lat]"
+//                                    }
+//                                }
+//
+//                        val line =
+//                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+//                                Date(
+//                                    farm.createdAt,
+//                                )
+//                            },${Date(farm.updatedAt)}\n"
+//                        writer.write(line)
+//                    }
+//                } else {
+//                    val geoJson =
+//                        buildString {
+//                            append("{\"type\": \"FeatureCollection\", \"features\": [")
+//                            selectedFarms.forEachIndexed { index, farm ->
+//                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+//                                val matches = regex.findAll(farm.coordinates.toString())
+//                                val geoJsonCoordinates =
+//                                    matches
+//                                        .map { match ->
+//                                            val (lat, lon) = match.destructured
+//                                            "[$lon, $lat]"
+//                                        }.joinToString(", ", prefix = "[", postfix = "]")
+//                                val latitude =
+//                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+//                                val longitude =
+//                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+//
+//                                val feature =
+//                                    """
+//                                    {
+//                                        "type": "Feature",
+//                                        "properties": {
+//                                            "remote_id": "${farm.remoteId ?: ""}",
+//                                            "farmer_name": "${farm.farmerName ?: ""}",
+//                                            "member_id": "${farm.memberId ?: ""}",
+//                                            "collection_site": "${getSiteById?.name ?: ""}",
+//                                            "agent_name": "${getSiteById?.agentName ?: ""}",
+//                                            "farm_village": "${farm.village ?: ""}",
+//                                            "farm_district": "${farm.district ?: ""}",
+//                                             "farm_size": ${farm.size ?: 0.0},
+//                                            "latitude": $latitude,
+//                                            "longitude": $longitude,
+//                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+//                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+//
+//                                        },
+//                                        "geometry": {
+//                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+//                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+//                                        }
+//                                    }
+//                                    """.trimIndent()
+//                                append(feature)
+//                                if (index < listItems.size - 1) append(",")
+//                            }
+//                            append("]}")
+//                        }
+//                    writer.write(geoJson)
+//                }
+//            }
+//            return file
+//        } catch (e: IOException) {
+//            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+//            return null
+//        }
+//    }
+
+//    fun createFileForSharing(): File? {
+//        // Get the current date and time
+//        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+//        val getSiteById = cwsListItems.find { it.siteId == siteID }
+//        val siteName = getSiteById?.name ?: "SiteName"
+//        val filename =
+//            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+//        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
+//        // Get the Downloads directory
+//        val downloadsDir =
+//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+//        val file = File(downloadsDir, filename)
+//
+//        try {
+//            file.bufferedWriter().use { writer ->
+//                if (exportFormat == "CSV") {
+//                    writer.write(
+//                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+//                    )
+//                    listItems.forEach { farm ->
+//                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+//                        val matches = regex.findAll(farm.coordinates.toString())
+//
+//                        val reversedCoordinates =
+//                            matches
+//                                .map { match ->
+//                                    val (lat, lon) = match.destructured
+//                                    "[$lon, $lat]"
+//                                }.toList()
+//                                .let { coordinates ->
+//                                    if (coordinates.isNotEmpty()) {
+//                                        // Always include brackets, even for a single point
+//                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                    } else {
+//                                        val lon = farm.longitude ?: "0.0"
+//                                        val lat = farm.latitude ?: "0.0"
+//                                        "[$lon, $lat]"
+//                                    }
+//                                }
+//
+//                        val line =
+//                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+//                                Date(
+//                                    farm.createdAt,
+//                                )
+//                            },${Date(farm.updatedAt)}\n"
+//                        writer.write(line)
+//                    }
+//                } else {
+//                    val geoJson =
+//                        buildString {
+//                            append("{\"type\": \"FeatureCollection\", \"features\": [")
+//                            listItems.forEachIndexed { index, farm ->
+//                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+//                                val matches = regex.findAll(farm.coordinates.toString())
+//                                val geoJsonCoordinates =
+//                                    matches
+//                                        .map { match ->
+//                                            val (lat, lon) = match.destructured
+//                                            "[$lon, $lat]"
+//                                        }.joinToString(", ", prefix = "[", postfix = "]")
+//                                val latitude =
+//                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+//                                val longitude =
+//                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+//
+//                                val feature =
+//                                    """
+//                                    {
+//                                        "type": "Feature",
+//                                        "properties": {
+//                                            "remote_id": "${farm.remoteId ?: ""}",
+//                                            "farmer_name": "${farm.farmerName ?: ""}",
+//                                            "member_id": "${farm.memberId ?: ""}",
+//                                            "collection_site": "${getSiteById?.name ?: ""}",
+//                                            "agent_name": "${getSiteById?.agentName ?: ""}",
+//                                            "farm_village": "${farm.village ?: ""}",
+//                                            "farm_district": "${farm.district ?: ""}",
+//                                             "farm_size": ${farm.size ?: 0.0},
+//                                            "latitude": $latitude,
+//                                            "longitude": $longitude,
+//                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+//                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+//
+//                                        },
+//                                        "geometry": {
+//                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+//                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+//                                        }
+//                                    }
+//                                    """.trimIndent()
+//                                append(feature)
+//                                if (index < listItems.size - 1) append(",")
+//                            }
+//                            append("]}")
+//                        }
+//                    writer.write(geoJson)
+//                }
+//            }
+//            return file
+//        } catch (e: IOException) {
+//            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+//            return null
+//        }
+//    }
+
+    fun createFileForSharing(selectedFarms: List<Farm>? = null): File? {
+        // Use selectedFarms if provided, otherwise default to listItems
+        val farmsToExport = selectedFarms ?: listItems
 
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -578,40 +792,18 @@ fun FarmList(
             if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
-        val downloadsDir =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
 
         try {
             file.bufferedWriter().use { writer ->
                 if (exportFormat == "CSV") {
                     writer.write(
-                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n"
                     )
-                    selectedFarms.forEach { farm ->
+                    farmsToExport.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
-//                        val reversedCoordinates =
-//                            matches
-//                                .map { match ->
-//                                    val (lat, lon) = match.destructured
-//                                    "[$lon, $lat]"
-//                                }.toList() // Convert Sequence to List for easy handling
-//                                .let { coordinates ->
-//                                    if (coordinates.isNotEmpty()) {
-//                                        if (coordinates.size == 1) {
-//                                            // Single point, return without additional brackets
-//                                            coordinates.first()
-//                                        } else {
-//                                            // Multiple points, add enclosing brackets
-//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                        }
-//                                    } else {
-//                                        "" // Return an empty string if there are no coordinates
-//                                    }
-//                                }
-
-
                         val reversedCoordinates =
                             matches
                                 .map { match ->
@@ -631,186 +823,52 @@ fun FarmList(
 
                         val line =
                             "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-                                Date(
-                                    farm.createdAt,
-                                )
+                                Date(farm.createdAt)
                             },${Date(farm.updatedAt)}\n"
                         writer.write(line)
                     }
                 } else {
-                    val geoJson =
-                        buildString {
-                            append("{\"type\": \"FeatureCollection\", \"features\": [")
-                            selectedFarms.forEachIndexed { index, farm ->
-                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                val matches = regex.findAll(farm.coordinates.toString())
-                                val geoJsonCoordinates =
-                                    matches
-                                        .map { match ->
-                                            val (lat, lon) = match.destructured
-                                            "[$lon, $lat]"
-                                        }.joinToString(", ", prefix = "[", postfix = "]")
-                                val latitude =
-                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-                                val longitude =
-                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-
-                                val feature =
-                                    """
-                                    {
-                                        "type": "Feature",
-                                        "properties": {
-                                            "remote_id": "${farm.remoteId ?: ""}",
-                                            "farmer_name": "${farm.farmerName ?: ""}",
-                                            "member_id": "${farm.memberId ?: ""}",
-                                            "collection_site": "${getSiteById?.name ?: ""}",
-                                            "agent_name": "${getSiteById?.agentName ?: ""}",
-                                            "farm_village": "${farm.village ?: ""}",
-                                            "farm_district": "${farm.district ?: ""}",
-                                             "farm_size": ${farm.size ?: 0.0},
-                                            "latitude": $latitude,
-                                            "longitude": $longitude,
-                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
-                                            
-                                        },
-                                        "geometry": {
-                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
-                                        }
-                                    }
-                                    """.trimIndent()
-                                append(feature)
-                                if (index < listItems.size - 1) append(",")
-                            }
-                            append("]}")
-                        }
-                    writer.write(geoJson)
-                }
-            }
-            return file
-        } catch (e: IOException) {
-            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
-            return null
-        }
-    }
-
-    fun createFileForSharing(): File? {
-        // Get the current date and time
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val getSiteById = cwsListItems.find { it.siteId == siteID }
-        val siteName = getSiteById?.name ?: "SiteName"
-        val filename =
-            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-        // Get the Downloads directory
-        val downloadsDir =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val file = File(downloadsDir, filename)
-
-        try {
-            file.bufferedWriter().use { writer ->
-                if (exportFormat == "CSV") {
-                    writer.write(
-                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
-                    )
-                    listItems.forEach { farm ->
-                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                        val matches = regex.findAll(farm.coordinates.toString())
-//                        val reversedCoordinates =
-//                            matches
-//                                .map { match ->
-//                                    val (lat, lon) = match.destructured
-//                                    "[$lon, $lat]"
-//                                }.toList() // Convert Sequence to List for easy handling
-//                                .let { coordinates ->
-//                                    if (coordinates.isNotEmpty()) {
-//                                        if (coordinates.size == 1) {
-//                                            // Single point, return without additional brackets
-//                                            coordinates.first()
-//                                        } else {
-//                                            // Multiple points, add enclosing brackets
-//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                        }
-//                                    } else {
-//                                        "" // Return an empty string if there are no coordinates
-//                                    }
-//                                }
-
-
-                        val reversedCoordinates =
-                            matches
-                                .map { match ->
+                    val geoJson = buildString {
+                        append("{\"type\": \"FeatureCollection\", \"features\": [")
+                        farmsToExport.forEachIndexed { index, farm ->
+                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                            val matches = regex.findAll(farm.coordinates.toString())
+                            val geoJsonCoordinates =
+                                matches.map { match ->
                                     val (lat, lon) = match.destructured
                                     "[$lon, $lat]"
-                                }.toList()
-                                .let { coordinates ->
-                                    if (coordinates.isNotEmpty()) {
-                                        // Always include brackets, even for a single point
-                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
-                                    } else {
-                                        val lon = farm.longitude ?: "0.0"
-                                        val lat = farm.latitude ?: "0.0"
-                                        "[$lon, $lat]"
-                                    }
+                                }.joinToString(", ", prefix = "[", postfix = "]")
+                            val latitude = farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                            val longitude = farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+
+                            val feature = """
+                            {
+                                "type": "Feature",
+                                "properties": {
+                                    "remote_id": "${farm.remoteId ?: ""}",
+                                    "farmer_name": "${farm.farmerName ?: ""}",
+                                    "member_id": "${farm.memberId ?: ""}",
+                                    "collection_site": "${getSiteById?.name ?: ""}",
+                                    "agent_name": "${getSiteById?.agentName ?: ""}",
+                                    "farm_village": "${farm.village ?: ""}",
+                                    "farm_district": "${farm.district ?: ""}",
+                                    "farm_size": ${farm.size ?: 0.0},
+                                    "latitude": $latitude,
+                                    "longitude": $longitude,
+                                    "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+                                    "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+                                },
+                                "geometry": {
+                                    "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+                                    "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
                                 }
-
-                        val line =
-                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-                                Date(
-                                    farm.createdAt,
-                                )
-                            },${Date(farm.updatedAt)}\n"
-                        writer.write(line)
-                    }
-                } else {
-                    val geoJson =
-                        buildString {
-                            append("{\"type\": \"FeatureCollection\", \"features\": [")
-                            listItems.forEachIndexed { index, farm ->
-                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                val matches = regex.findAll(farm.coordinates.toString())
-                                val geoJsonCoordinates =
-                                    matches
-                                        .map { match ->
-                                            val (lat, lon) = match.destructured
-                                            "[$lon, $lat]"
-                                        }.joinToString(", ", prefix = "[", postfix = "]")
-                                val latitude =
-                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-                                val longitude =
-                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-
-                                val feature =
-                                    """
-                                    {
-                                        "type": "Feature",
-                                        "properties": {
-                                            "remote_id": "${farm.remoteId ?: ""}",
-                                            "farmer_name": "${farm.farmerName ?: ""}",
-                                            "member_id": "${farm.memberId ?: ""}",
-                                            "collection_site": "${getSiteById?.name ?: ""}",
-                                            "agent_name": "${getSiteById?.agentName ?: ""}",
-                                            "farm_village": "${farm.village ?: ""}",
-                                            "farm_district": "${farm.district ?: ""}",
-                                             "farm_size": ${farm.size ?: 0.0},
-                                            "latitude": $latitude,
-                                            "longitude": $longitude,
-                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
-                                            
-                                        },
-                                        "geometry": {
-                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
-                                        }
-                                    }
-                                    """.trimIndent()
-                                append(feature)
-                                if (index < listItems.size - 1) append(",")
                             }
-                            append("]}")
+                        """.trimIndent()
+                            append(feature)
+                            if (index < farmsToExport.size - 1) append(",")
                         }
+                        append("]}")
+                    }
                     writer.write(geoJson)
                 }
             }
@@ -820,6 +878,9 @@ fun FarmList(
             return null
         }
     }
+
+
+
 
     fun createFile(
         context: Context,
@@ -842,26 +903,6 @@ fun FarmList(
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-//                            val reversedCoordinates =
-//                                matches
-//                                    .map { match ->
-//                                        val (lat, lon) = match.destructured
-//                                        "[$lon, $lat]"
-//                                    }.toList() // Convert Sequence to List for easy handling
-//                                    .let { coordinates ->
-//                                        if (coordinates.isNotEmpty()) {
-//                                            if (coordinates.size == 1) {
-//                                                // Single point, return without additional brackets
-//                                                coordinates.first()
-//                                            } else {
-//                                                // Multiple points, add enclosing brackets
-//                                                coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                            }
-//                                        } else {
-//                                            "" // Return an empty string if here are no coordinates
-//                                        }
-//                                    }
-
                             val reversedCoordinates =
                                 matches
                                     .map { match ->
@@ -1833,181 +1874,195 @@ fun FarmListHeader(
             )
         }
     }
-    if (drawerVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0x99000000))
-                .clickable { drawerVisible = false },
-            contentAlignment = Alignment.TopStart
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(250.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .padding(16.dp)
-                ) {
-                    // Header
-                    Text(
-                        text = stringResource(id = R.string.menu),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Divider()
+//    if (drawerVisible) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color(0x99000000))
+//                .clickable { drawerVisible = false },
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(250.dp)
+//                    .background(MaterialTheme.colorScheme.surface)
+//            ) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxHeight()
+//                        .weight(1f)
+//                        .padding(16.dp)
+//                ) {
+//                    // Header
+//                    Text(
+//                        text = stringResource(id = R.string.menu),
+//                        style = MaterialTheme.typography.headlineSmall,
+//                        modifier = Modifier.padding(bottom = 16.dp)
+//                    )
+//                    Divider()
+//
+//                    // Scrollable Content
+//                    Box(modifier = Modifier.weight(1f)) {
+//                        LazyColumn(
+//                            verticalArrangement = Arrangement.spacedBy(16.dp),
+//                            contentPadding = PaddingValues(bottom = 64.dp)
+//                        ) {
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.home),
+//                                    painter = painterResource(R.drawable.home),
+//                                    onClick = {
+//                                        navController.navigate("shopping")
+//                                        //navController.previousBackStackEntry
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.collection_site_registration),
+//                                    painter = painterResource(R.drawable.add_collection_site),
+//                                    onClick = {
+//                                        navController.navigate("siteList")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.farmer_registration),
+//                                    painter = painterResource(R.drawable.person_add),
+//                                    onClick = {
+//                                        navController.navigate("siteList")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.akrabi_registration),
+//                                    painter = painterResource(R.drawable.person_add),
+//                                    onClick = {
+//                                        navController.navigate("akrabi_list_screen")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//
+//                            item {
+//                                Divider()
+//                            }
+//                            item {
+//                                // Dark Mode Toggle
+//                                Row(
+//                                    verticalAlignment = Alignment.CenterVertically,
+//                                    modifier = Modifier.fillMaxWidth()
+//                                ) {
+//                                    Text(
+//                                        text = stringResource(id = R.string.light_dark_theme),
+//                                        style = MaterialTheme.typography.titleMedium
+//                                    )
+//                                    Spacer(modifier = Modifier.weight(1f))
+//                                    Switch(
+//                                        checked = darkMode.value,
+//                                        onCheckedChange = {
+//                                            darkMode.value = it
+//                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
+//                                        }
+//                                    )
+//                                }
+//                            }
+//                            item {
+//                                Divider()
+//                            }
+//                            // using checkbox
+//
+//                            item {
+//                                Text(
+//                                    text = stringResource(id = R.string.select_language),
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    color = MaterialTheme.colorScheme.onBackground
+//                                )
+//                                Box(
+//                                    modifier = Modifier
+//                                        .width(230.dp)
+//                                        .padding(8.dp)
+//                                ) {
+//                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+//                                    OutlinedButton(
+//                                        onClick = { expanded = true },
+//                                        modifier = Modifier.fillMaxWidth()
+//                                    ) {
+//                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+//
+//                                        Icon(
+//                                            imageVector = Icons.Default.ArrowDropDown,
+//                                            contentDescription = null,
+//                                            tint = MaterialTheme.colorScheme.onBackground
+//                                        )
+//                                    }
+//                                    DropdownMenu(
+//                                        expanded = expanded,
+//                                        onDismissRequest = { expanded = false },
+//                                        modifier = Modifier
+//                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+//                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
+//                                    ) {
+//                                        languages.forEach { language ->
+//                                            DropdownMenuItem(
+//                                                text = {
+//                                                    Text(
+//                                                        text = language.displayName,
+//                                                        color = MaterialTheme.colorScheme.onBackground
+//                                                    )
+//                                                },
+//                                                onClick = {
+//                                                    languageViewModel.selectLanguage(language, context)
+//                                                    expanded = false
+//                                                },
+//                                                modifier = Modifier
+//                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//                            item {
+//                                // Logout Item
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.logout),
+//                                    painter = painterResource(R.drawable.logout),
+//                                    onClick = {
+//                                        // Call your logout function here
+//                                        // navigate to login screen or refresh UI
+//                                        navController.navigate("home")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-                    // Scrollable Content
-                    Box(modifier = Modifier.weight(1f)) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 64.dp)
-                        ) {
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.home),
-                                    painter = painterResource(R.drawable.home),
-                                    onClick = {
-                                        navController.navigate("shopping")
-                                        //navController.previousBackStackEntry
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.collection_site_registration),
-                                    painter = painterResource(R.drawable.add_collection_site),
-                                    onClick = {
-                                        navController.navigate("siteList")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.farmer_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("siteList")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-
-                            item {
-                                Divider()
-                            }
-                            item {
-                                // Dark Mode Toggle
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.light_dark_theme),
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Switch(
-                                        checked = darkMode.value,
-                                        onCheckedChange = {
-                                            darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
-                                        }
-                                    )
-                                }
-                            }
-                            item {
-                                Divider()
-                            }
-                            // using checkbox
-
-                            item {
-                                Text(
-                                    text = stringResource(id = R.string.select_language),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(230.dp)
-                                        .padding(8.dp)
-                                ) {
-                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
-                                    OutlinedButton(
-                                        onClick = { expanded = true },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
-
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier
-                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
-                                    ) {
-                                        languages.forEach { language ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        text = language.displayName,
-                                                        color = MaterialTheme.colorScheme.onBackground
-                                                    )
-                                                },
-                                                onClick = {
-                                                    languageViewModel.selectLanguage(language, context)
-                                                    expanded = false
-                                                },
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            item {
-                                // Logout Item
-                                DrawerItem(
-                                    text = stringResource(id = R.string.logout),
-                                    painter = painterResource(R.drawable.logout),
-                                    onClick = {
-                                        // Call your logout function here
-                                        // navigate to login screen or refresh UI
-                                        navController.navigate("home")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+    CustomDrawer(
+        drawerVisible = drawerVisible,
+        onClose = { drawerVisible = false },
+        navController = navController,
+        darkMode = darkMode,
+        currentLanguage = currentLanguage,
+        languages = languages,
+        onLanguageSelected = { language -> languageViewModel.selectLanguage(language, context) },
+        onLogout = {
+            navController.navigate("home")
+            drawerVisible = false
         }
-    }
+    )
 }
 
 
@@ -3294,181 +3349,195 @@ fun UpdateFarmForm(
         )
     }
 
-    if (drawerVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0x99000000))
-                .clickable { drawerVisible = false },
-            contentAlignment = Alignment.TopStart
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(250.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .padding(16.dp)
-                ) {
-                    // Header
-                    Text(
-                        text = stringResource(id = R.string.menu),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Divider()
+//    if (drawerVisible) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color(0x99000000))
+//                .clickable { drawerVisible = false },
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(250.dp)
+//                    .background(MaterialTheme.colorScheme.surface)
+//            ) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxHeight()
+//                        .weight(1f)
+//                        .padding(16.dp)
+//                ) {
+//                    // Header
+//                    Text(
+//                        text = stringResource(id = R.string.menu),
+//                        style = MaterialTheme.typography.headlineSmall,
+//                        modifier = Modifier.padding(bottom = 16.dp)
+//                    )
+//                    Divider()
+//
+//                    // Scrollable Content
+//                    Box(modifier = Modifier.weight(1f)) {
+//                        LazyColumn(
+//                            verticalArrangement = Arrangement.spacedBy(16.dp),
+//                            contentPadding = PaddingValues(bottom = 64.dp)
+//                        ) {
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.home),
+//                                    painter = painterResource(R.drawable.home),
+//                                    onClick = {
+//                                        navController.navigate("shopping")
+//                                        //navController.previousBackStackEntry
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.collection_site_registration),
+//                                    painter = painterResource(R.drawable.add_collection_site),
+//                                    onClick = {
+//                                        navController.navigate("siteList")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.farmer_registration),
+//                                    painter = painterResource(R.drawable.person_add),
+//                                    onClick = {
+//                                        navController.navigate("siteList")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.akrabi_registration),
+//                                    painter = painterResource(R.drawable.person_add),
+//                                    onClick = {
+//                                        navController.navigate("akrabi_list_screen")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//
+//                            item {
+//                                Divider()
+//                            }
+//                            item {
+//                                // Dark Mode Toggle
+//                                Row(
+//                                    verticalAlignment = Alignment.CenterVertically,
+//                                    modifier = Modifier.fillMaxWidth()
+//                                ) {
+//                                    Text(
+//                                        text = stringResource(id = R.string.light_dark_theme),
+//                                        style = MaterialTheme.typography.titleMedium
+//                                    )
+//                                    Spacer(modifier = Modifier.weight(1f))
+//                                    Switch(
+//                                        checked = darkMode.value,
+//                                        onCheckedChange = {
+//                                            darkMode.value = it
+//                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
+//                                        }
+//                                    )
+//                                }
+//                            }
+//                            item {
+//                                Divider()
+//                            }
+//                            // using checkbox
+//
+//                            item {
+//                                Text(
+//                                    text = stringResource(id = R.string.select_language),
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    color = MaterialTheme.colorScheme.onBackground
+//                                )
+//                                Box(
+//                                    modifier = Modifier
+//                                        .width(230.dp)
+//                                        .padding(8.dp)
+//                                ) {
+//                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+//                                    OutlinedButton(
+//                                        onClick = { expanded = true },
+//                                        modifier = Modifier.fillMaxWidth()
+//                                    ) {
+//                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+//
+//                                        Icon(
+//                                            imageVector = Icons.Default.ArrowDropDown,
+//                                            contentDescription = null,
+//                                            tint = MaterialTheme.colorScheme.onBackground
+//                                        )
+//                                    }
+//                                    DropdownMenu(
+//                                        expanded = expanded,
+//                                        onDismissRequest = { expanded = false },
+//                                        modifier = Modifier
+//                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+//                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
+//                                    ) {
+//                                        languages.forEach { language ->
+//                                            DropdownMenuItem(
+//                                                text = {
+//                                                    Text(
+//                                                        text = language.displayName,
+//                                                        color = MaterialTheme.colorScheme.onBackground
+//                                                    )
+//                                                },
+//                                                onClick = {
+//                                                    languageViewModel.selectLanguage(language, context)
+//                                                    expanded = false
+//                                                },
+//                                                modifier = Modifier
+//                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//                            item {
+//                                // Logout Item
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.logout),
+//                                    painter = painterResource(R.drawable.logout),
+//                                    onClick = {
+//                                        // Call your logout function here
+//                                        // navigate to login screen or refresh UI
+//                                        navController.navigate("home")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-                    // Scrollable Content
-                    Box(modifier = Modifier.weight(1f)) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 64.dp)
-                        ) {
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.home),
-                                    painter = painterResource(R.drawable.home),
-                                    onClick = {
-                                        navController.navigate("shopping")
-                                        //navController.previousBackStackEntry
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.collection_site_registration),
-                                    painter = painterResource(R.drawable.add_collection_site),
-                                    onClick = {
-                                        navController.navigate("siteList")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.farmer_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("siteList")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-
-                            item {
-                                Divider()
-                            }
-                            item {
-                                // Dark Mode Toggle
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.light_dark_theme),
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Switch(
-                                        checked = darkMode.value,
-                                        onCheckedChange = {
-                                            darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
-                                        }
-                                    )
-                                }
-                            }
-                            item {
-                                Divider()
-                            }
-                            // using checkbox
-
-                            item {
-                                Text(
-                                    text = stringResource(id = R.string.select_language),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(230.dp)
-                                        .padding(8.dp)
-                                ) {
-                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
-                                    OutlinedButton(
-                                        onClick = { expanded = true },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
-
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier
-                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
-                                    ) {
-                                        languages.forEach { language ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        text = language.displayName,
-                                                        color = MaterialTheme.colorScheme.onBackground
-                                                    )
-                                                },
-                                                onClick = {
-                                                    languageViewModel.selectLanguage(language, context)
-                                                    expanded = false
-                                                },
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            item {
-                                // Logout Item
-                                DrawerItem(
-                                    text = stringResource(id = R.string.logout),
-                                    painter = painterResource(R.drawable.logout),
-                                    onClick = {
-                                        // Call your logout function here
-                                        // navigate to login screen or refresh UI
-                                        navController.navigate("home")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+    CustomDrawer(
+        drawerVisible = drawerVisible,
+        onClose = { drawerVisible = false },
+        navController = navController,
+        darkMode = darkMode,
+        currentLanguage = currentLanguage,
+        languages = languages,
+        onLanguageSelected = { language -> languageViewModel.selectLanguage(language, context) },
+        onLogout = {
+            navController.navigate("home")
+            drawerVisible = false
         }
-    }
+    )
 }
 
 fun updateFarm(

@@ -219,7 +219,7 @@ fun DateRangePicker(
             OutlinedTextField(
                 value = startDate,
                 onValueChange = { /* Disable manual input */ },
-                label = { Text(text= stringResource(id =R.string.start_date)) },
+                label = { Text(text= stringResource(id =R.string.start_date), fontSize = 12.sp) },
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp), // Adds space between the two text fields
@@ -234,7 +234,7 @@ fun DateRangePicker(
             OutlinedTextField(
                 value = endDate,
                 onValueChange = { /* Disable manual input */ },
-                label = { Text(text= stringResource(id =R.string.end_date)) },
+                label = { Text(text= stringResource(id =R.string.end_date),fontSize = 12.sp) },
                 modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
@@ -784,181 +784,195 @@ fun BoughtItemsList(
             }
         }
     }
-    if (drawerVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0x99000000))
-                .clickable { drawerVisible = false },
-            contentAlignment = Alignment.TopStart
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(250.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .padding(16.dp)
-                ) {
-                    // Header
-                    Text(
-                        text = stringResource(id = R.string.menu),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Divider()
+//    if (drawerVisible) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color(0x99000000))
+//                .clickable { drawerVisible = false },
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(250.dp)
+//                    .background(MaterialTheme.colorScheme.surface)
+//            ) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxHeight()
+//                        .weight(1f)
+//                        .padding(16.dp)
+//                ) {
+//                    // Header
+//                    Text(
+//                        text = stringResource(id = R.string.menu),
+//                        style = MaterialTheme.typography.headlineSmall,
+//                        modifier = Modifier.padding(bottom = 16.dp)
+//                    )
+//                    Divider()
+//
+//                    // Scrollable Content
+//                    Box(modifier = Modifier.weight(1f)) {
+//                        LazyColumn(
+//                            verticalArrangement = Arrangement.spacedBy(16.dp),
+//                            contentPadding = PaddingValues(bottom = 64.dp)
+//                        ) {
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.home),
+//                                    painter = painterResource(R.drawable.home),
+//                                    onClick = {
+//                                        // navController.navigate("shopping")
+//                                        //navController.previousBackStackEntry
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.collection_site_registration),
+//                                    painter = painterResource(R.drawable.add_collection_site),
+//                                    onClick = {
+//                                        navController.navigate("siteList")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.farmer_registration),
+//                                    painter = painterResource(R.drawable.person_add),
+//                                    onClick = {
+//                                        navController.navigate("siteList")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//
+//                            item {
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.akrabi_registration),
+//                                    painter = painterResource(R.drawable.person_add),
+//                                    onClick = {
+//                                        navController.navigate("akrabi_list_screen")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//
+//                            item {
+//                                Divider()
+//                            }
+//                            item {
+//                                // Dark Mode Toggle
+//                                Row(
+//                                    verticalAlignment = Alignment.CenterVertically,
+//                                    modifier = Modifier.fillMaxWidth()
+//                                ) {
+//                                    Text(
+//                                        text = stringResource(id = R.string.light_dark_theme),
+//                                        style = MaterialTheme.typography.titleMedium
+//                                    )
+//                                    Spacer(modifier = Modifier.weight(1f))
+//                                    Switch(
+//                                        checked = darkMode.value,
+//                                        onCheckedChange = {
+//                                            darkMode.value = it
+//                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
+//                                        }
+//                                    )
+//                                }
+//                            }
+//                            item {
+//                                Divider()
+//                            }
+//                            // using checkbox
+//
+//                            item {
+//                                Text(
+//                                    text = stringResource(id = R.string.select_language),
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    color = MaterialTheme.colorScheme.onBackground
+//                                )
+//                                Box(
+//                                    modifier = Modifier
+//                                        .width(230.dp)
+//                                        .padding(8.dp)
+//                                ) {
+//                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+//                                    OutlinedButton(
+//                                        onClick = { expanded = true },
+//                                        modifier = Modifier.fillMaxWidth()
+//                                    ) {
+//                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+//
+//                                        Icon(
+//                                            imageVector = Icons.Default.ArrowDropDown,
+//                                            contentDescription = null,
+//                                            tint = MaterialTheme.colorScheme.onBackground
+//                                        )
+//                                    }
+//                                    DropdownMenu(
+//                                        expanded = expanded,
+//                                        onDismissRequest = { expanded = false },
+//                                        modifier = Modifier
+//                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
+//                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
+//                                    ) {
+//                                        languages.forEach { language ->
+//                                            DropdownMenuItem(
+//                                                text = {
+//                                                    Text(
+//                                                        text = language.displayName,
+//                                                        color = MaterialTheme.colorScheme.onBackground
+//                                                    )
+//                                                },
+//                                                onClick = {
+//                                                    languageViewModel.selectLanguage(language, context)
+//                                                    expanded = false
+//                                                },
+//                                                modifier = Modifier
+//                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//                            item {
+//                                // Logout Item
+//                                DrawerItem(
+//                                    text = stringResource(id = R.string.logout),
+//                                    painter = painterResource(R.drawable.logout),
+//                                    onClick = {
+//                                        // Call your logout function here
+//                                        // navigate to login screen or refresh UI
+//                                        navController.navigate("home")
+//                                        drawerVisible = false
+//                                    }
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-                    // Scrollable Content
-                    Box(modifier = Modifier.weight(1f)) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 64.dp)
-                        ) {
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.home),
-                                    painter = painterResource(R.drawable.home),
-                                    onClick = {
-                                        // navController.navigate("shopping")
-                                        //navController.previousBackStackEntry
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.collection_site_registration),
-                                    painter = painterResource(R.drawable.add_collection_site),
-                                    onClick = {
-                                        navController.navigate("siteList")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.farmer_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("siteList")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-
-                            item {
-                                DrawerItem(
-                                    text = stringResource(id = R.string.akrabi_registration),
-                                    painter = painterResource(R.drawable.person_add),
-                                    onClick = {
-                                        navController.navigate("akrabi_list_screen")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-
-                            item {
-                                Divider()
-                            }
-                            item {
-                                // Dark Mode Toggle
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.light_dark_theme),
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Switch(
-                                        checked = darkMode.value,
-                                        onCheckedChange = {
-                                            darkMode.value = it
-                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
-                                        }
-                                    )
-                                }
-                            }
-                            item {
-                                Divider()
-                            }
-                            // using checkbox
-
-                            item {
-                                Text(
-                                    text = stringResource(id = R.string.select_language),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(230.dp)
-                                        .padding(8.dp)
-                                ) {
-                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
-                                    OutlinedButton(
-                                        onClick = { expanded = true },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
-
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier
-                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
-                                    ) {
-                                        languages.forEach { language ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        text = language.displayName,
-                                                        color = MaterialTheme.colorScheme.onBackground
-                                                    )
-                                                },
-                                                onClick = {
-                                                    languageViewModel.selectLanguage(language, context)
-                                                    expanded = false
-                                                },
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            item {
-                                // Logout Item
-                                DrawerItem(
-                                    text = stringResource(id = R.string.logout),
-                                    painter = painterResource(R.drawable.logout),
-                                    onClick = {
-                                        // Call your logout function here
-                                        // navigate to login screen or refresh UI
-                                        navController.navigate("home")
-                                        drawerVisible = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+    CustomDrawer(
+        drawerVisible = drawerVisible,
+        onClose = { drawerVisible = false },
+        navController = navController,
+        darkMode = darkMode,
+        currentLanguage = currentLanguage,
+        languages = languages,
+        onLanguageSelected = { language -> languageViewModel.selectLanguage(language, context) },
+        onLogout = {
+            navController.navigate("home")
+            drawerVisible = false
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1426,220 +1440,233 @@ fun BoughtItemsListDirectBuy(
                 }
             }
         }
-        if (drawerVisible) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x99000000))
-                    .clickable { drawerVisible = false },
-                contentAlignment = Alignment.TopStart
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(250.dp)
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .padding(16.dp)
-                    ) {
-                        // Header
-                        Text(
-                            text = stringResource(id = R.string.menu),
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        Divider()
-
-                        // Scrollable Content
-                        Box(modifier = Modifier.weight(1f)) {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                contentPadding = PaddingValues(bottom = 64.dp)
-                            ) {
-                                item {
-                                    DrawerItem(
-                                        text = stringResource(id = R.string.home),
-                                        painter = painterResource(R.drawable.home),
-                                        onClick = {
-                                            // navController.navigate("shopping")
-                                            //navController.previousBackStackEntry
-                                            drawerVisible = false
-                                        }
-                                    )
-                                }
-                                item {
-                                    DrawerItem(
-                                        text = stringResource(id = R.string.collection_site_registration),
-                                        painter = painterResource(R.drawable.add_collection_site),
-                                        onClick = {
-                                            navController.navigate("siteList")
-                                            drawerVisible = false
-                                        }
-                                    )
-                                }
-                                item {
-                                    DrawerItem(
-                                        text = stringResource(id = R.string.farmer_registration),
-                                        painter = painterResource(R.drawable.person_add),
-                                        onClick = {
-                                            navController.navigate("siteList")
-                                            drawerVisible = false
-                                        }
-                                    )
-                                }
-
-                                item {
-                                    DrawerItem(
-                                        text = stringResource(id = R.string.akrabi_registration),
-                                        painter = painterResource(R.drawable.person_add),
-                                        onClick = {
-                                            navController.navigate("akrabi_list_screen")
-                                            drawerVisible = false
-                                        }
-                                    )
-                                }
-
-                                item {
-                                    Divider()
-                                }
-                                item {
-                                    // Dark Mode Toggle
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(
-                                            text = stringResource(id = R.string.light_dark_theme),
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                        Spacer(modifier = Modifier.weight(1f))
-                                        Switch(
-                                            checked = darkMode.value,
-                                            onCheckedChange = {
-                                                darkMode.value = it
-                                                sharedPreferences.edit().putBoolean("dark_mode", it).apply()
-                                            }
-                                        )
-                                    }
-                                }
-                                item {
-                                    Divider()
-                                }
-                                // using checkbox
-
-                                item {
-                                    Text(
-                                        text = stringResource(id = R.string.select_language),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .width(230.dp)
-                                            .padding(8.dp)
-                                    ) {
-                                        var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
-                                        OutlinedButton(
-                                            onClick = { expanded = true },
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
-
-                                            Icon(
-                                                imageVector = Icons.Default.ArrowDropDown,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onBackground
-                                            )
-                                        }
-                                        DropdownMenu(
-                                            expanded = expanded,
-                                            onDismissRequest = { expanded = false },
-                                            modifier = Modifier
-                                                .width(230.dp) // Set the width of the DropdownMenu to match the Box
-                                                .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
-                                        ) {
-                                            languages.forEach { language ->
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            text = language.displayName,
-                                                            color = MaterialTheme.colorScheme.onBackground
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        languageViewModel.selectLanguage(language, context)
-                                                        expanded = false
-                                                    },
-                                                    modifier = Modifier
-                                                        .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                item {
-                                    // Logout Item
-                                    DrawerItem(
-                                        text = stringResource(id = R.string.logout),
-                                        painter = painterResource(R.drawable.logout),
-                                        onClick = {
-                                            // Call your logout function here
-                                            // navigate to login screen or refresh UI
-                                            navController.popBackStack()
-                                            drawerVisible = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+//        if (drawerVisible) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .background(Color(0x99000000))
+//                    .clickable { drawerVisible = false },
+//                contentAlignment = Alignment.TopStart
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxHeight()
+//                        .width(250.dp)
+//                        .background(MaterialTheme.colorScheme.surface)
+//                ) {
+//                    Column(
+//                        modifier = Modifier
+//                            .fillMaxHeight()
+//                            .weight(1f)
+//                            .padding(16.dp)
+//                    ) {
+//                        // Header
+//                        Text(
+//                            text = stringResource(id = R.string.menu),
+//                            style = MaterialTheme.typography.headlineSmall,
+//                            modifier = Modifier.padding(bottom = 16.dp)
+//                        )
+//                        Divider()
+//
+//                        // Scrollable Content
+//                        Box(modifier = Modifier.weight(1f)) {
+//                            LazyColumn(
+//                                verticalArrangement = Arrangement.spacedBy(16.dp),
+//                                contentPadding = PaddingValues(bottom = 64.dp)
+//                            ) {
+//                                item {
+//                                    DrawerItem(
+//                                        text = stringResource(id = R.string.home),
+//                                        painter = painterResource(R.drawable.home),
+//                                        onClick = {
+//                                            // navController.navigate("shopping")
+//                                            //navController.previousBackStackEntry
+//                                            drawerVisible = false
+//                                        }
+//                                    )
+//                                }
+//                                item {
+//                                    DrawerItem(
+//                                        text = stringResource(id = R.string.collection_site_registration),
+//                                        painter = painterResource(R.drawable.add_collection_site),
+//                                        onClick = {
+//                                            navController.navigate("siteList")
+//                                            drawerVisible = false
+//                                        }
+//                                    )
+//                                }
+//                                item {
+//                                    DrawerItem(
+//                                        text = stringResource(id = R.string.farmer_registration),
+//                                        painter = painterResource(R.drawable.person_add),
+//                                        onClick = {
+//                                            navController.navigate("siteList")
+//                                            drawerVisible = false
+//                                        }
+//                                    )
+//                                }
+//
+//                                item {
+//                                    DrawerItem(
+//                                        text = stringResource(id = R.string.akrabi_registration),
+//                                        painter = painterResource(R.drawable.person_add),
+//                                        onClick = {
+//                                            navController.navigate("akrabi_list_screen")
+//                                            drawerVisible = false
+//                                        }
+//                                    )
+//                                }
+//
+//                                item {
+//                                    Divider()
+//                                }
+//                                item {
+//                                    // Dark Mode Toggle
+//                                    Row(
+//                                        verticalAlignment = Alignment.CenterVertically,
+//                                        modifier = Modifier.fillMaxWidth()
+//                                    ) {
+//                                        Text(
+//                                            text = stringResource(id = R.string.light_dark_theme),
+//                                            style = MaterialTheme.typography.titleMedium
+//                                        )
+//                                        Spacer(modifier = Modifier.weight(1f))
+//                                        Switch(
+//                                            checked = darkMode.value,
+//                                            onCheckedChange = {
+//                                                darkMode.value = it
+//                                                sharedPreferences.edit().putBoolean("dark_mode", it).apply()
+//                                            }
+//                                        )
+//                                    }
+//                                }
+//                                item {
+//                                    Divider()
+//                                }
+//                                // using checkbox
+//
+//                                item {
+//                                    Text(
+//                                        text = stringResource(id = R.string.select_language),
+//                                        style = MaterialTheme.typography.titleMedium,
+//                                        color = MaterialTheme.colorScheme.onBackground
+//                                    )
+//                                    Box(
+//                                        modifier = Modifier
+//                                            .width(230.dp)
+//                                            .padding(8.dp)
+//                                    ) {
+//                                        var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
+//                                        OutlinedButton(
+//                                            onClick = { expanded = true },
+//                                            modifier = Modifier.fillMaxWidth()
+//                                        ) {
+//                                            Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
+//
+//                                            Icon(
+//                                                imageVector = Icons.Default.ArrowDropDown,
+//                                                contentDescription = null,
+//                                                tint = MaterialTheme.colorScheme.onBackground
+//                                            )
+//                                        }
+//                                        DropdownMenu(
+//                                            expanded = expanded,
+//                                            onDismissRequest = { expanded = false },
+//                                            modifier = Modifier
+//                                                .width(230.dp) // Set the width of the DropdownMenu to match the Box
+//                                                .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
+//                                        ) {
+//                                            languages.forEach { language ->
+//                                                DropdownMenuItem(
+//                                                    text = {
+//                                                        Text(
+//                                                            text = language.displayName,
+//                                                            color = MaterialTheme.colorScheme.onBackground
+//                                                        )
+//                                                    },
+//                                                    onClick = {
+//                                                        languageViewModel.selectLanguage(language, context)
+//                                                        expanded = false
+//                                                    },
+//                                                    modifier = Modifier
+//                                                        .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//
+//                                item {
+//                                    // Logout Item
+//                                    DrawerItem(
+//                                        text = stringResource(id = R.string.logout),
+//                                        painter = painterResource(R.drawable.logout),
+//                                        onClick = {
+//                                            // Call your logout function here
+//                                            // navigate to login screen or refresh UI
+//                                            navController.popBackStack()
+//                                            drawerVisible = false
+//                                        }
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+        CustomDrawer(
+            drawerVisible = drawerVisible,
+            onClose = { drawerVisible = false },
+            navController = navController,
+            darkMode = darkMode,
+            currentLanguage = currentLanguage,
+            languages = languages,
+            onLanguageSelected = { language -> languageViewModel.selectLanguage(language, context) },
+            onLogout = {
+                navController.navigate("home")
+                drawerVisible = false
             }
-        }
-
-    }
-
-}
-
-
-@Composable
-fun LanguageCardSideBar(language: Language, isSelected: Boolean, onSelect: (String) -> Unit) {
-    val cardElevation = if (isSelected) 8.dp else 4.dp
-    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-
-    Card(
-        modifier = Modifier
-            .padding(4.dp) // Reduced padding
-            .clickable { onSelect(language.code) }
-            .border(
-                width = 1.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(8.dp) // Rounded corners
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = cardElevation
-        ),
-        shape = RoundedCornerShape(8.dp) // Rounded corners
-    ) {
-        Text(
-            text = language.displayName,
-            color = textColor,
-            fontSize = 10.sp, // Smaller font size
-            modifier = Modifier
-                .padding(8.dp) // Adjusted padding for smaller card
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
         )
+
     }
+
 }
+
+
+//@Composable
+//fun LanguageCardSideBar(language: Language, isSelected: Boolean, onSelect: (String) -> Unit) {
+//    val cardElevation = if (isSelected) 8.dp else 4.dp
+//    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+//
+//    Card(
+//        modifier = Modifier
+//            .padding(4.dp) // Reduced padding
+//            .clickable { onSelect(language.code) }
+//            .border(
+//                width = 1.dp,
+//                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+//                shape = RoundedCornerShape(8.dp) // Rounded corners
+//            ),
+//        colors = CardDefaults.cardColors(
+//            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+//        ),
+//        elevation = CardDefaults.cardElevation(
+//            defaultElevation = cardElevation
+//        ),
+//        shape = RoundedCornerShape(8.dp) // Rounded corners
+//    ) {
+//        Text(
+//            text = language.displayName,
+//            color = textColor,
+//            fontSize = 10.sp, // Smaller font size
+//            modifier = Modifier
+//                .padding(8.dp) // Adjusted padding for smaller card
+//                .fillMaxWidth()
+//                .align(Alignment.CenterHorizontally)
+//        )
+//    }
+//}
 
 
 @Composable

@@ -186,5 +186,26 @@
     <string name="logout">Cerrar Sesión</string>
 
 
+    <string name="akrabi_list">Lista de Akrabi</string>
+    <string name="akrabi_details">Detalles de Akrabi</string>
+    <string name="age">Edad</string>
+    <string name="edit">Editar</string>
+    <string name="gender">Género</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Número de identificación gubernamental</string>
+    <string name="phone">Teléfono</string>
+    <string name="number_of_trees">Número de árboles</string>
+    <string name="total_farms">%1$d granjas en total</string>
+    <string name="total_farms_with_incomplete_data">%1$d con datos incompletos</string>
+    <string name="error_loading_more_sites">Error al cargar más sitios</string>
+    <string name="delete_all">Eliminar todo</string>
+    <string name="delete_selected">Eliminar seleccionado</string>
+    <string name="share">Compartir</string>
+    <string name="confirm_export_items">Estás a punto de exportar %1$d artículos. %2$d artículos tienen datos incompletos. ¿Quieres continuar?</string>
+    <string name="confirm_share_items">Estás a punto de compartir %1$d artículos. %2$d artículos tienen datos incompletos. ¿Quieres continuar?</string>
+
+
+
 
 </resources>

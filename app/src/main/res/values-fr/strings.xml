@@ -185,4 +185,24 @@
     <string name="no_photo_selected">Aucune Photo Sélectionnée</string>
     <string name="logout">Déconnexion</string>
 
+    <string name="akrabi_list">Liste des Akrabi</string>
+    <string name="akrabi_details">Détails de l\'Akrabi</string>
+    <string name="age">Âge</string>
+    <string name="edit">Modifier</string>
+    <string name="gender">Genre</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Numéro d\'ID gouvernemental</string>
+    <string name="phone">Téléphone</string>
+    <string name="number_of_trees">Nombre d\'arbres</string>
+    <string name="total_farms">%1$d fermes au total</string>
+    <string name="total_farms_with_incomplete_data">%1$d avec des données incomplètes</string>
+    <string name="error_loading_more_sites">Erreur lors du chargement de plus de sites</string>
+    <string name="delete_all">Tout supprimer</string>
+    <string name="delete_selected">Supprimer la sélection</string>
+    <string name="share">Partager</string>
+    <string name="confirm_export_items">Vous êtes sur le point d\'exporter %1$d articles. %2$d articles ont des données incomplètes. Voulez-vous continuer ?</string>
+    <string name="confirm_share_items">Vous êtes sur le point de partager %1$d articles. %2$d articles ont des données incomplètes. Voulez-vous continuer ?</string>
+
+
 </resources>

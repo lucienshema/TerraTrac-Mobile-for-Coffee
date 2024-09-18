@@ -185,4 +185,25 @@
     <string name="photo_selected">ፎቶ ተመርጧል</string>
     <string name="no_photo_selected">ፎቶ አልተመረጠም</string>
     <string name="logout">ውጣ</string>
+
+
+    <string name="akrabi_list">የአካራቢ ዝርዝር</string>
+    <string name="akrabi_details">የአካራቢ ዝርዝሮች</string>
+    <string name="age">እድሜ</string>
+    <string name="edit">አርትዕ</string>
+    <string name="gender">ፆታ</string>
+    <string name="woreda">ወረዳ</string>
+    <string name="kebele">ቀበሌ</string>
+    <string name="gov_id_number">የመንግስት መታወቂያ ቁጥር</string>
+    <string name="phone">ስልክ</string>
+    <string name="number_of_trees">ዛፎች ብዛት</string>
+    <string name="total_farms">%1$d ግልጽ እርሻ</string>
+    <string name="total_farms_with_incomplete_data">%1$d ያልተከማቸ ውሂብ አለባቸው</string>
+    <string name="error_loading_more_sites">ተጨማሪ አካባቢዎችን ማስገባት ስህተት</string>
+    <string name="delete_all">ሁሉንም ሰርዝ</string>
+    <string name="delete_selected">የተመረጡትን ሰርዝ</string>
+    <string name="share">አጋራ</string>
+    <string name="confirm_export_items">እርሶ የተሰለጠኩትን %1$d እቃዎችን መላክ ነው። %2$d እቃዎች ያልተከማቸ ውሂብ አላቸው። እርግጠኛ ነህ እንደምትቀጥል?</string>
+    <string name="confirm_share_items">እርሶ የተሰለጠኩትን %1$d እቃዎችን ማጋራት ነው። %2$d እቃዎች ያልተከማቸ ውሂብ አላቸው። እርግጠኛ ነህ እንደምትቀጥል?</string>
+
 </resources>

@@ -186,5 +186,26 @@
     <string name="logout">Ba’ee Bahi</string>
 
 
+    <string name="akrabi_list">Akrabi Tarree</string>
+    <string name="akrabi_details">Akrabi Faayilii</string>
+    <string name="age">Umri</string>
+    <string name="edit">Sirreessi</string>
+    <string name="gender">Saala</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Lakkoofsa Waraqaa Eenyummaa Mootummaa</string>
+    <string name="phone">Bilbila</string>
+    <string name="number_of_trees">Lakkoofsa Mukkeen</string>
+    <string name="total_farms">%1$d bakka qonnaa guutuu</string>
+    <string name="total_farms_with_incomplete_data">%1$d odeeffannoo hin guutamin qabudha</string>
+    <string name="error_loading_more_sites">Dogoggora bakka dabalataa fe\'uufi</string>
+    <string name="delete_all">Hunduma balleessi</string>
+    <string name="delete_selected">Filataman balleessi</string>
+    <string name="share">Wal Qooduu</string>
+    <string name="confirm_export_items">Meeshaalee %1$d gadi lakkisuuf jirta. Meeshaaleen %2$d odeeffannoo hin guutamin qabu. Itti fufuu barbaaddaa?</string>
+    <string name="confirm_share_items">Meeshaalee %1$d wal qoosuu barbaadu. Meeshaaleen %2$d odeeffannoo hin guutamin qabu. Itti fufuu barbaaddaa?</string>
+
+
+
 
 </resources>
