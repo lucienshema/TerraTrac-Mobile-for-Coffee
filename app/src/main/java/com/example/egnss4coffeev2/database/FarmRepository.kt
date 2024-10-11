@@ -1,5 +1,7 @@
 package com.example.egnss4coffeev2.database
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,14 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     val readData: LiveData<List<Farm>> = farmDAO.getData()
     fun readAllFarms(siteId: Long): LiveData<List<Farm>> {
         return farmDAO.getAll(siteId)
+    }
+
+    fun getAllFarms(): List<Farm> {
+        return farmDAO.getAllFarms()
+    }
+
+    fun getAllSites(): List<CollectionSite>{
+        return farmDAO.getAllSites()
     }
 
     fun readAllFarmsSync(siteId: Long): List<Farm> {
@@ -38,8 +48,34 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.insertAllIfNotExists(farms)
     }
 
-    suspend fun addSite(site: CollectionSite) {
-        farmDAO.insertSite(site)
+    suspend fun isSiteDuplicate(collectionSite: CollectionSite): CollectionSite? {
+        return farmDAO.getSiteByDetails(
+            collectionSite.siteId,
+            collectionSite.district,
+            collectionSite.name,
+            collectionSite.village
+        )
+    }
+
+    suspend fun addSite(site: CollectionSite) : Boolean {
+        // Check if the site already exists
+        val existingSite = isSiteDuplicate(site)
+
+        if (existingSite == null) {
+            Log.d(TAG, "Attempting to insert new site: $site")
+            val insertResult = farmDAO.insertSite(site)
+            Log.d(TAG, "Insert operation result: $insertResult")
+            if (insertResult != -1L) {
+                Log.d(TAG, "New site inserted: $site")
+                return true
+            } else {
+                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
+                return false
+            }
+        } else {
+            Log.d(TAG, "Site already exists: $existingSite")
+            return false
+        }
     }
 
     fun getLastFarm(): LiveData<List<Farm>> {
@@ -118,21 +154,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         }
     }
 
-
-
-//    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
-//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) } != null
-//    }
-//
-//    suspend fun isFarmDuplicate(farm: Farm): Farm? {
-//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) }
-//    }
-//
-//    // Function to fetch a farm by remote ID
-//    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
-//        return farmDAO.getFarmByRemoteId(remoteId)
-//    }
-
     suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
         return farmDAO.getFarmByDetails(
             farm.remoteId,
@@ -160,12 +181,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
             farm.district
         )
     }
-
-
-//    suspend fun deleteFarmByRemoteId(remoteId: UUID) {
-//        farmDAO.deleteFarmByRemoteId(remoteId)
-//    }
-//
 
 
     fun farmNeedsUpdate(existingFarm: Farm, newFarm: Farm): Boolean {

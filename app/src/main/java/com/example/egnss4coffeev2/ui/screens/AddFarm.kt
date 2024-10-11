@@ -13,6 +13,7 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -135,23 +136,15 @@ fun AddFarm(navController: NavController, siteId: Long, languageViewModel: Langu
             darkMode: MutableState<Boolean>,
             languages: List<Language>) {
     var coordinatesData: List<Pair<Double, Double>>? = null
-//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-//        coordinatesData =
-//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-//                "coordinates"
-//            )
-//    }
+
+    var accuracyArrayData: List<Float?>? = null
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
         val parcelableCoordinates = navController.currentBackStackEntry!!
             .savedStateHandle
             .get<List<ParcelablePair>>("coordinates")
-
         coordinatesData = parcelableCoordinates?.map { Pair(it.first, it.second) }
+        accuracyArrayData = navController.currentBackStackEntry!!.savedStateHandle.get<List<Float?>>("accuracyArray")
     }
-
-    // State for holding the search query
-    // var searchQuery by remember { mutableStateOf("") }
-
 
 
     // State variables
@@ -162,30 +155,6 @@ fun AddFarm(navController: NavController, siteId: Long, languageViewModel: Langu
     val context = LocalContext.current
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
-
-//    Column(
-////        modifier = Modifier
-////            .fillMaxSize()
-////            .padding(16.dp)
-////    ) {
-////        FarmListHeader(
-////            title = stringResource(id = R.string.add_farm),
-////            onSearchQueryChanged = {},
-////            onAddFarmClicked = { /* Handle adding a farm here */ },
-////            onBackSearchClicked = {},
-////            onBackClicked = { navController.popBackStack() },
-////            showAdd = false,
-////            selectedItemsCount = 0,
-////            showSearch = false,
-////            selectAllEnabled = false,
-////            isAllSelected =false,
-////            onSelectAllChanged = { null},
-////            darkMode = darkMode,
-////            languages = languages,
-////            languageViewModel = languageViewModel,
-////            navController = navController
-////        )
-//        Spacer(modifier = Modifier.height(16.dp))
 
     // Composable content
     Box(modifier = Modifier.fillMaxSize()) {
@@ -198,50 +167,16 @@ fun AddFarm(navController: NavController, siteId: Long, languageViewModel: Langu
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back to Farm List")
                         }
                     }
-//                    actions = {
-//                        IconButton(onClick = { isSearchActive = !isSearchActive }) {
-//                            Icon(
-//                                if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-//                                contentDescription = if (isSearchActive) "Close Search" else "Search"
-//                            )
-//                        }
-//                    }
                 )
             },
-//            floatingActionButton = {
-//                FloatingActionButton(
-//                    onClick = {
-//                        navController.navigate("addSite")
-//                    },
-//                    modifier = Modifier.padding(16.dp)
-//                ) {
-//                    Icon(Icons.Default.Add, contentDescription = "Add Site")
-//                }
-//            },
             content = { paddingValues ->
                 Column(
                     modifier = Modifier
                         .padding(paddingValues)
                         .fillMaxSize()
                 ) {
-//                    // Search field below the header
-//                    if (isSearchActive) {
-//                        OutlinedTextField(
-//                            value = searchQuery,
-//                            onValueChange = { searchQuery = it },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(horizontal = 16.dp, vertical = 8.dp),
-//                            label = { Text(stringResource(R.string.search)) },
-//                            singleLine = true,
-//                            colors = TextFieldDefaults.outlinedTextFieldColors(
-//                                cursorColor = MaterialTheme.colorScheme.onSurface,
-//                            ),
-//                        )
-//                    }
-
                     // Call the FarmForm composable with the necessary parameters
-                    FarmForm(navController, siteId, coordinatesData)
+                    FarmForm(navController, siteId,coordinatesData,accuracyArrayData)
                 }
             }
         )
@@ -483,7 +418,8 @@ fun validateSize(size: String): Boolean {
 fun FarmForm(
     navController: NavController,
     siteId: Long,
-    coordinatesData: List<Pair<Double, Double>>?
+    coordinatesData: List<Pair<Double, Double>>?,
+    accuracyArrayData: List<Float?>?
 ) {
     val context = LocalContext.current as Activity
     var isValid by remember { mutableStateOf(true) }
@@ -503,6 +439,7 @@ fun FarmForm(
 
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
+    var accuracyArray by rememberSaveable { mutableStateOf(listOf<Float>()) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
 //    var selectedUnit by remember { mutableStateOf(items[0]) }
@@ -628,7 +565,9 @@ fun FarmForm(
                 }) {
                     Text(stringResource(id = R.string.no))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -638,6 +577,28 @@ fun FarmForm(
         // Add farm
         // Generating a UUID for a new farm before saving it
         val newUUID = UUID.randomUUID()
+
+        val coordinatesSize = coordinatesData?.size ?: 0 // Safely get the size of coordinates, or 0 if null
+
+        Log.d("coordinatesSize", "coordinatesSize : $coordinatesSize")
+
+
+        val finalAccuracyArray = when {
+            accuracyArray.isEmpty() -> emptyList()
+            coordinatesSize == 0 -> listOf(accuracyArray[0])
+            else -> {
+                val result = accuracyArrayData!!.toMutableList()
+                if (coordinatesSize > 1) {
+                    result.add(accuracyArrayData.last())
+                }
+                result
+            }
+        }
+
+        Log.d("Accuracy Array Before", "Accuracy Array Before Saving The farm is set to : $accuracyArray")
+
+        Log.d("finalAccuracyArray", "finalAccuracyArray is set to : $finalAccuracyArray")
+
 
         addFarm(
             farmViewModel,
@@ -653,6 +614,7 @@ fun FarmForm(
             latitude,
             longitude,
             coordinates = coordinatesData?.plus(coordinatesData.first()),
+            accuracyArray = finalAccuracyArray,
             age = age.toInt(),  // Default value if null
             gender = gender ?: "",  // Default value if null
             govtIdNumber = govtIdNumber ?: "",  // Default value if null
@@ -693,7 +655,9 @@ fun FarmForm(
                 }) {
                     Text(text = stringResource(id = R.string.set_polygon))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -1097,8 +1061,16 @@ fun FarmForm(
             }
         }
 
-//        Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-//        if ((size.toFloatOrNull() ?: 0f) < 4f) {
+        // If coordinatesData exists and latitude/longitude are empty, calculate the center
+        if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
+            val center = coordinatesData.toLatLngList().getCenterOfPolygon()
+            val bounds: LatLngBounds = center
+            longitude = bounds.northeast.longitude.toString()
+            latitude = bounds.southwest.latitude.toString()
+            // Show an overview of the polygon captured, if needed.
+        }
+
+
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1107,14 +1079,6 @@ fun FarmForm(
                 OutlinedTextField(
                     readOnly = true,
                     value = latitude,
-//                    onValueChange = {
-//                        if (it.split(".").last().length >= 6) latitude = it
-//                        else Toast.makeText(
-//                            context,
-//                            R.string.error_latitude_decimal_places,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    },
                     onValueChange = {
                         val parts = it.split(".")
                         if (parts.size == 2 && parts.last().length == 5 ) {
@@ -1152,14 +1116,6 @@ fun FarmForm(
                 OutlinedTextField(
                     readOnly = true,
                     value = longitude,
-//                    onValueChange = {
-//                        if (it.split(".").last().length >= 6) longitude = it
-//                        else Toast.makeText(
-//                            context,
-//                            R.string.error_longitude_decimal_places,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    },
                     onValueChange = {
                         val parts = it.split(".")
                         if (parts.size == 2) {
@@ -1314,6 +1270,7 @@ fun addFarm(
     latitude: String,
     longitude: String,
     coordinates: List<Pair<Double, Double>>?,
+    accuracyArray : List<Float?>?,
     age: Int,  // New field
     gender: String,  // New field
     govtIdNumber: String,  // New field
@@ -1334,6 +1291,7 @@ fun addFarm(
         latitude = latitude,
         longitude = longitude,
         coordinates = coordinates,
+        accuracyArray = accuracyArray,
         age = age?:0,  // Default value if null
         gender = gender ?: "",  // Default value if null
         govtIdNumber = govtIdNumber ?: "",  // Default value if null
@@ -1419,7 +1377,9 @@ fun LocationPermissionRequest(
                     }) {
                         Text(stringResource(id = R.string.no))
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
         }
     }

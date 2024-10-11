@@ -20,8 +20,11 @@ import com.example.egnss4coffeev2.R
  */
 @Composable
 fun ConfirmDialog(
-    title: String, message: String, showDialog: MutableState<Boolean>,
-    onProceedFn: () -> Unit
+    title: String,
+    message: String,
+    showDialog: MutableState<Boolean>,
+    onProceedFn: () -> Unit,
+    onCancelFn: () -> Unit,  // Add cancel callback
 ) {
     if (showDialog.value) {
         AlertDialog(
@@ -33,14 +36,13 @@ fun ConfirmDialog(
                     Text(text = message)
                 }
             },
-
             confirmButton = {
                 TextButton(onClick = { onProceedFn() }) {
                     Text(text = stringResource(id = R.string.yes))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog.value = false }) {
+                TextButton(onClick = { onCancelFn() }) {
                     Text(text = stringResource(id = R.string.no))
                 }
             },

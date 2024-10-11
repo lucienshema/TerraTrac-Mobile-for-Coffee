@@ -1,4 +1,3 @@
-
 package com.example.egnss4coffeev2.ui.screens
 
 import android.Manifest
@@ -145,14 +144,19 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 import com.example.egnss4coffeev2.database.BuyThroughAkrabi
 import com.example.egnss4coffeev2.database.DirectBuy
+import com.example.egnss4coffeev2.database.sync.DeviceIdUtil
 import com.example.egnss4coffeev2.map.MapViewModel
 import com.example.egnss4coffeev2.utils.Language
 import com.example.egnss4coffeev2.utils.LanguageViewModel
@@ -299,7 +303,7 @@ fun ConfirmationDialog(
         val incompleteFarms =
             farms.filter { farm ->
                 farm.farmerName.isEmpty() ||
-                        farm.district.isEmpty()||
+                        farm.district.isEmpty() ||
                         farm.village.isEmpty() ||
                         farm.latitude == "0.0" ||
                         farm.longitude == "0.0" ||
@@ -311,7 +315,12 @@ fun ConfirmationDialog(
     val (totalFarms, incompleteFarms) = validateFarms(listItems)
     val message =
         when (action) {
-            Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
+            Action.Export -> stringResource(
+                R.string.confirm_export,
+                totalFarms,
+                incompleteFarms.size
+            )
+
             Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
         }
     AlertDialog(
@@ -347,7 +356,7 @@ fun ConfirmationDialogDirectBuy(
         val incompletedirectBuyItems =
             directBuyItems.filter { directBuy ->
                 directBuy.farmerName.isEmpty() ||
-                        directBuy.siteName.isEmpty()||
+                        directBuy.siteName.isEmpty() ||
                         directBuy.location.isEmpty()
             }
         return Pair(directBuyItems.size, incompletedirectBuyItems)
@@ -355,8 +364,17 @@ fun ConfirmationDialogDirectBuy(
     val (totaldirectBuyItems, incompletedirectBuyItems) = validateDirectBuy(listItems)
     val message =
         when (action) {
-            Action.Export -> stringResource(R.string.confirm_export_items, totaldirectBuyItems, incompletedirectBuyItems.size)
-            Action.Share -> stringResource(R.string.confirm_share_items, totaldirectBuyItems, incompletedirectBuyItems.size)
+            Action.Export -> stringResource(
+                R.string.confirm_export_items,
+                totaldirectBuyItems,
+                incompletedirectBuyItems.size
+            )
+
+            Action.Share -> stringResource(
+                R.string.confirm_share_items,
+                totaldirectBuyItems,
+                incompletedirectBuyItems.size
+            )
         }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -389,16 +407,27 @@ fun ConfirmationDialogBuyThroughAkrabi(
         val incompletebuyThroughAkrabiItems =
             buyThroughAkrabiItems.filter { buyThroughAkrabiItem ->
                 buyThroughAkrabiItem.akrabiName.isEmpty() ||
-                        buyThroughAkrabiItem.siteName.isEmpty()||
+                        buyThroughAkrabiItem.siteName.isEmpty() ||
                         buyThroughAkrabiItem.location.isEmpty()
             }
         return Pair(buyThroughAkrabiItems.size, incompletebuyThroughAkrabiItems)
     }
-    val (totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems) = validateBuyThroughAkrabi(listItems)
+    val (totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems) = validateBuyThroughAkrabi(
+        listItems
+    )
     val message =
         when (action) {
-            Action.Export -> stringResource(R.string.confirm_export_items, totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems.size)
-            Action.Share -> stringResource(R.string.confirm_share_items, totalbuyThroughAkrabiItems, incompletebuyThroughAkrabiItems.size)
+            Action.Export -> stringResource(
+                R.string.confirm_export_items,
+                totalbuyThroughAkrabiItems,
+                incompletebuyThroughAkrabiItems.size
+            )
+
+            Action.Share -> stringResource(
+                R.string.confirm_share_items,
+                totalbuyThroughAkrabiItems,
+                incompletebuyThroughAkrabiItems.size
+            )
         }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -420,66 +449,9 @@ fun ConfirmationDialogBuyThroughAkrabi(
     )
 }
 
-//@Composable
-//fun ConfirmationDialog(
-//    listItems: List<Farm>,
-//    selectedIds: List<Long>,
-//    action: Action,
-//    onConfirm: () -> Unit,
-//    onDismiss: () -> Unit,
-//) {
-//    fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
-//        val incompleteFarms = farms.filter { farm ->
-//            farm.farmerName.isEmpty() ||
-//                    farm.district.isEmpty() ||
-//                    farm.village.isEmpty() ||
-//                    farm.latitude == "0.0" ||
-//                    farm.longitude == "0.0" ||
-//                    farm.size == 0.0f ||
-//                    farm.remoteId.toString().isEmpty()
-//        }
-//        return Pair(farms.size, incompleteFarms)
-//    }
-//
-//    // Determine if we are working with all items or only selected items
-//    val farmsToProcess = if (selectedIds.isEmpty()) {
-//        listItems // Use all farms if nothing is selected
-//    } else {
-//        listItems.filter { it.id in selectedIds } // Only use selected farms
-//    }
-//
-//    // Validate the farms based on the selected scope
-//    val (totalFarms, incompleteFarms) = validateFarms(farmsToProcess)
-//
-//    // Generate the message based on the action type
-//    val message = when (action) {
-//        Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
-//        Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
-//    }
-//
-//    // Display the confirmation dialog
-//    AlertDialog(
-//        onDismissRequest = onDismiss,
-//        title = { Text(text = stringResource(R.string.confirm)) },
-//        text = { Text(text = message) },
-//        confirmButton = {
-//            Button(onClick = {
-//                onConfirm()
-//                onDismiss()
-//            }) {
-//                Text(text = stringResource(R.string.yes))
-//            }
-//        },
-//        dismissButton = {
-//            Button(onClick = { onDismiss() }) {
-//                Text(text = stringResource(R.string.no))
-//            }
-//        },
-//    )
-//}
 
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterial3Api::class
 )
 @RequiresApi(Build.VERSION_CODES.N)
@@ -526,14 +498,13 @@ fun FarmList(
 
 
     var currentPage by remember { mutableStateOf(1) }
-  //  val pageSize = 3 // Define page size
+    //  val pageSize = 3 // Define page size
 //    val totalPages = (listItems.size + pageSize - 1) / pageSize
 //
 //    val filteredListItems = listItems.filter { it.farmerName.contains(searchQuery, ignoreCase = true) }
 //
 //    // Calculate total pages for the filtered list
 //    val pages = (filteredListItems.size + pageSize - 1) / pageSize
-
 
 
     var selectedTabIndex by remember { mutableStateOf(0) }
@@ -547,14 +518,25 @@ fun FarmList(
     val coroutineScope = rememberCoroutineScope()
 
 
-    // State to manage the loading status
-    val isLoading = remember { mutableStateOf(true) }
-
     // State to control the visibility of BuyThroughAkrabiForm
     var isFormVisible by remember { mutableStateOf(false) }
 
     val collectionSites by farmViewModel.readAllSites.observeAsState(emptyList())
     var akrabis by remember { mutableStateOf(listOf<Akrabi>()) }
+
+    // State to manage the loading status
+    val isLoading = remember { mutableStateOf(true) }
+    var deviceId by remember { mutableStateOf("") }
+    // State variable to observe restore status
+    val restoreStatus by farmViewModel.restoreStatus.observeAsState()
+
+    var showRestorePrompt by remember { mutableStateOf(false) }
+    var finalMessage by remember { mutableStateOf("") }
+    var showFinalMessage by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        deviceId = DeviceIdUtil.getDeviceId(context)
+    }
 
 
     // Simulate a network request or data loading
@@ -565,220 +547,6 @@ fun FarmList(
         isLoading.value = false
     }
 
-
-//    fun createFileForSharing(selectedFarms: List<Farm>): File? {
-//        // Modify the existing logic to use selectedFarms instead of listItems
-//        // (the rest of the code remains the same)
-//
-//        // Get the current date and time
-//        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-//        val getSiteById = cwsListItems.find { it.siteId == siteID }
-//        val siteName = getSiteById?.name ?: "SiteName"
-//        val filename =
-//            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-//        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-//        // Get the Downloads directory
-//        val downloadsDir =
-//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-//        val file = File(downloadsDir, filename)
-//
-//        try {
-//            file.bufferedWriter().use { writer ->
-//                if (exportFormat == "CSV") {
-//                    writer.write(
-//                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
-//                    )
-//                    selectedFarms.forEach { farm ->
-//                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-//                        val matches = regex.findAll(farm.coordinates.toString())
-//                        val reversedCoordinates =
-//                            matches
-//                                .map { match ->
-//                                    val (lat, lon) = match.destructured
-//                                    "[$lon, $lat]"
-//                                }.toList()
-//                                .let { coordinates ->
-//                                    if (coordinates.isNotEmpty()) {
-//                                        // Always include brackets, even for a single point
-//                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                    } else {
-//                                        val lon = farm.longitude ?: "0.0"
-//                                        val lat = farm.latitude ?: "0.0"
-//                                        "[$lon, $lat]"
-//                                    }
-//                                }
-//
-//                        val line =
-//                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-//                                Date(
-//                                    farm.createdAt,
-//                                )
-//                            },${Date(farm.updatedAt)}\n"
-//                        writer.write(line)
-//                    }
-//                } else {
-//                    val geoJson =
-//                        buildString {
-//                            append("{\"type\": \"FeatureCollection\", \"features\": [")
-//                            selectedFarms.forEachIndexed { index, farm ->
-//                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-//                                val matches = regex.findAll(farm.coordinates.toString())
-//                                val geoJsonCoordinates =
-//                                    matches
-//                                        .map { match ->
-//                                            val (lat, lon) = match.destructured
-//                                            "[$lon, $lat]"
-//                                        }.joinToString(", ", prefix = "[", postfix = "]")
-//                                val latitude =
-//                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-//                                val longitude =
-//                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-//
-//                                val feature =
-//                                    """
-//                                    {
-//                                        "type": "Feature",
-//                                        "properties": {
-//                                            "remote_id": "${farm.remoteId ?: ""}",
-//                                            "farmer_name": "${farm.farmerName ?: ""}",
-//                                            "member_id": "${farm.memberId ?: ""}",
-//                                            "collection_site": "${getSiteById?.name ?: ""}",
-//                                            "agent_name": "${getSiteById?.agentName ?: ""}",
-//                                            "farm_village": "${farm.village ?: ""}",
-//                                            "farm_district": "${farm.district ?: ""}",
-//                                             "farm_size": ${farm.size ?: 0.0},
-//                                            "latitude": $latitude,
-//                                            "longitude": $longitude,
-//                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-//                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
-//
-//                                        },
-//                                        "geometry": {
-//                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-//                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
-//                                        }
-//                                    }
-//                                    """.trimIndent()
-//                                append(feature)
-//                                if (index < listItems.size - 1) append(",")
-//                            }
-//                            append("]}")
-//                        }
-//                    writer.write(geoJson)
-//                }
-//            }
-//            return file
-//        } catch (e: IOException) {
-//            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
-//            return null
-//        }
-//    }
-
-//    fun createFileForSharing(): File? {
-//        // Get the current date and time
-//        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-//        val getSiteById = cwsListItems.find { it.siteId == siteID }
-//        val siteName = getSiteById?.name ?: "SiteName"
-//        val filename =
-//            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-//        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-//        // Get the Downloads directory
-//        val downloadsDir =
-//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-//        val file = File(downloadsDir, filename)
-//
-//        try {
-//            file.bufferedWriter().use { writer ->
-//                if (exportFormat == "CSV") {
-//                    writer.write(
-//                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
-//                    )
-//                    listItems.forEach { farm ->
-//                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-//                        val matches = regex.findAll(farm.coordinates.toString())
-//
-//                        val reversedCoordinates =
-//                            matches
-//                                .map { match ->
-//                                    val (lat, lon) = match.destructured
-//                                    "[$lon, $lat]"
-//                                }.toList()
-//                                .let { coordinates ->
-//                                    if (coordinates.isNotEmpty()) {
-//                                        // Always include brackets, even for a single point
-//                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                    } else {
-//                                        val lon = farm.longitude ?: "0.0"
-//                                        val lat = farm.latitude ?: "0.0"
-//                                        "[$lon, $lat]"
-//                                    }
-//                                }
-//
-//                        val line =
-//                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-//                                Date(
-//                                    farm.createdAt,
-//                                )
-//                            },${Date(farm.updatedAt)}\n"
-//                        writer.write(line)
-//                    }
-//                } else {
-//                    val geoJson =
-//                        buildString {
-//                            append("{\"type\": \"FeatureCollection\", \"features\": [")
-//                            listItems.forEachIndexed { index, farm ->
-//                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-//                                val matches = regex.findAll(farm.coordinates.toString())
-//                                val geoJsonCoordinates =
-//                                    matches
-//                                        .map { match ->
-//                                            val (lat, lon) = match.destructured
-//                                            "[$lon, $lat]"
-//                                        }.joinToString(", ", prefix = "[", postfix = "]")
-//                                val latitude =
-//                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-//                                val longitude =
-//                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-//
-//                                val feature =
-//                                    """
-//                                    {
-//                                        "type": "Feature",
-//                                        "properties": {
-//                                            "remote_id": "${farm.remoteId ?: ""}",
-//                                            "farmer_name": "${farm.farmerName ?: ""}",
-//                                            "member_id": "${farm.memberId ?: ""}",
-//                                            "collection_site": "${getSiteById?.name ?: ""}",
-//                                            "agent_name": "${getSiteById?.agentName ?: ""}",
-//                                            "farm_village": "${farm.village ?: ""}",
-//                                            "farm_district": "${farm.district ?: ""}",
-//                                             "farm_size": ${farm.size ?: 0.0},
-//                                            "latitude": $latitude,
-//                                            "longitude": $longitude,
-//                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-//                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
-//
-//                                        },
-//                                        "geometry": {
-//                                            "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-//                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
-//                                        }
-//                                    }
-//                                    """.trimIndent()
-//                                append(feature)
-//                                if (index < listItems.size - 1) append(",")
-//                            }
-//                            append("]}")
-//                        }
-//                    writer.write(geoJson)
-//                }
-//            }
-//            return file
-//        } catch (e: IOException) {
-//            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
-//            return null
-//        }
-//    }
 
     fun createFileForSharing(selectedFarms: List<Farm>? = null): File? {
         // Use selectedFarms if provided, otherwise default to listItems
@@ -792,7 +560,8 @@ fun FarmList(
             if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadsDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
 
         try {
@@ -838,8 +607,10 @@ fun FarmList(
                                     val (lat, lon) = match.destructured
                                     "[$lon, $lat]"
                                 }.joinToString(", ", prefix = "[", postfix = "]")
-                            val latitude = farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-                            val longitude = farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                            val latitude =
+                                farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                            val longitude =
+                                farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
 
                             val feature = """
                             {
@@ -878,8 +649,6 @@ fun FarmList(
             return null
         }
     }
-
-
 
 
     fun createFile(
@@ -1097,6 +866,7 @@ fun FarmList(
                             exportSelectedFarms()
                         }
                     }
+
                     Action.Share -> {
                         if (selectedIds.isEmpty()) {
                             // Share all farms
@@ -1106,6 +876,7 @@ fun FarmList(
                             shareSelectedFarms()
                         }
                     }
+
                     else -> {}
                 }
             }
@@ -1164,219 +935,87 @@ fun FarmList(
         }
     }
 
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp)
-//    ) {
-//        Column {
-//            FarmListHeaderPlots(
-//                title = stringResource(id = R.string.farm_list),
-//                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-//                onBackClicked = { navController.navigate("siteList") },
-//                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-//                onExportClicked = {
-//                    action = Action.Export
-//                    showFormatDialog = true
-//                },
-//                onShareClicked = {
-//                    action = Action.Share
-//                    showFormatDialog = true
-//                },
-//                searchQuery = searchQuery,
-//                isSearchVisible = isSearchVisible,
-//                onSearchQueryChanged = { query ->
-//                    searchQuery = query
-//                    currentPage = 1
-//                },
-//                onSearchVisibilityChanged = { isSearchVisible = it },
-//                onBuyThroughAkrabiClicked = {
-//                    navController.navigate("shopping")
-//                },
-//                onImportClicked = { showImportDialog = true },
-//                showAdd = true,
-//                showExport = listItems.isNotEmpty(),
-//                showShare = listItems.isNotEmpty(),
-//                showSearch = listItems.isNotEmpty(),
-//                showBuyThroughAkrabi = listItems.isNotEmpty(),
-//            )
-//
-//            Spacer(modifier = Modifier.height(8.dp))
+    // Function to show data or no data message
+    @Composable
+    fun showDataContent() {
+        val hasData = listItems.isNotEmpty() // Check if there's data available
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = stringResource(id = R.string.farm_list)) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.navigate("siteList")}, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back to Site List")
-                        }
+        if (hasData) {
+            Column {
+                // Only show the TabRow and HorizontalPager if there is data
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier
+                                .tabIndicatorOffset(tabPositions[pagerState.currentPage])
+                                .height(3.dp),
+                            color = MaterialTheme.colorScheme.onPrimary // Color for the indicator
+                        )
                     },
-                    actions = {
-                        IconButton(
-                            onClick = { /* Handle restore action */ },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Restore",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(1.dp))
-                        if (listItems.isNotEmpty()) {
-                            IconButton(onClick = {action = Action.Export;showFormatDialog = true}, modifier = Modifier.size(36.dp)) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.save),
-                                    contentDescription = "Export",
-                                    modifier = Modifier.size(24.dp),
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(1.dp))
-                        }
-                        if (listItems.isNotEmpty()) {
-                            IconButton(onClick = {action = Action.Share;showFormatDialog = true}, modifier = Modifier.size(36.dp)) {
-                                Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
-                            }
-                            Spacer(modifier = Modifier.width(1.dp))
-                        }
-                        IconButton(
+                    divider = { HorizontalDivider() }
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
                             onClick = {
-                                if (!isImportDisabled) {
-                                    showImportDialog = true
-                                    isImportDisabled = true // Disable the import icon after importing
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
                                 }
                             },
-                            modifier = Modifier.size(36.dp),
-                            enabled = !isImportDisabled // Disable the button if import is completed
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.icons8_import_file_48),
-                                contentDescription = "Import",
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(1.dp))
-                        IconButton(onClick = { isSearchActive = !isSearchActive }, modifier = Modifier.size(36.dp)) {
-                            Icon(
-                                if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                                contentDescription = if (isSearchActive) "Close Search" else "Search",
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
-                    }
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate("addFarm/${siteId}")
-                    },
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
-                }
-            },
-            content = { paddingValues ->
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                ) {
-                    // Search field below the header
-                    if (isSearchActive) {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            label = { Text(stringResource(R.string.search)) },
-                            singleLine = true,
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                cursorColor = MaterialTheme.colorScheme.onSurface,
-                            ),
+                            text = { Text(title) },
                         )
                     }
+                }
 
-                    TabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = selectedTabIndex == index,
-                                onClick = { selectedTabIndex = index },
-                                text = { Text(title) },
-                            )
-                        }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                ) { page ->
+                    val filteredListItems = when (page) {
+                        1 -> listItems.filter { it.needsUpdate }
+                        else -> listItems
+                    }.filter {
+                        it.farmerName.contains(searchQuery, ignoreCase = true)
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (isLoading.value) {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(16.dp),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    CircularProgressIndicator()
-//                }
-                        LazyColumn {
-                            items(3) {
-                                FarmCardSkeleton()
-                                Spacer(modifier = Modifier.height(8.dp))
+                    if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
+                        // Show the list only when loading is complete
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 90.dp)
+                        ) {
+                            val filteredList = filteredListItems.filter {
+                                it.farmerName.contains(searchQuery, ignoreCase = true)
                             }
-                        }
-                    } else {
-                        val itemsPerPage = 3 // Adjust this value as needed
-                        var currentPage by remember { mutableStateOf(1) }
 
-                        // Filter items based on the selected tab
-                        val filteredItems = if (selectedTabIndex == 0) {
-                            listItems
-                        } else {
-                            listItems.filter { it.needsUpdate }
-                        }.filter { farm ->
-                            farm.farmerName.contains(searchQuery, ignoreCase = true) ||
-                                    farm.id.toString().contains(searchQuery, ignoreCase = true)
-                        }
-
-                        val totalPages = (filteredItems.size + itemsPerPage - 1) / itemsPerPage
-                        val paginatedList =
-                            filteredItems.chunked(itemsPerPage).getOrNull(currentPage - 1)
-                                ?: emptyList()
-
-
-                        // Show number of selected items if any
-                        if (selectedIds.isNotEmpty()) {
-                            Text(
-                                text = "${selectedIds.size} item(s) selected",
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                        }
-
-                        if (filteredItems.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No results found",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                items(paginatedList) { farm ->
+                            if (filteredList.isEmpty()) {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Top,
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.no_results_found),
+                                            modifier = Modifier
+                                                .padding(16.dp)
+                                                .fillMaxWidth(),
+                                            textAlign = TextAlign.Center,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                    }
+                                }
+                            } else {
+                                items(filteredList) { farm ->
                                     FarmCard(
                                         farm = farm,
                                         navController = navController,
@@ -1417,31 +1056,321 @@ fun FarmList(
                                 }
                             }
                         }
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp, 8.dp),
+                            painter = painterResource(id = R.drawable.no_data2),
+                            contentDescription = null
+                        )
+                    }
+                }
+            }
+        } else {
+            // Display a message or image indicating no data available
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp, 8.dp),
+                    painter = painterResource(id = R.drawable.no_data2),
+                    contentDescription = null
+                )
+            }
+        }
+    }
 
-                        if (listItems.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = stringResource(id = R.string.farm_list)) },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navController.navigate("siteList") },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back to Site List")
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                farmViewModel.restoreData(
+                                    deviceId = deviceId,
+                                    phoneNumber = "",
+                                    email = "",
+                                    farmViewModel = farmViewModel
+                                ) { success ->
+                                    if (success) {
+                                        finalMessage =
+                                            context.getString(R.string.data_restored_successfully)
+                                        showFinalMessage = true
+                                    } else {
+                                        showFinalMessage = true
+                                        showRestorePrompt = true
+                                    }
+                                }
+                            },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Restore",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(1.dp))
+                        if (listItems.isNotEmpty()) {
+                            IconButton(
+                                onClick = { action = Action.Export;showFormatDialog = true },
+                                modifier = Modifier.size(36.dp)
                             ) {
-                                Image(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp, 8.dp),
-                                    painter = painterResource(id = R.drawable.no_data2),
-                                    contentDescription = null
+                                Icon(
+                                    painter = painterResource(id = R.drawable.save),
+                                    contentDescription = "Export",
+                                    modifier = Modifier.size(24.dp),
                                 )
                             }
+                            Spacer(modifier = Modifier.width(1.dp))
                         }
-                        if (filteredItems.isNotEmpty()) {
-                            CustomPaginationControls(
-                                currentPage = currentPage,
-                                totalPages = totalPages,
-                                onPageChange = { newPage ->
-                                    currentPage = newPage
+                        if (listItems.isNotEmpty()) {
+                            IconButton(
+                                onClick = { action = Action.Share;showFormatDialog = true },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(1.dp))
+                        }
+                        IconButton(
+                            onClick = {
+                                if (!isImportDisabled) {
+                                    showImportDialog = true
+                                    isImportDisabled =
+                                        true // Disable the import icon after importing
                                 }
+                            },
+                            modifier = Modifier.size(36.dp),
+                            enabled = !isImportDisabled // Disable the button if import is completed
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icons8_import_file_48),
+                                contentDescription = "Import",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(1.dp))
+                        IconButton(
+                            onClick = { isSearchActive = !isSearchActive },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                                contentDescription = if (isSearchActive) "Close Search" else "Search",
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("addFarm/${siteId}")
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(end = 0.dp, bottom = 48.dp)
+                        .background(MaterialTheme.colorScheme.background)
+                        .align(
+                            BottomEnd
+                        )
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
+                }
+            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    // Search field below the header
+                    if (isSearchActive) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            label = { Text(stringResource(R.string.search)) },
+                            singleLine = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                cursorColor = MaterialTheme.colorScheme.onSurface,
+                            ),
+                        )
+                    }
+
+//                    TabRow(
+//                        selectedTabIndex = pagerState.currentPage,
+//                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+//                        contentColor = MaterialTheme.colorScheme.onSurface,
+//                        indicator = { tabPositions ->
+//                            TabRowDefaults.Indicator(
+//                                Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]).height(3.dp),
+//                                color = MaterialTheme.colorScheme.onPrimary
+//                            )
+//                        },
+//                        divider = {  HorizontalDivider() }
+//                    ) {
+//                        tabs.forEachIndexed { index, title ->
+//                            Tab(
+//                                selected = pagerState.currentPage == index,
+//                                onClick = {
+//                                    coroutineScope.launch {
+//                                        pagerState.animateScrollToPage(index)
+//                                    }
+//                                },
+//                                text = { Text(title) },
+//                            )
+//                        }
+//                    }
+//
+//                    Spacer(modifier = Modifier.height(8.dp))
+//
+//                    if (isLoading.value) {
+//                        LazyColumn {
+//                            items(3) {
+//                                FarmCardSkeleton()
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                            }
+//                        }
+//                    } else {
+//                        val itemsPerPage = 3 // Adjust this value as needed
+//                        var currentPage by remember { mutableStateOf(1) }
+//
+//                        // Filter items based on the selected tab
+//                        val filteredItems = if (selectedTabIndex == 0) {
+//                            listItems
+//                        } else {
+//                            listItems.filter { it.needsUpdate }
+//                        }.filter { farm ->
+//                            farm.farmerName.contains(searchQuery, ignoreCase = true) ||
+//                                    farm.id.toString().contains(searchQuery, ignoreCase = true)
+//                        }
+//
+//                        val totalPages = (filteredItems.size + itemsPerPage - 1) / itemsPerPage
+//                        val paginatedList =
+//                            filteredItems.chunked(itemsPerPage).getOrNull(currentPage - 1)
+//                                ?: emptyList()
+//
+//
+//                        // Show number of selected items if any
+//                        if (selectedIds.isNotEmpty()) {
+//                            Text(
+//                                text = "${selectedIds.size} item(s) selected",
+//                                style = MaterialTheme.typography.bodySmall,
+//                                modifier = Modifier.padding(bottom = 8.dp)
+//                            )
+//                        }
+//
+//                        if (filteredItems.isEmpty()) {
+//                            Box(
+//                                modifier = Modifier
+//                                    .fillMaxSize()
+//                                    .weight(1f),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Text(
+//                                    text = "No results found",
+//                                    style = MaterialTheme.typography.bodyMedium
+//                                )
+//                            }
+//                        } else {
+//                            LazyColumn(
+//                                modifier = Modifier.weight(1f)
+//                            ) {
+//                                items(paginatedList) { farm ->
+//                                    FarmCard(
+//                                        farm = farm,
+//                                        navController = navController,
+//                                        isSelected = selectedIds.contains(farm.id),
+//                                        onCardClick = {
+//                                            navController.currentBackStackEntry?.arguments?.apply {
+//                                                putParcelableArrayList(
+//                                                    "coordinates",
+//                                                    farm.coordinates?.map {
+//                                                        it.first?.let { it1 ->
+//                                                            it.second?.let { it2 ->
+//                                                                ParcelablePair(it1, it2)
+//                                                            }
+//                                                        }
+//                                                    }?.let { ArrayList(it) }
+//                                                )
+//                                                putParcelable(
+//                                                    "farmData",
+//                                                    ParcelableFarmData(farm, "view")
+//                                                )
+//                                            }
+//                                            navController.navigate(route = "setPolygon")
+//                                        },
+//                                        onDeleteClick = {
+//                                            selectedIds.add(farm.id)
+//                                            selectedFarm.value = farm
+//                                            showDeleteDialog.value = true
+//                                        },
+//                                        onToggleSelect = { id ->
+//                                            if (selectedIds.contains(id)) {
+//                                                selectedIds.remove(id)
+//                                            } else {
+//                                                selectedIds.add(id)
+//                                            }
+//                                        }
+//                                    )
+//                                    Spacer(modifier = Modifier.height(16.dp))
+//                                }
+//                            }
+//                        }
+//
+//                        if (listItems.isEmpty()) {
+//                            Box(
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Image(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(16.dp, 8.dp),
+//                                    painter = painterResource(id = R.drawable.no_data2),
+//                                    contentDescription = null
+//                                )
+//                            }
+//                        }
+//                        if (filteredItems.isNotEmpty()) {
+//                            CustomPaginationControls(
+//                                currentPage = currentPage,
+//                                totalPages = totalPages,
+//                                onPageChange = { newPage ->
+//                                    currentPage = newPage
+//                                }
+//                            )
+//                        }
+//                    }
+
+                    showDataContent()
+
                 }
             }
         )
@@ -1474,6 +1403,7 @@ fun FarmList(
         }
     }
 }
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun ImportFileDialog(
@@ -1642,7 +1572,10 @@ fun ImportFileDialog(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
             ) {
-                Text(stringResource(R.string.select_file),color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    stringResource(R.string.select_file),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
         },
         dismissButton = {
@@ -1652,7 +1585,10 @@ fun ImportFileDialog(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-                Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    stringResource(R.string.cancel),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
@@ -1660,36 +1596,6 @@ fun ImportFileDialog(
     )
 }
 
-
-//@Composable
-//fun DeleteAllDialogPresenter(
-//    showDeleteDialog: MutableState<Boolean>,
-//    onProceedFn: () -> Unit,
-//) {
-//    if (showDeleteDialog.value) {
-//        AlertDialog(
-//            modifier = Modifier.padding(horizontal = 32.dp),
-//            onDismissRequest = { showDeleteDialog.value = false },
-//            title = { Text(text = stringResource(id = R.string.delete_this_item)) },
-//            text = {
-//                Column {
-//                    Text(stringResource(id = R.string.are_you_sure))
-//                    Text(stringResource(id = R.string.item_will_be_deleted))
-//                }
-//            },
-//            confirmButton = {
-//                TextButton(onClick = { onProceedFn() }) {
-//                    Text(text = stringResource(id = R.string.yes))
-//                }
-//            },
-//            dismissButton = {
-//                TextButton(onClick = { showDeleteDialog.value = false }) {
-//                    Text(text = stringResource(id = R.string.no))
-//                }
-//            },
-//        )
-//    }
-//}
 
 @Composable
 fun DeleteAllDialogPresenter(
@@ -1771,7 +1677,7 @@ fun FarmListHeader(
     // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
 
-    var isSearchVisible by remember { mutableStateOf(false)}
+    var isSearchVisible by remember { mutableStateOf(false) }
 
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val context = LocalContext.current
@@ -1784,7 +1690,7 @@ fun FarmListHeader(
             .background(MaterialTheme.colorScheme.primary)
             .fillMaxWidth(),
         navigationIcon = {
-            IconButton(onClick = { drawerVisible = ! drawerVisible }) {
+            IconButton(onClick = { drawerVisible = !drawerVisible }) {
                 Icon(Icons.Default.Menu, contentDescription = "Menu")
             }
         },
@@ -1857,15 +1763,6 @@ fun FarmListHeader(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-//                trailingIcon = {
-//                    IconButton(onClick = {
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.Close, contentDescription = "Close")
-//                    }
-//                },
                 singleLine = true,
                 colors =
                 TextFieldDefaults.outlinedTextFieldColors(
@@ -1874,181 +1771,6 @@ fun FarmListHeader(
             )
         }
     }
-//    if (drawerVisible) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(Color(0x99000000))
-//                .clickable { drawerVisible = false },
-//            contentAlignment = Alignment.TopStart
-//        ) {
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxHeight()
-//                    .width(250.dp)
-//                    .background(MaterialTheme.colorScheme.surface)
-//            ) {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxHeight()
-//                        .weight(1f)
-//                        .padding(16.dp)
-//                ) {
-//                    // Header
-//                    Text(
-//                        text = stringResource(id = R.string.menu),
-//                        style = MaterialTheme.typography.headlineSmall,
-//                        modifier = Modifier.padding(bottom = 16.dp)
-//                    )
-//                    Divider()
-//
-//                    // Scrollable Content
-//                    Box(modifier = Modifier.weight(1f)) {
-//                        LazyColumn(
-//                            verticalArrangement = Arrangement.spacedBy(16.dp),
-//                            contentPadding = PaddingValues(bottom = 64.dp)
-//                        ) {
-//                            item {
-//                                DrawerItem(
-//                                    text = stringResource(id = R.string.home),
-//                                    painter = painterResource(R.drawable.home),
-//                                    onClick = {
-//                                        navController.navigate("shopping")
-//                                        //navController.previousBackStackEntry
-//                                        drawerVisible = false
-//                                    }
-//                                )
-//                            }
-//                            item {
-//                                DrawerItem(
-//                                    text = stringResource(id = R.string.collection_site_registration),
-//                                    painter = painterResource(R.drawable.add_collection_site),
-//                                    onClick = {
-//                                        navController.navigate("siteList")
-//                                        drawerVisible = false
-//                                    }
-//                                )
-//                            }
-//                            item {
-//                                DrawerItem(
-//                                    text = stringResource(id = R.string.farmer_registration),
-//                                    painter = painterResource(R.drawable.person_add),
-//                                    onClick = {
-//                                        navController.navigate("siteList")
-//                                        drawerVisible = false
-//                                    }
-//                                )
-//                            }
-//
-//                            item {
-//                                DrawerItem(
-//                                    text = stringResource(id = R.string.akrabi_registration),
-//                                    painter = painterResource(R.drawable.person_add),
-//                                    onClick = {
-//                                        navController.navigate("akrabi_list_screen")
-//                                        drawerVisible = false
-//                                    }
-//                                )
-//                            }
-//
-//                            item {
-//                                Divider()
-//                            }
-//                            item {
-//                                // Dark Mode Toggle
-//                                Row(
-//                                    verticalAlignment = Alignment.CenterVertically,
-//                                    modifier = Modifier.fillMaxWidth()
-//                                ) {
-//                                    Text(
-//                                        text = stringResource(id = R.string.light_dark_theme),
-//                                        style = MaterialTheme.typography.titleMedium
-//                                    )
-//                                    Spacer(modifier = Modifier.weight(1f))
-//                                    Switch(
-//                                        checked = darkMode.value,
-//                                        onCheckedChange = {
-//                                            darkMode.value = it
-//                                            sharedPreferences.edit().putBoolean("dark_mode", it).apply()
-//                                        }
-//                                    )
-//                                }
-//                            }
-//                            item {
-//                                Divider()
-//                            }
-//                            // using checkbox
-//
-//                            item {
-//                                Text(
-//                                    text = stringResource(id = R.string.select_language),
-//                                    style = MaterialTheme.typography.titleMedium,
-//                                    color = MaterialTheme.colorScheme.onBackground
-//                                )
-//                                Box(
-//                                    modifier = Modifier
-//                                        .width(230.dp)
-//                                        .padding(8.dp)
-//                                ) {
-//                                    var expanded by remember { mutableStateOf(false) } // Ensure expanded is inside the Box
-//                                    OutlinedButton(
-//                                        onClick = { expanded = true },
-//                                        modifier = Modifier.fillMaxWidth()
-//                                    ) {
-//                                        Text(text = currentLanguage.displayName, color = MaterialTheme.colorScheme.onBackground)
-//
-//                                        Icon(
-//                                            imageVector = Icons.Default.ArrowDropDown,
-//                                            contentDescription = null,
-//                                            tint = MaterialTheme.colorScheme.onBackground
-//                                        )
-//                                    }
-//                                    DropdownMenu(
-//                                        expanded = expanded,
-//                                        onDismissRequest = { expanded = false },
-//                                        modifier = Modifier
-//                                            .width(230.dp) // Set the width of the DropdownMenu to match the Box
-//                                            .background(MaterialTheme.colorScheme.background) // Set the background color to white for visibility
-//                                    ) {
-//                                        languages.forEach { language ->
-//                                            DropdownMenuItem(
-//                                                text = {
-//                                                    Text(
-//                                                        text = language.displayName,
-//                                                        color = MaterialTheme.colorScheme.onBackground
-//                                                    )
-//                                                },
-//                                                onClick = {
-//                                                    languageViewModel.selectLanguage(language, context)
-//                                                    expanded = false
-//                                                },
-//                                                modifier = Modifier
-//                                                    .background(MaterialTheme.colorScheme.background) // Ensure each menu item has a white background
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                            }
-//
-//                            item {
-//                                // Logout Item
-//                                DrawerItem(
-//                                    text = stringResource(id = R.string.logout),
-//                                    painter = painterResource(R.drawable.logout),
-//                                    onClick = {
-//                                        // Call your logout function here
-//                                        // navigate to login screen or refresh UI
-//                                        navController.navigate("home")
-//                                        drawerVisible = false
-//                                    }
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     CustomDrawer(
         drawerVisible = drawerVisible,
@@ -2066,7 +1788,6 @@ fun FarmListHeader(
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmListHeaderPlots(
@@ -2080,7 +1801,7 @@ fun FarmListHeaderPlots(
     onSearchQueryChanged: (String) -> Unit,
     searchQuery: String, // Pass the search query as a parameter
     isSearchVisible: Boolean, // Control search visibility from outside
-    onSearchVisibilityChanged: (Boolean) -> Unit ,// Add this
+    onSearchVisibilityChanged: (Boolean) -> Unit,// Add this
     onBuyThroughAkrabiClicked: () -> Unit, // Added this
     showAdd: Boolean,
     showExport: Boolean,
@@ -2117,7 +1838,11 @@ fun FarmListHeaderPlots(
             }
             if (showShare) {
                 IconButton(onClick = onShareClicked, modifier = Modifier.size(24.dp)) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
                 Spacer(modifier = Modifier.width(2.dp))
             }
@@ -2151,7 +1876,8 @@ fun FarmListHeaderPlots(
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
-                    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+                    val sharedPref =
+                        context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
                     if (sharedPref.contains("plot_size")) {
                         sharedPref.edit().remove("plot_size").apply()
                     }
@@ -2161,7 +1887,11 @@ fun FarmListHeaderPlots(
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
                 }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
                 Spacer(modifier = Modifier.width(2.dp))
             }
@@ -2170,7 +1900,11 @@ fun FarmListHeaderPlots(
 //                    isSearchVisible = !isSearchVisible
                     onSearchVisibilityChanged(!isSearchVisible)
                 }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         },
@@ -2280,8 +2014,8 @@ fun FarmCard(
             ) {
 
                 Checkbox(
-                    checked= isSelected,
-                    onCheckedChange = { onToggleSelect(farm.id)}
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelect(farm.id) }
                 )
 
                 // Farm Name and Village (Left Side)
@@ -2298,7 +2032,11 @@ fun FarmCard(
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${stringResource(id = R.string.ha)}",
+                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
+                            stringResource(
+                                id = R.string.ha
+                            )
+                        }",
                         style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
                     )
                     Text(
@@ -2473,9 +2211,6 @@ fun FarmCardSkeleton(
 }
 
 
-
-
-
 fun OutputStream.writeCsv(farms: List<Farm>) {
     val writer = bufferedWriter()
     writer.write(""""Farmer Name", "Village", "District"""")
@@ -2551,6 +2286,7 @@ fun UpdateFarmForm(
         latitude = "0.0", // Default latitude
         longitude = "0.0", // Default longitude
         coordinates = null,
+        accuracyArray = null,
         age = 0,  // Default age
         gender = "",  // Default gender
         govtIdNumber = "",  // Default government ID number
@@ -2632,7 +2368,11 @@ fun UpdateFarmForm(
             dismissButton = {
                 Button(onClick = {
                     showLocationDialog.value = false
-                    Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        R.string.location_permission_denied_message,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }) {
                     Text(stringResource(id = R.string.cancel))
                 }
@@ -2702,10 +2442,11 @@ fun UpdateFarmForm(
             item.gender = gender
             item.govtIdNumber = govtIdNumber
             item.phone = phone
-            item.numberOfTrees = numberOfTrees.toIntOrNull()?: 0
+            item.numberOfTrees = numberOfTrees.toIntOrNull() ?: 0
             item.photo = "" // Default photo
             item.longitude = longitude
-            if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
+            if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }
+                    ?: 0f) >= 4) {
                 if ((coordinates?.size ?: 0) < 3) {
                     Toast
                         .makeText(
@@ -2715,9 +2456,15 @@ fun UpdateFarmForm(
                         ).show()
                     return
                 }
-                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+                item.coordinates =
+                    coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
             } else {
-                item.coordinates = listOf(Pair(item.longitude.toDoubleOrNull() ?: 0.0, item.latitude.toDoubleOrNull() ?: 0.0)) // Example default value
+                item.coordinates = listOf(
+                    Pair(
+                        item.longitude.toDoubleOrNull() ?: 0.0,
+                        item.latitude.toDoubleOrNull() ?: 0.0
+                    )
+                ) // Example default value
             }
             item.size = convertSize(size.toDouble(), selectedUnit).toFloat()
             item.purchases = 0.toFloat()
@@ -2870,7 +2617,7 @@ fun UpdateFarmForm(
                         .padding(paddingValues)
                         .fillMaxSize()
                         .padding(8.dp)
-                        .verticalScroll(state= rememberScrollState())
+                        .verticalScroll(state = rememberScrollState())
                 ) {
 
                     OutlinedTextField(
@@ -3324,8 +3071,10 @@ fun UpdateFarmForm(
                         horizontalArrangement = Arrangement.Center // Ensures buttons are spaced evenly
                     ) {
 
-                        Button(onClick = { navController.popBackStack()},
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                        Button(
+                            onClick = { navController.popBackStack() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        ) {
                             Text(text = stringResource(id = R.string.cancel), color = Color.White)
                         }
                         Spacer(modifier = Modifier.width(8.dp)) // Adds some space between the buttons
@@ -3341,7 +3090,6 @@ fun UpdateFarmForm(
                             Text(text = stringResource(id = R.string.update_farm))
                         }
                     }
-
 
 
                 }

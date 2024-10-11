@@ -152,7 +152,6 @@ class PickImageContract : ActivityResultContract<Void?, Uri?>() {
 @Composable
 fun PhotoPicker(
     photoUri: Uri?,
-    //onPhotoSelected: (Uri) -> Unit,
     onPickPhotoClick: () -> Unit,
     onRemovePhotoClick: () -> Unit
 ) {
@@ -671,6 +670,8 @@ fun BoughtItemsList(
                 // Floating Action Button (FAB)
                 FloatingActionButton(
                     onClick = { navController.navigate("buy_through_akrabi/add") },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 0.dp, bottom = 72.dp)
@@ -1325,6 +1326,8 @@ fun BoughtItemsListDirectBuy(
                     onClick = {
                         navController.navigate("direct_buy/add")
                     },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 0.dp, bottom = 72.dp)

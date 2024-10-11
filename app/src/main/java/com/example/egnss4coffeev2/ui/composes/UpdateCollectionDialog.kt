@@ -6,7 +6,12 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -23,9 +28,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.CollectionSite
@@ -46,20 +54,21 @@ fun validateForm(
     district: String,
 ): Boolean {
     var isValid = true // Reset isValid to true before starting validation
+    val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
 
-    if (name.isBlank()) {
+    if (name.isBlank() || !name.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
-    if (agentName.isBlank()) {
+    if (agentName.isBlank() || !agentName.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
-    if (village.isBlank()) {
+    if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
-    if (district.isBlank()) {
+    if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
@@ -91,6 +100,14 @@ fun UpdateCollectionDialog(
     var isValid by remember { mutableStateOf(true) }
     var showConfirmDialog by remember { mutableStateOf(false) }
 
+    // FocusRequester for each TextField
+    val nameFocusRequester = remember { FocusRequester() }
+    val agentNameFocusRequester = remember { FocusRequester() }
+    val phoneNumberFocusRequester = remember { FocusRequester() }
+    val emailFocusRequester = remember { FocusRequester() }
+    val villageFocusRequester = remember { FocusRequester() }
+    val districtFocusRequester = remember { FocusRequester() }
+
     if (showDialog.value) {
         AlertDialog(
            // modifier = Modifier.padding(horizontal = 10.dp).background(MaterialTheme.colorScheme.background),
@@ -99,6 +116,9 @@ fun UpdateCollectionDialog(
             text = {
                 Column(
                    // modifier = Modifier.padding(horizontal = 10.dp).background(MaterialTheme.colorScheme.background)
+                    modifier = Modifier
+                        .fillMaxHeight(0.75f) // Set max height to limit size
+                        .verticalScroll(rememberScrollState())
                 )
                 {
                     Text(stringResource(id = R.string.confirm_update_site))
@@ -112,6 +132,11 @@ fun UpdateCollectionDialog(
                         TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onNext = { agentNameFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(nameFocusRequester)
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -123,6 +148,11 @@ fun UpdateCollectionDialog(
                         TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onNext = { phoneNumberFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(agentNameFocusRequester)
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -137,6 +167,11 @@ fun UpdateCollectionDialog(
                         TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onNext = { emailFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(phoneNumberFocusRequester)
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -151,6 +186,11 @@ fun UpdateCollectionDialog(
                         TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onNext = { villageFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(emailFocusRequester)
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -162,6 +202,11 @@ fun UpdateCollectionDialog(
                         TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onNext = { districtFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(villageFocusRequester)
                     )
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OutlinedTextField(
@@ -173,6 +218,8 @@ fun UpdateCollectionDialog(
                         TextFieldDefaults.textFieldColors(
                             errorLeadingIconColor = Color.Red,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        modifier = Modifier.focusRequester(districtFocusRequester)
                     )
                 }
             },
@@ -223,6 +270,8 @@ fun UpdateCollectionDialog(
                     Text(text = stringResource(id = R.string.no),color = MaterialTheme.colorScheme.onBackground)
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 6.dp
         )
     }
 }

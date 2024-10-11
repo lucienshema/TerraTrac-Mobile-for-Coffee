@@ -4,7 +4,9 @@ package com.example.egnss4coffeev2.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ContentValues.TAG
 import android.content.Intent
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -22,13 +24,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -63,29 +69,7 @@ import org.joda.time.Instant
 fun AddSite(navController: NavController, languageViewModel: LanguageViewModel,
             darkMode: MutableState<Boolean>,
             languages: List<Language>) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp)
-//    ) {
-//        FarmListHeader(
-//            title = stringResource(id = R.string.add_site),
-//            onSearchQueryChanged = {},
-//            onAddFarmClicked = { /* Handle adding a farm here */ },
-//            onBackSearchClicked = {},
-//            onBackClicked = { navController.popBackStack() },
-//            showAdd = false,
-//            showSearch = false,
-//            selectedItemsCount = 0,
-//            selectAllEnabled = false,
-//            isAllSelected =false,
-//            onSelectAllChanged = { null},
-//            darkMode = darkMode,
-//            languages = languages,
-//            languageViewModel = languageViewModel,
-//            navController = navController
-//        )
-    // Composable content
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
@@ -126,6 +110,9 @@ fun SiteForm(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var village by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
+
+    var showDisclaimerPhone by remember { mutableStateOf(false) }
+    var showDisclaimerEmail by remember { mutableStateOf(false) }
 
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -281,6 +268,15 @@ fun SiteForm(navController: NavController) {
                 unfocusedBorderColor = inputBorder,
                 errorBorderColor = Color.Red
             ),
+            trailingIcon = {
+                IconButton(onClick = { showDisclaimerPhone = !showDisclaimerPhone }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.phone_info),
+                        tint = inputLabelColor
+                    )
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 4.dp)
@@ -291,7 +287,21 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-//        Spacer(modifier = Modifier.height(8.dp))
+        if (showDisclaimerPhone) {
+            AlertDialog(
+                onDismissRequest = { showDisclaimerPhone = false },
+                title = {Text(stringResource(id=R.string.phone_number)) },
+                text = { Text(stringResource(id=R.string.phone_info), color = MaterialTheme.colorScheme.onBackground) },
+                confirmButton = {
+                    TextButton(onClick = { showDisclaimerPhone = false }) {
+                        Text(stringResource(id=R.string.ok))
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+                tonalElevation = 6.dp
+            )
+
+        }
         OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
@@ -323,6 +333,15 @@ fun SiteForm(navController: NavController) {
                 unfocusedBorderColor = inputBorder,
                 errorBorderColor = Color.Red
             ),
+            trailingIcon = {
+                IconButton(onClick = { showDisclaimerEmail = !showDisclaimerEmail }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.email_info),
+                        tint = inputLabelColor
+                    )
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 4.dp)
@@ -333,7 +352,20 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-//        Spacer(modifier = Modifier.height(8.dp))
+        if (showDisclaimerEmail) {
+            AlertDialog(
+                onDismissRequest = { showDisclaimerEmail = false },
+                title = {Text(stringResource(id=R.string.email)) },
+                text = { Text(stringResource(id=R.string.email_info),color = MaterialTheme.colorScheme.onBackground) },
+                confirmButton = {
+                    TextButton(onClick = { showDisclaimerEmail = false }) {
+                        Text(stringResource(id=R.string.ok))
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+                tonalElevation = 6.dp
+            )
+        }
         OutlinedTextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -346,7 +378,7 @@ fun SiteForm(navController: NavController) {
             supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White, // Set the container (background) color
+                containerColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -364,7 +396,6 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-//        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             singleLine = true,
             value = district,
@@ -385,7 +416,6 @@ fun SiteForm(navController: NavController) {
                 .fillMaxWidth()
                 .padding(bottom = 4.dp)
         )
-//        Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
                 if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
@@ -400,7 +430,6 @@ fun SiteForm(navController: NavController) {
                     )
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
-                    // context.finish()  // Uncomment if you want to finish the activity
                     navController.navigate("siteList")
                     // Show toast indicating success
                     Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT).show()
@@ -436,6 +465,10 @@ fun addSite(
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addSite(site)
+    farmViewModel.addSite(site){isAdded->
+        if (isAdded) {
+            Log.d(TAG, " site added")
+        }
+    }
     return site
 }

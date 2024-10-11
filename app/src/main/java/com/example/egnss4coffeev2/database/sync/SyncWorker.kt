@@ -1,7 +1,6 @@
 
 package com.example.egnss4coffeev2.database.sync
 
-
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,11 +19,11 @@ import androidx.work.WorkerParameters
 import com.example.egnss4coffeev2.R
 import com.example.egnss4coffeev2.database.AppDatabase
 import com.example.egnss4coffeev2.database.remote.ApiService
-import com.example.egnss4coffeev2.database.toDtoList
 import kotlinx.coroutines.DelicateCoroutinesApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.egnss4coffeev2.BuildConfig
+import com.example.egnss4coffeev2.database.toDeviceFarmDtoList
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -46,7 +45,6 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         if (checkNotificationPermission()) {
             // sendSyncNotification()
-            //showSyncNotification()
         } else {
             Log.d(TAG, "Notification permission not granted.")
             // Handle the case where notification permission is not granted
@@ -77,22 +75,24 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         try {
             val deviceId = DeviceIdUtil.getDeviceId(applicationContext)
-            val farmDtos = unsyncedFarms.toDtoList(deviceId, farmDao)
+            val farmDtos = unsyncedFarms.toDeviceFarmDtoList(deviceId, farmDao)
 
             Log.d("YourTag", "Device ID: $deviceId")
 
             // Log the payload
             Log.d(TAG, "Payload to send: ${farmDtos.joinToString(separator = "\n") { it.toString() }}")
 
-            Log.d(TAG, "Syncing Farms: ${farmDtos.size}")
+            Log.d(TAG, "Farms before sync: ${unsyncedFarms.map { it.synced }}")
+
+
+            // Log.d(TAG, "Syncing Farms: ${farmDtos.size}")
 
             val response = api.syncFarms(farmDtos)
-            Log.d(TAG, "Response: $response")
+            // Log.d(TAG, "Response: $response")
 
             if (response.isSuccessful) {
-                // showSyncNotification()
                 unsyncedFarms.forEach { farm ->
-                    farmDao.updateFarmSyncStatus(farm.copy(synced = true))
+                    farmDao.updateFarmSyncStatus(farm.remoteId, true)
                 }
                 if(totalItems > 0) {
                     Log.d(TAG, "Farms synced successfully.")
@@ -103,26 +103,27 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
                 createSyncFailedNotification() // Notify sync failure
                 return Result.failure() // Return failure result
             }
+            Log.d(TAG, "Farms After sync: ${unsyncedFarms.map { it.synced }}")
         } catch (e: Exception) {
             Log.e(TAG, "Error syncing farms: ${e.message}", e)
             createSyncFailedNotification() // Notify sync failure
             return Result.retry() // Retry if an exception occurred
         }
 
-        Log.d(TAG, "SyncWorker completed successfully.")
+        // Log.d(TAG, "SyncWorker completed successfully.")
         return Result.success()
     }
 
     private fun createSyncFailedNotification() {
         if (!checkNotificationPermission()) {
-            Log.d(TAG, "Notification permission not granted.")
+// Log.d(TAG, "Notification permission not granted.")
             return
         }
 
         val builder = NotificationCompat.Builder(applicationContext, "SYNC_CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_sync_failed)
-            .setContentTitle("Sync Failed")
-            .setContentText("Failed to synchronize Farms Data with the server.")
+            .setContentTitle(applicationContext.getString(R.string.sync_failed))
+            .setContentText(applicationContext.getString(R.string.syncronization_failed))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         with(NotificationManagerCompat.from(applicationContext)) {
@@ -242,8 +243,8 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         val builder = NotificationCompat.Builder(applicationContext, "SYNC_CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_sync_complete)
-            .setContentTitle("Sync Complete")
-            .setContentText("Farms have been successfully synchronized with the server.")
+            .setContentTitle(applicationContext.getString(R.string.sync_complete))
+            .setContentText(applicationContext.getString(R.string.successfully_syncronized))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         if (checkNotificationPermission()) {

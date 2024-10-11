@@ -200,7 +200,7 @@ class MainActivity : ComponentActivity() {
                                 Home(navController, languageViewModel, languages)
                             }
                             composable("siteList") {
-                                //ScreenWithSidebar(navController) {
+                                // ScreenWithSidebar(navController) {
                                     CollectionSiteList(navController,languageViewModel = languageViewModel,
                                         darkMode = darkMode,
                                         languages = languages)
@@ -215,7 +215,7 @@ class MainActivity : ComponentActivity() {
                                         darkMode = darkMode,
                                         languages = languages
                                     )
-                                  //  }
+                                // }
                                 }
                             }
                             composable("addFarm/{siteId}") { backStackEntry ->
@@ -467,13 +467,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-//    private fun startSyncService() {
-//        val serviceIntent = Intent(this, SyncService::class.java)
-//        ContextCompat.startForegroundService(this, serviceIntent)
-//    }
-
-
-
 
 }
 

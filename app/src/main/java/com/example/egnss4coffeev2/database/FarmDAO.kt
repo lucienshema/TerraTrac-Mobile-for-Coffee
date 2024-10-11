@@ -23,6 +23,14 @@ interface FarmDAO {
     fun getAllSync(siteId: Long): List<Farm>
 
     @Transaction
+    @Query("SELECT * FROM Farms ORDER BY createdAt DESC")
+    fun getAllFarms(): List<Farm>
+
+    @Transaction
+    @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
+    fun getAllSites(): List<CollectionSite>
+
+    @Transaction
     @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
     fun getSites(): LiveData<List<CollectionSite>>
 
@@ -38,7 +46,7 @@ interface FarmDAO {
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertSite(site: CollectionSite)
+    fun insertSite(site: CollectionSite) : Long
 
     @Update
     fun updateSite(site: CollectionSite)
@@ -70,8 +78,9 @@ interface FarmDAO {
     @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId LIMIT 1")
     fun getCollectionSiteById(siteId: Long): CollectionSite?
 
-    @Update
-    suspend fun updateFarmSyncStatus(farm: Farm)
+
+    @Query("UPDATE farms SET synced = :synced WHERE remote_id = :remoteId")
+    suspend fun updateFarmSyncStatus(remoteId: UUID, synced: Boolean)
 
     @Query("UPDATE Farms SET scheduledForSync=1 WHERE id IN (:ids)")
     fun updateSyncListStatus(ids: List<Long>)
@@ -158,6 +167,9 @@ interface FarmDAO {
 
     @Query("SELECT * FROM CollectionSites LIMIT :limit OFFSET :offset")
     fun getCollectionSites(offset: Int, limit: Int): List<CollectionSite>
+
+    @Query("SELECT * FROM CollectionSites WHERE siteId = :localCsId OR (name = :siteName AND village = :village AND district = :district) LIMIT 1")
+    suspend fun getSiteByDetails(localCsId: Long, siteName: String, village: String, district: String): CollectionSite?
 
 
 }
