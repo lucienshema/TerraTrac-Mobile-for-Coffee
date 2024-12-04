@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.ui.screens.collectionsites
+package org.technoserve.cafetrac.ui.screens.collectionsites
 
 import android.content.ContentValues.TAG
 import android.util.Log

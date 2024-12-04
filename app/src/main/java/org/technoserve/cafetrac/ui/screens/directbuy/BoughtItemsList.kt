@@ -63,7 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 import com.example.cafetrac.database.models.BuyThroughAkrabi
-import com.example.cafetrac.ui.screens.farms.Action
+import org.technoserve.cafetrac.ui.screens.farms.Action
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import com.example.cafetrac.database.models.Language
 

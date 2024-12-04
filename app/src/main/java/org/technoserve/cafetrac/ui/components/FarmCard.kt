@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.cafetrac.database.models.Farm
-import com.example.cafetrac.ui.screens.farms.formatInput
+import org.technoserve.cafetrac.ui.screens.farms.formatInput
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 
 

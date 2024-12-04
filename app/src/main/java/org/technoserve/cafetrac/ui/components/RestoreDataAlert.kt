@@ -1,4 +1,4 @@
-package com.example.cafetrac.ui.components
+package org.technoserve.cafetrac.ui.components
 
 
 /**

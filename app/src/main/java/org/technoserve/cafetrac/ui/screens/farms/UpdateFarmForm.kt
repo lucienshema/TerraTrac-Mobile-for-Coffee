@@ -65,8 +65,8 @@ import com.example.cafetrac.database.models.ParcelablePair
 import org.technoserve.cafetrac.ui.components.CustomDrawer
 import org.technoserve.cafetrac.ui.components.GenderDropdown
 import org.technoserve.cafetrac.ui.components.isSystemInDarkTheme
-import com.example.cafetrac.utils.convertSize
-import com.example.cafetrac.utils.hasLocationPermission
+import org.technoserve.cafetrac.utils.convertSize
+import org.technoserve.cafetrac.utils.hasLocationPermission
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetrac.viewmodels.FarmViewModelFactory
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel
@@ -75,6 +75,13 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import org.joda.time.Instant
+import org.technoserve.cafetrac.ui.screens.farms.LocationPermissionRequest
+import org.technoserve.cafetrac.ui.screens.farms.createImageFile
+import org.technoserve.cafetrac.ui.screens.farms.isLocationEnabled
+import org.technoserve.cafetrac.ui.screens.farms.promptEnableLocation
+import org.technoserve.cafetrac.ui.screens.farms.siteID
+import org.technoserve.cafetrac.ui.screens.farms.truncateToDecimalPlaces
+import org.technoserve.cafetrac.ui.screens.farms.updateFarm
 import java.util.Objects
 import java.util.regex.Pattern
 

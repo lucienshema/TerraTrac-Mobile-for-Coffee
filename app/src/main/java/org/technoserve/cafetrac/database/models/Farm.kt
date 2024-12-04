@@ -342,20 +342,40 @@ data class DirectBuy(
 
 @Entity(tableName = "Akrabis")
 data class Akrabi(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
-    @ColumnInfo(name = "akrabiNumber") val akrabiNumber: String,
-    @ColumnInfo(name = "akrabiName") val akrabiName: String,
-    @ColumnInfo(name = "siteName") val siteName: String,
-    @ColumnInfo(name = "age") val age: Int = 0, // Added age field
-    @ColumnInfo(name = "gender") val gender: String = "", // Added gender field
-    @ColumnInfo(name = "woreda") val woreda: String = "", // Added Woreda field
-    @ColumnInfo(name = "kebele") val kebele: String = "", // Added Kebele field
-    @ColumnInfo(name = "govtIdNumber") val govtIdNumber: String = "", // Added Govt ID number field
-    @ColumnInfo(name = "phone") val phone: String = "", // Added phone field
-    @ColumnInfo(name = "photoUri") val photoUri: String ?
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
+    @ColumnInfo(name = "akrabiNumber")
+    val akrabiNumber: String,
+    @ColumnInfo(name = "akrabiName")
+    val akrabiName: String,
+    @ColumnInfo(name = "siteName")
+    val siteName: String,
+    @ColumnInfo(name = "age")
+    val age: Int = 0,
+    @ColumnInfo(name = "gender")
+    val gender: String = "",
+    @ColumnInfo(name = "woreda")
+    val woreda: String = "",
+    @ColumnInfo(name = "kebele")
+    val kebele: String = "",
+    @ColumnInfo(name = "govtIdNumber")
+    val govtIdNumber: String = "",
+    @ColumnInfo(name = "phone")
+    val phone: String = "",
+    @ColumnInfo(name = "photoUri")
+    val photoUri: String?
 )
 
-
-
+//@PrimaryKey(autoGenerate = true) val id: Long = 0L,
+//@ColumnInfo(name = "akrabiNumber") val akrabiNumber: String,
+//@ColumnInfo(name = "akrabiName") val akrabiName: String,
+//@ColumnInfo(name = "siteName") val siteName: String,
+//@ColumnInfo(name = "age") val age: Int = 0, // Added age field
+//@ColumnInfo(name = "gender") val gender: String = "", // Added gender field
+//@ColumnInfo(name = "woreda") val woreda: String = "", // Added Woreda field
+//@ColumnInfo(name = "kebele") val kebele: String = "", // Added Kebele field
+//@ColumnInfo(name = "govtIdNumber") val govtIdNumber: String = "", // Added Govt ID number field
+//@ColumnInfo(name = "phone") val phone: String = "", // Added phone field
+//@ColumnInfo(name = "photoUri") val photoUri: String ?
 
 

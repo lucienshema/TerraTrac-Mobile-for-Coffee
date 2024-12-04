@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.cafetrac.database.models.Farm
-import com.example.cafetrac.ui.screens.farms.Action
+import org.technoserve.cafetrac.ui.screens.farms.Action
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 
 

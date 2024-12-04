@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.ui.composes
+package org.technoserve.cafetrac.ui.composes
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.utils
+package org.technoserve.cafetrac.utils
 
 import android.annotation.SuppressLint
 import android.content.Context

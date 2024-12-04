@@ -16,13 +16,13 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.cafetrac.database.AppDatabase
+import org.technoserve.cafetrac.database.AppDatabase
 import com.example.cafetrac.database.sync.remote.ApiService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.cafetrac.database.models.toDeviceFarmDtoList
-import com.example.cafetrac.utils.DeviceIdUtil
+import org.technoserve.cafetrac.utils.DeviceIdUtil
 import okhttp3.OkHttpClient
 import org.technoserve.cafetraorg.technoserve.cafetrac.BuildConfig
 import org.technoserve.cafetraorg.technoserve.cafetrac.R

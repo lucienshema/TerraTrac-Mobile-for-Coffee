@@ -1,8 +1,6 @@
 package org.technoserve.cafetrac
 
 
-
-import BottomNavBar
 import android.Manifest
 import android.app.Activity
 import android.app.Application
@@ -45,29 +43,31 @@ import org.technoserve.cafetrac.viewmodels.FarmViewModelFactory
 import com.example.cafetrac.database.helpers.PreferencesManager
 import org.technoserve.cafetrac.ui.components.currentRoute
 import org.technoserve.cafetrac.viewmodels.MapViewModel
-import com.example.cafetrac.ui.screens.farms.AddFarm
-import com.example.cafetrac.ui.screens.collectionsites.AddSite
+import org.technoserve.cafetrac.ui.screens.farms.AddFarm
+import org.technoserve.cafetrac.ui.screens.collectionsites.AddSite
 import org.technoserve.cafetrac.ui.screens.akrabis.AkrabiDetailScreen
 import org.technoserve.cafetrac.ui.screens.akrabis.AkrabiListScreenScreen
-import com.example.cafetrac.ui.screens.directbuy.BoughtItemDetailScreen
+import org.technoserve.cafetrac.ui.screens.directbuy.BoughtItemDetailScreen
 import com.example.cafetrac.ui.screens.directbuy.BoughtItemsList
 import org.technoserve.cafetrac.ui.screens.directbuy.BoughtItemsListDirectBuy
 import com.example.cafetrac.ui.screens.akrabis.BuyThroughAkrabiForm
 import com.example.cafetrac.ui.screens.collectionsites.CollectionSiteList
-import com.example.cafetrac.ui.screens.akrabis.CreateAkrabiFormScreen
-import com.example.cafetrac.ui.screens.directbuy.DirectBuyDetailScreen
-import com.example.cafetrac.ui.screens.akrabis.EditAkrabiScreen
-import com.example.cafetrac.ui.screens.akrabis.EditBuyThroughAkrabiForm
-import com.example.cafetrac.ui.screens.directbuy.DirectBuyForm
-import com.example.cafetrac.ui.screens.directbuy.EditDirectBuyForm
-import com.example.cafetrac.ui.screens.farms.FarmList
-import com.example.cafetrac.ui.screens.home.Home
-import com.example.cafetrac.ui.screens.privacy.PrivacyPolicyScreen
+import org.technoserve.cafetrac.ui.screens.akrabis.CreateAkrabiFormScreen
+import org.technoserve.cafetrac.ui.screens.directbuy.DirectBuyDetailScreen
+import org.technoserve.cafetrac.ui.screens.akrabis.EditAkrabiScreen
+import org.technoserve.cafetrac.ui.screens.akrabis.EditBuyThroughAkrabiForm
+import org.technoserve.cafetrac.ui.screens.directbuy.DirectBuyForm
+import org.technoserve.cafetrac.ui.screens.directbuy.EditDirectBuyForm
+import org.technoserve.cafetrac.ui.screens.farms.FarmList
+import org.technoserve.cafetrac.ui.screens.home.Home
+import org.technoserve.cafetrac.ui.screens.privacy.PrivacyPolicyScreen
 import org.technoserve.cafetrac.ui.screens.map.SetPolygon
-import com.example.cafetrac.ui.screens.settings.SettingsScreen
+import org.technoserve.cafetrac.ui.screens.settings.SettingsScreen
 import com.example.cafetrac.ui.screens.farms.UpdateFarmForm
-import com.example.cafetrac.ui.screens.shopping.ShoppingScreen
+import org.technoserve.cafetrac.ui.screens.shopping.ShoppingScreen
 import kotlinx.coroutines.delay
+import org.technoserve.cafetrac.ui.screens.bottomnavbar.BottomNavBar
+import org.technoserve.cafetrac.ui.screens.bottomnavbar.BottomNavItem
 import org.technoserve.cafetrac.ui.theme.FarmCollectorThemeV2
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel
 import org.technoserve.cafetrac.viewmodels.LanguageViewModelFactory

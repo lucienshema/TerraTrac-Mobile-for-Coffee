@@ -68,8 +68,8 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetrac.viewmodels.FarmViewModelFactory
-import com.example.cafetrac.ui.screens.farms.Action
-import com.example.cafetrac.ui.screens.farms.siteID
+import org.technoserve.cafetrac.ui.screens.farms.Action
+import org.technoserve.cafetrac.ui.screens.farms.siteID
 import com.example.cafetrac.database.models.Language
 import org.technoserve.cafetrac.ui.components.ConfirmationDialog
 import org.technoserve.cafetrac.ui.components.CustomDrawer

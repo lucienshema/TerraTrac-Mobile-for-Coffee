@@ -1,4 +1,4 @@
-package com.example.cafetrac.ui.screens.farms
+package org.technoserve.cafetrac.ui.screens.farms
 
 import android.app.Activity
 import android.app.Application
@@ -88,10 +88,8 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment.Companion.BottomEnd
-
 import com.example.cafetrac.ui.screens.collectionsites.BottomActionBar
-
-import com.example.cafetrac.utils.DeviceIdUtil
+import org.technoserve.cafetrac.utils.DeviceIdUtil
 import com.example.cafetrac.database.models.Language
 import com.example.cafetrac.database.models.ParcelableFarmData
 import com.example.cafetrac.database.models.ParcelablePair

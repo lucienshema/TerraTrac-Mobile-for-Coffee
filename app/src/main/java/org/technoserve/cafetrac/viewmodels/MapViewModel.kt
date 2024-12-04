@@ -15,7 +15,7 @@ import com.example.cafetrac.database.helpers.map.ZoneClusterManager
 import org.technoserve.cafetrac.utils.map.calculateCameraViewPoints
 import org.technoserve.cafetrac.utils.map.getCenterOfPolygon
 import com.example.cafetrac.utils.GeoCalculator
-import com.example.cafetrac.utils.convertSize
+import org.technoserve.cafetrac.utils.convertSize
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng

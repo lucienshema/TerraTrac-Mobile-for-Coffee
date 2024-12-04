@@ -60,7 +60,7 @@ import androidx.navigation.NavController
 
 import com.example.cafetrac.database.models.Akrabi
 
-import com.example.cafetrac.ui.screens.farms.siteID
+import org.technoserve.cafetrac.ui.screens.farms.siteID
 import org.technoserve.cafetrac.ui.components.DatePickerDialog
 import org.technoserve.cafetrac.ui.components.ImagePicker
 import org.technoserve.cafetrac.ui.components.ImportFileDialog

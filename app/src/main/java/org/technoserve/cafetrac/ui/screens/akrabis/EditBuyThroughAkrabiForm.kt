@@ -1,4 +1,4 @@
-package com.example.cafetrac.ui.screens.akrabis
+package org.technoserve.cafetrac.ui.screens.akrabis
 
 import android.net.Uri
 import android.os.Build

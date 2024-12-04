@@ -46,7 +46,6 @@ import androidx.navigation.NavController
 
 import com.example.cafetrac.database.models.Akrabi
 import com.example.cafetrac.database.models.Language
-import com.example.cafetrac.ui.screens.akrabis.AkrabiListScreen
 import org.technoserve.cafetrac.ui.components.CustomDrawer
 import org.technoserve.cafetrac.viewmodels.AkrabiViewModel
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel

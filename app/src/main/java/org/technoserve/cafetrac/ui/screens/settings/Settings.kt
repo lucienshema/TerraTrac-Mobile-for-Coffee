@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.ui.screens.settings
+package org.technoserve.cafetrac.ui.screens.settings
 
 import android.content.Context
 import androidx.compose.foundation.background

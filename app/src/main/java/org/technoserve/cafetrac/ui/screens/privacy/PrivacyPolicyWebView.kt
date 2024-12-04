@@ -1,4 +1,4 @@
-package com.example.cafetrac.ui.screens.privacy
+package org.technoserve.cafetrac.ui.screens.privacy
 
 import android.webkit.WebView
 import android.webkit.WebViewClient

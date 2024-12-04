@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.ui.screens.farms
+package org.technoserve.cafetrac.ui.screens.farms
 
 import android.Manifest
 import android.annotation.SuppressLint

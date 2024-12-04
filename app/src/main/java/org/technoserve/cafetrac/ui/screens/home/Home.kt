@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.ui.screens.home
+package org.technoserve.cafetrac.ui.screens.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,7 +40,7 @@ import org.technoserve.cafetrac.ui.theme.Teal
 import org.technoserve.cafetrac.ui.theme.Turquoise
 import org.technoserve.cafetrac.ui.theme.White
 import com.example.cafetrac.database.models.Language
-import com.example.cafetrac.ui.screens.settings.LanguageSelector
+import org.technoserve.cafetrac.ui.screens.settings.LanguageSelector
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel
 import java.util.Locale
 

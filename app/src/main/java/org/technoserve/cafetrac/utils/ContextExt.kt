@@ -1,4 +1,4 @@
-package com.example.cafetrac.utils
+package org.technoserve.cafetrac.utils
 
 
 import android.Manifest

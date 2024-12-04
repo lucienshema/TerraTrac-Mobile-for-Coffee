@@ -1,4 +1,4 @@
-package com.example.cafetrac.ui.screens.settings
+package org.technoserve.cafetrac.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

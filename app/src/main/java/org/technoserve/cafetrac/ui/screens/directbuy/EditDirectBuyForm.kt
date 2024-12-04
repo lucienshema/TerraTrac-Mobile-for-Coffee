@@ -1,4 +1,4 @@
-package com.example.cafetrac.ui.screens.directbuy
+package org.technoserve.cafetrac.ui.screens.directbuy
 
 import android.net.Uri
 import android.os.Build

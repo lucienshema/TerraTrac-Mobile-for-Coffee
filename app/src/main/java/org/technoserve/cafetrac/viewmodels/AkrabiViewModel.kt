@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.cafetrac.database.AppDatabase
+import org.technoserve.cafetrac.database.AppDatabase
 import com.example.cafetrac.database.dao.AkrabiDao
 import com.example.cafetrac.database.models.Akrabi
 import kotlinx.coroutines.launch

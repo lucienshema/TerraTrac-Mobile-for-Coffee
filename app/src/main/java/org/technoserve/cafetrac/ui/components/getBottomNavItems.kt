@@ -3,6 +3,7 @@ package org.technoserve.cafetrac.ui.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.example.cafetrac.database.models.BottomNavItemWithLabel
+import org.technoserve.cafetrac.ui.screens.bottomnavbar.BottomNavItem
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 
 @Composable

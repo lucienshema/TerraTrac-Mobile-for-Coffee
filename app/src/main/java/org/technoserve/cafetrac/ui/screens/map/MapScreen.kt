@@ -1,5 +1,5 @@
 
-package com.example.cafetrac.ui.screens.map
+package org.technoserve.cafetrac.ui.screens.map
 
 import android.annotation.SuppressLint
 import android.content.Context

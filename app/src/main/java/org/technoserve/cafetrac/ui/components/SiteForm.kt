@@ -46,8 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
-import com.example.cafetrac.ui.screens.collectionsites.addSite
-import org.technoserve.cafetrac.ui.components.isSystemInDarkTheme
+import org.technoserve.cafetrac.ui.screens.collectionsites.addSite
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetrac.viewmodels.FarmViewModelFactory
 import org.technoserve.cafetraorg.technoserve.cafetrac.R

@@ -1,6 +1,5 @@
-package com.example.cafetrac.ui.screens.shopping
+package org.technoserve.cafetrac.ui.screens.shopping
 
-import BottomNavBar
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -13,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.cafetrac.database.models.Language
 import com.example.cafetrac.ui.screens.directbuy.BoughtItemsList
+import org.technoserve.cafetrac.ui.screens.bottomnavbar.BottomNavBar
+import org.technoserve.cafetrac.ui.screens.bottomnavbar.BottomNavItem
 import org.technoserve.cafetrac.ui.screens.directbuy.BoughtItemsListDirectBuy
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel
