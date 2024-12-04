@@ -61,8 +61,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
-import com.example.cafetrac.database.models.ParcelableFarmData
-import com.example.cafetrac.database.models.ParcelablePair
+import org.technoserve.cafetrac.database.models.ParcelableFarmData
+import org.technoserve.cafetrac.database.models.ParcelablePair
 import org.technoserve.cafetrac.ui.components.isSystemInDarkTheme
 import org.technoserve.cafetrac.utils.hasLocationPermission
 import org.technoserve.cafetrac.viewmodels.MapViewModel

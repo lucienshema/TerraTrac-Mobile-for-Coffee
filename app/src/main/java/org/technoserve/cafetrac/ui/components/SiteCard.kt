@@ -31,8 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.technoserve.cafetrac.database.models.CollectionSite
 
-import com.example.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.ui.composes.UpdateCollectionDialog
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetraorg.technoserve.cafetrac.R

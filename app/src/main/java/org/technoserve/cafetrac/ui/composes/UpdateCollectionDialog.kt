@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.example.cafetrac.database.models.CollectionSite
+import org.technoserve.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 

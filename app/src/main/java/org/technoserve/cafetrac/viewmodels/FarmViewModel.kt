@@ -20,10 +20,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import org.technoserve.cafetrac.database.AppDatabase
-import com.example.cafetrac.database.models.BuyThroughAkrabi
-import com.example.cafetrac.database.models.CollectionSite
-import com.example.cafetrac.database.models.DirectBuy
-import com.example.cafetrac.database.models.Farm
+import org.technoserve.cafetrac.database.models.Farm
 import com.example.cafetrac.database.helpers.MyPagingSource
 import com.example.cafetrac.database.helpers.RefreshableLiveData
 import com.example.cafetrac.database.sync.remote.ApiService
@@ -38,6 +35,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.Instant
 import org.json.JSONObject
+import org.technoserve.cafetrac.database.models.BuyThroughAkrabi
+import org.technoserve.cafetrac.database.models.CollectionSite
+import org.technoserve.cafetrac.database.models.DirectBuy
 import org.technoserve.cafetrac.database.models.FarmRequest
 import org.technoserve.cafetraorg.technoserve.cafetrac.BuildConfig
 import org.technoserve.cafetraorg.technoserve.cafetrac.R

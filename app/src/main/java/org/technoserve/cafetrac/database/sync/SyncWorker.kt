@@ -21,9 +21,9 @@ import com.example.cafetrac.database.sync.remote.ApiService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.example.cafetrac.database.models.toDeviceFarmDtoList
 import org.technoserve.cafetrac.utils.DeviceIdUtil
 import okhttp3.OkHttpClient
+import org.technoserve.cafetrac.database.mappers.toDeviceFarmDtoList
 import org.technoserve.cafetraorg.technoserve.cafetrac.BuildConfig
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 

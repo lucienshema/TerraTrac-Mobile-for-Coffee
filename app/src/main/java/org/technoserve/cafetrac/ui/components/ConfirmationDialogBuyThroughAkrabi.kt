@@ -5,7 +5,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import com.example.cafetrac.database.models.BuyThroughAkrabi
+import org.technoserve.cafetrac.database.models.BuyThroughAkrabi
+
 import org.technoserve.cafetrac.ui.screens.farms.Action
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 

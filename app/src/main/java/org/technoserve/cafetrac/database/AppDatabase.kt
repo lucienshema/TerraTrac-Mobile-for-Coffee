@@ -11,13 +11,13 @@ import com.example.cafetrac.database.converters.BitmapConverter
 import com.example.cafetrac.database.converters.DateConverter
 import com.example.cafetrac.database.dao.AkrabiDao
 import com.example.cafetrac.database.dao.FarmDAO
-import com.example.cafetrac.database.models.Akrabi
-import com.example.cafetrac.database.models.BuyThroughAkrabi
-import com.example.cafetrac.database.models.CollectionSite
-import com.example.cafetrac.database.models.DirectBuy
-import com.example.cafetrac.database.models.Farm
+import org.technoserve.cafetrac.database.models.Farm
 import org.technoserve.cafetrac.database.helpers.ContextProvider
 import org.technoserve.cafetrac.database.helpers.MigrationHelper
+import org.technoserve.cafetrac.database.models.Akrabi
+import org.technoserve.cafetrac.database.models.BuyThroughAkrabi
+import org.technoserve.cafetrac.database.models.CollectionSite
+import org.technoserve.cafetrac.database.models.DirectBuy
 
 
 @Database(entities = [Farm::class, CollectionSite::class, BuyThroughAkrabi::class, DirectBuy::class, Akrabi::class], version = 2, exportSchema = true)

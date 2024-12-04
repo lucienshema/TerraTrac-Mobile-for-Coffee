@@ -9,8 +9,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import org.technoserve.cafetrac.database.AppDatabase
 import com.example.cafetrac.database.dao.AkrabiDao
-import com.example.cafetrac.database.models.Akrabi
+
 import kotlinx.coroutines.launch
+import org.technoserve.cafetrac.database.models.Akrabi
 
 class AkrabiViewModel(application: Application) : AndroidViewModel(application) {
     private val akrabiDao: AkrabiDao = AppDatabase.getInstance(application).akrabiDao()

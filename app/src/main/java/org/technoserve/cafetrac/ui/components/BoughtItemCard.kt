@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.cafetrac.database.models.BuyThroughAkrabi
+import org.technoserve.cafetrac.database.models.BuyThroughAkrabi
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 
 

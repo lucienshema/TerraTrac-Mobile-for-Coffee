@@ -59,9 +59,9 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
-import com.example.cafetrac.database.models.Farm
+import org.technoserve.cafetrac.database.models.Farm
 import com.example.cafetrac.database.models.Language
-import com.example.cafetrac.database.models.ParcelablePair
+import org.technoserve.cafetrac.database.models.ParcelablePair
 import org.technoserve.cafetrac.ui.components.CustomDrawer
 import org.technoserve.cafetrac.ui.components.GenderDropdown
 import org.technoserve.cafetrac.ui.components.isSystemInDarkTheme

@@ -18,9 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-
-import com.example.cafetrac.database.models.Akrabi
-import com.example.cafetrac.database.models.CollectionSite
+import org.technoserve.cafetrac.database.models.Akrabi
+import org.technoserve.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.viewmodels.AkrabiViewModel
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 

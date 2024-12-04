@@ -58,10 +58,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import com.example.cafetrac.database.models.Farm
+import org.technoserve.cafetrac.database.models.Farm
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import com.example.cafetrac.database.models.Language
-import com.example.cafetrac.database.models.ParcelablePair
+import org.technoserve.cafetrac.database.models.ParcelablePair
 import org.technoserve.cafetrac.ui.components.DrawerItem
 
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel

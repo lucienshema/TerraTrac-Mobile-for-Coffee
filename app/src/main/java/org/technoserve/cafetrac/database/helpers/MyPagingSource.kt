@@ -2,10 +2,10 @@ package com.example.cafetrac.database.helpers
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.example.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.technoserve.cafetrac.database.models.CollectionSite
 
 class MyPagingSource(
     private val farmViewModel: FarmViewModel

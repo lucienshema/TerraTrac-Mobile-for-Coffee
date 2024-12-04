@@ -51,10 +51,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import org.technoserve.cafetrac.database.models.CollectionSite
+import org.technoserve.cafetrac.database.models.DirectBuy
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
-import com.example.cafetrac.database.models.CollectionSite
-import com.example.cafetrac.database.models.DirectBuy
-import com.example.cafetrac.database.models.Farm
+import org.technoserve.cafetrac.database.models.Farm
 import org.technoserve.cafetrac.ui.components.CreateFarmerDialog
 import org.technoserve.cafetrac.ui.components.DatePickerDialog
 import org.technoserve.cafetrac.ui.components.ImagePicker

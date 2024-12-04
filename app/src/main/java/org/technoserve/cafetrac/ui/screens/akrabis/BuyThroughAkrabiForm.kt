@@ -33,8 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.cafetrac.database.models.BuyThroughAkrabi
-import com.example.cafetrac.database.models.CollectionSite
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -57,8 +55,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-
-import com.example.cafetrac.database.models.Akrabi
+import org.technoserve.cafetrac.database.models.Akrabi
+import org.technoserve.cafetrac.database.models.BuyThroughAkrabi
+import org.technoserve.cafetrac.database.models.CollectionSite
 
 import org.technoserve.cafetrac.ui.screens.farms.siteID
 import org.technoserve.cafetrac.ui.components.DatePickerDialog

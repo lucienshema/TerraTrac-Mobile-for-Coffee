@@ -65,8 +65,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
-import com.example.cafetrac.database.models.Akrabi
-import com.example.cafetrac.database.models.Farm
+import org.technoserve.cafetrac.database.models.Farm
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetrac.viewmodels.FarmViewModelFactory
 import kotlinx.coroutines.delay
@@ -91,8 +90,9 @@ import androidx.compose.ui.Alignment.Companion.BottomEnd
 import com.example.cafetrac.ui.screens.collectionsites.BottomActionBar
 import org.technoserve.cafetrac.utils.DeviceIdUtil
 import com.example.cafetrac.database.models.Language
-import com.example.cafetrac.database.models.ParcelableFarmData
-import com.example.cafetrac.database.models.ParcelablePair
+import org.technoserve.cafetrac.database.models.Akrabi
+import org.technoserve.cafetrac.database.models.ParcelableFarmData
+import org.technoserve.cafetrac.database.models.ParcelablePair
 import org.technoserve.cafetrac.ui.components.ConfirmationDialog
 import org.technoserve.cafetrac.ui.components.DeleteAllDialogPresenter
 import org.technoserve.cafetrac.ui.components.FarmCard

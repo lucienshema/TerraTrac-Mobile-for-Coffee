@@ -1,4 +1,4 @@
-package com.example.cafetrac.database.models
+package org.technoserve.cafetrac.database.models
 
 import android.os.Parcel
 import android.os.Parcelable

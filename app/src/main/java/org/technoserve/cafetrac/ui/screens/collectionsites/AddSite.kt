@@ -23,11 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import com.example.cafetrac.database.models.Language
 import org.technoserve.cafetrac.viewmodels.LanguageViewModel
 import org.joda.time.Instant
+import org.technoserve.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.ui.components.SiteForm
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
 

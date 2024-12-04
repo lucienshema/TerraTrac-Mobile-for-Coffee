@@ -43,9 +43,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import org.technoserve.cafetrac.database.models.Akrabi
+import org.technoserve.cafetrac.database.models.CollectionSite
 
-import com.example.cafetrac.database.models.Akrabi
-import com.example.cafetrac.database.models.CollectionSite
 import org.technoserve.cafetrac.ui.components.GenderDropdown
 import org.technoserve.cafetrac.ui.components.ImagePicker
 import org.technoserve.cafetraorg.technoserve.cafetrac.R

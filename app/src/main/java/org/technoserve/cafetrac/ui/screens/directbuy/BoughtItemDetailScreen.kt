@@ -43,7 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import com.example.cafetrac.database.models.BuyThroughAkrabi
+import org.technoserve.cafetrac.database.models.BuyThroughAkrabi
 import org.technoserve.cafetrac.ui.components.DetailText
 import org.technoserve.cafetrac.viewmodels.FarmViewModel
 import org.technoserve.cafetraorg.technoserve.cafetrac.R
