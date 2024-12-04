@@ -28,7 +28,7 @@
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
     <application
-        android:name=".FarmCollectorV2App"
+        android:name="org.technoserve.cafetrac.CafeTrac"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -42,7 +42,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="${GOOGLE_MAPS_API_KEY}" />
         <activity
-            android:name=".MainActivity"
+            android:name="org.technoserve.cafetrac.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat">
             <intent-filter>
@@ -51,11 +51,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name=".database.sync.SyncService"
-            android:foregroundServiceType="dataSync"
-            android:permission="android.permission.FOREGROUND_SERVICE"
-            tools:ignore="ForegroundServicePermission" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

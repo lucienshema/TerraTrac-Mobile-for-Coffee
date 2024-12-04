@@ -6,15 +6,16 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("kotlin-parcelize")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
 //    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.example.egnss4coffeev2"
+    namespace = "org.technoserve.cafetraorg.technoserve.cafetrac"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.egnss4coffeev2"
+        applicationId = "org.technoserve.cafetrac"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -23,6 +24,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["room.schemaLocation"] =
+                    "$projectDir/schemas"
+            }
         }
     }
     buildTypes {
