@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "EGNSS4COFFEE V2"
+rootProject.name = "Cafe Trac"
 include(":app")
  

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TerraTrac</string>
+    <string name="app_name">CafeTrac</string>
     <string name="farm_list">Tarree Plootii</string>
     <string name="app_intro">Dambii bosona ciruu Gamtaa Awurooppaa eeguuf appii mobaayilaa bu\'uuraa hordoffii bunaa</string>
     <string name="developed_by">Kan qopheesse</string>
@@ -134,6 +134,78 @@
     <string name="error_farm_size_invalid">Gatii Dirree Dogoggoraa</string>
     <string name="invalid_farms">%1$d Waraqaa qabeenya beeyladaa dogoggoraa hin galmoofne</string>
     <string name="invalid_farms_with_names">%1$d qabeenya ispoortii dogongoraa hin taasifamne. Barsiisota: %2$s</string>
+
+    <string name="direct_buy">Si’aawuu Gidduu Galeessa</string>
+    <string name="buy_through_akrabi">Akrabiin Si’aa</string>
+    <string name="date">Guyyaa</string>
+    <string name="time">Sa’a</string>
+    <string name="location">Iddoo</string>
+    <string name="select_or_create_site">Iddoo filadhu ykn Uumi</string>
+    <string name="farmer_name">Maqaa Qotee Bulaan</string>
+    <string name="farmer_number">Lakkoofsa Qotee Bulaa</string>
+    <string name="akrabi_name">Maqaa Akrabi</string>
+    <string name="cherry_sold">Qorichaa Gurgurame (kg)</string>
+    <string name="price_per_kg">Gatii kg’f</string>
+    <string name="paid">Dhaabbate</string>
+    <string name="total_paid">Baay’inni Guutuu Kenname</string>
+    <string name="submit">Ergaa</string>
+    <string name="required_field">Bakki kun dirqama</string>
+    <string name="select_site_name">Maqaa iddoo filadhu</string>
+    <string name="select_or_create_akrabi">Akrabi Filadhu ykn Uumi</string>
+    <string name="akrabi_number">Lakkoofsa Akrabi</string>
+    <string name="create_new_site">Iddoo Haaraa Uumi</string>
+    <string name="create_new_akrabi">Akrabi Haaraa Uumi</string>
+    <string name="invalid_value">Gatii sirrii miti</string>
+    <string name="update_bought_item">Wanta Bitame Haaromsii</string>
+    <string name="are_you_sure_save_the_changes">Haqinanii jijjiirama kana qubataa?</string>
+    <string name="save_changes">Jijjiirama Qubaayii</string>
+    <string name="delete_this_item_cannot">Wanta kana haxa’a qubaachuudha? Wanti kun deebi’ee hin bu’uu</string>
+    <string name="delete">Haxa’aa</string>
+    <string name="bought_items">Wantoota Bitame</string>
+    <string name="no_bought_items">Wantoota hin bitamin</string>
+    <string name="create_akrabi_form">Furmaatni Akrabi Uumuuf</string>
+    <string name="edit_akrabi_form">Furmaatni Akrabi Sirreessaa</string>
+    <string name="menu">Menu</string>
+    <string name="home">Mana</string>
+    <string name="akrabi_registration">Akrabi</string>
+    <string name="collection_site_registration">Bakka Walitti Qabaa</string>
+    <string name="farmer_registration">Qotee Bulaa</string>
+    <string name="search_placeholder">Barbaadi...</string>
+    <string name="item_details_title">Bal’ina Wantootaa</string>
+    <string name="back">Deebi’aa</string>
+    <string name="bought_item_image_description">Suurri Wanta Bitame</string>
+    <string name="start_date">Guyyaa Jalqaba</string>
+    <string name="end_date">Guyyaa Dhuma</string>
+    <string name="apply">Akkasi</string>
+    <string name="clear">Mirkaneessii</string>
+    <string name="select_date_range">Guyyaa Filadhu</string>
+    <string name="photo">Suura</string>
+    <string name="select_photo">Suura Filadhu</string>
+    <string name="photo_selected">Suuri Filatame</string>
+    <string name="no_photo_selected">Suura Filatame Hin Jiru</string>
+    <string name="logout">Ba’ee Bahi</string>
+
+
+    <string name="akrabi_list">Akrabi Tarree</string>
+    <string name="akrabi_details">Akrabi Faayilii</string>
+    <string name="age">Umri</string>
+    <string name="edit">Sirreessi</string>
+    <string name="gender">Saala</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Lakkoofsa Waraqaa Eenyummaa Mootummaa</string>
+    <string name="phone">Bilbila</string>
+    <string name="number_of_trees">Lakkoofsa Mukkeen</string>
+    <string name="total_farms">%1$d bakka qonnaa guutuu</string>
+    <string name="total_farms_with_incomplete_data">%1$d odeeffannoo hin guutamin qabudha</string>
+    <string name="error_loading_more_sites">Dogoggora bakka dabalataa fe\'uufi</string>
+    <string name="delete_all">Hunduma balleessi</string>
+    <string name="delete_selected">Filataman balleessi</string>
+    <string name="share">Wal Qooduu</string>
+    <string name="confirm_export_items">Meeshaalee %1$d gadi lakkisuuf jirta. Meeshaaleen %2$d odeeffannoo hin guutamin qabu. Itti fufuu barbaaddaa?</string>
+    <string name="confirm_share_items">Meeshaalee %1$d wal qoosuu barbaadu. Meeshaaleen %2$d odeeffannoo hin guutamin qabu. Itti fufuu barbaaddaa?</string>
+
+
 
 
 </resources>

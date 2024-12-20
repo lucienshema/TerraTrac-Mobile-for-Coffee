@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TerraTrac</string>
+    <string name="app_name">CafeTrac</string>
     <string name="farm_list">Liste des parcelles</string>
     <string name="app_intro">Application mobile de base pour la traçabilité afin de respecter la réglementation européenne sur la déforestation</string>
     <string name="developed_by">Développée par</string>
@@ -134,4 +134,75 @@
     <string name="error_farm_size_invalid">Taille de ferme invalide</string>
     <string name="invalid_farms">%1$d Enregistrements de fermes invalides n\'ont pas été importés</string>
     <string name="invalid_farms_with_names">%1$d enregistrements de ferme invalides n\'ont pas été importés. Fermiers : %2$s</string>
+
+    <string name="direct_buy">Achat Direct</string>
+    <string name="buy_through_akrabi">Acheter via Akrabi</string>
+    <string name="date">Date</string>
+    <string name="time">Heure</string>
+    <string name="location">Emplacement</string>
+    <string name="select_or_create_site">Sélectionner ou Créer un Site</string>
+    <string name="farmer_name">Nom de l\'Agriculteur</string>
+    <string name="farmer_number">Numéro de l\'Agriculteur</string>
+    <string name="akrabi_name">Nom de l\'Akrabi</string>
+    <string name="cherry_sold">Cerise Vendue (kg)</string>
+    <string name="price_per_kg">Prix par kg</string>
+    <string name="paid">Payé</string>
+    <string name="total_paid">Total Payé</string>
+    <string name="submit">Soumettre</string>
+    <string name="required_field">Ce champ est obligatoire</string>
+    <string name="select_site_name">Veuillez sélectionner un nom de site</string>
+    <string name="select_or_create_akrabi">Sélectionner ou Créer un Akrabi</string>
+    <string name="akrabi_number">Numéro de l\'Akrabi</string>
+    <string name="create_new_site">Créer un Nouveau Site</string>
+    <string name="create_new_akrabi">Créer un Nouvel Akrabi</string>
+    <string name="invalid_value">Valeur invalide</string>
+    <string name="update_bought_item">Mettre à jour l\'Article Acheté</string>
+    <string name="are_you_sure_save_the_changes">Êtes-vous sûr de vouloir enregistrer ces modifications?</string>
+    <string name="save_changes">Enregistrer les Modifications</string>
+    <string name="delete_this_item_cannot">Êtes-vous sûr de vouloir supprimer cet article? Cette action ne peut pas être annulée.</string>
+    <string name="delete">Supprimer</string>
+    <string name="bought_items">Articles Achetés</string>
+    <string name="no_bought_items">Aucun article acheté pour l\'instant</string>
+    <string name="create_akrabi_form">Formulaire de Création d\'Akrabi</string>
+    <string name="edit_akrabi_form">Formulaire de Modification d\'Akrabi</string>
+    <string name="menu">Menu</string>
+    <string name="home">Accueil</string>
+    <string name="akrabi_registration">Akrabi</string>
+    <string name="collection_site_registration"> Site de Collecte</string>
+    <string name="farmer_registration">Agriculteur</string>
+    <string name="search_placeholder">Rechercher...</string>
+    <string name="item_details_title">Détails de l\'Article</string>
+    <string name="back">Retour</string>
+    <string name="bought_item_image_description">Image de l\'Article Acheté</string>
+    <string name="start_date">Date de Début</string>
+    <string name="end_date">Date de Fin</string>
+    <string name="apply">Appliquer</string>
+    <string name="clear">Effacer</string>
+    <string name="select_date_range">Sélectionner la Période</string>
+    <string name="photo">Photo</string>
+    <string name="select_photo">Sélectionner une Photo</string>
+    <string name="photo_selected">Photo Sélectionnée</string>
+    <string name="no_photo_selected">Aucune Photo Sélectionnée</string>
+    <string name="logout">Déconnexion</string>
+
+    <string name="akrabi_list">Liste des Akrabi</string>
+    <string name="akrabi_details">Détails de l\'Akrabi</string>
+    <string name="age">Âge</string>
+    <string name="edit">Modifier</string>
+    <string name="gender">Genre</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Numéro d\'ID gouvernemental</string>
+    <string name="phone">Téléphone</string>
+    <string name="number_of_trees">Nombre d\'arbres</string>
+    <string name="total_farms">%1$d fermes au total</string>
+    <string name="total_farms_with_incomplete_data">%1$d avec des données incomplètes</string>
+    <string name="error_loading_more_sites">Erreur lors du chargement de plus de sites</string>
+    <string name="delete_all">Tout supprimer</string>
+    <string name="delete_selected">Supprimer la sélection</string>
+    <string name="share">Partager</string>
+    <string name="confirm_export_items">Vous êtes sur le point d\'exporter %1$d articles. %2$d articles ont des données incomplètes. Voulez-vous continuer ?</string>
+    <string name="confirm_share_items">Vous êtes sur le point de partager %1$d articles. %2$d articles ont des données incomplètes. Voulez-vous continuer ?</string>
+
+
 </resources>

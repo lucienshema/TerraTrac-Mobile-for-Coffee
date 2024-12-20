@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TerraTrac For Coffee</string>
+    <string name="app_name">CafeTrac</string>
     <string name="farm_list">Plots List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
     <string name="developed_by">Developed By</string>
@@ -135,5 +135,74 @@
     <string name="error_farm_size_invalid">Invalid Farm Size</string>
     <string name="invalid_farms">%1$d Invalid farm Records were not Imported</string>
     <string name="invalid_farms_with_names">%1$d Invalid farm records were not imported. Farmers: %2$s</string>
+
+    <string name="direct_buy">Direct Buy</string>
+    <string name="buy_through_akrabi">Buy Through Akrabi</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="location">Location</string>
+    <string name="select_or_create_site">Select or Create Site</string>
+    <string name="farmer_name">Farmer Name</string>
+    <string name="farmer_number">Farmer Number</string>
+    <string name="akrabi_name">Akrabi Name</string>
+    <string name="cherry_sold">Cherry Sold (kg)</string>
+    <string name="price_per_kg">Price per kg</string>
+    <string name="paid">Paid</string>
+    <string name="total_paid">Total Paid</string>
+    <string name="submit">Submit</string>
+    <string name="required_field">This field is required</string>
+    <string name="select_site_name">Please select a site name</string>
+    <string name="select_or_create_akrabi">Select or Create Akrabi</string>
+    <string name="akrabi_number">Akrabi Number"</string>
+    <string name="create_new_site">Create New Site</string>
+    <string name="create_new_akrabi">Create New Akrabi</string>
+    <string name="invalid_value">Invalid value</string>
+    <string name="update_bought_item">Update Bought Item</string>
+    <string name="are_you_sure_save_the_changes">Are you sure you want to save these changes?</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="delete_this_item_cannot">Are you sure you want to delete this item? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="bought_items">Bought Items</string>
+    <string name="no_bought_items">No items bought yet</string>
+    <string name="create_akrabi_form">Create Akrabi Form</string>
+    <string name="edit_akrabi_form">Edit Akrabi Form</string>
+    <string name="menu">Menu</string>
+    <string name="home">Home</string>
+    <string name="akrabi_registration">Akrabi</string>
+    <string name="collection_site_registration">Collection Site</string>
+    <string name="farmer_registration">Farmer</string>
+    <string name="search_placeholder">"Search...</string>
+    <string name="item_details_title">Item Details</string>
+    <string name="back">Back</string>
+    <string name="bought_item_image_description">Bought Item Image</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="apply">Apply</string>
+    <string name="clear">Clear</string>
+    <string name="select_date_range">Select Date Range</string>
+    <string name="photo">Photo</string>
+    <string name="select_photo">Select Photo</string>
+    <string name="photo_selected">Photo Selected</string>
+    <string name="no_photo_selected">No Photo Selected</string>
+    <string name="logout">Logout</string>
+
+    <string name="akrabi_list">Akrabi List</string>
+    <string name="akrabi_details">Akrabi Details</string>
+    <string name="age">Age</string>
+    <string name="edit">Edit</string>
+    <string name="gender">Gender</string>
+    <string name="woreda">Woreda</string>
+    <string name="kebele">Kebele</string>
+    <string name="gov_id_number">Government ID Number</string>
+    <string name="phone">Phone</string>
+    <string name="number_of_trees">Number of Trees</string>
+    <string name="total_farms">%1$d total farms</string>
+    <string name="total_farms_with_incomplete_data">%1$d with incomplete data</string>
+    <string name="error_loading_more_sites">Error Loading More Sites</string>
+    <string name="delete_all">Delete All</string>
+    <string name="delete_selected">Delete Selected</string>
+    <string name="share">Share</string>
+    <string name="confirm_export_items">You are about to export %1$d items. %2$d items have incomplete data. Do you want to proceed?</string>
+    <string name="confirm_share_items">You are about to share %1$d items. %2$d items have incomplete data. Do you want to proceed?</string>
 
 </resources>

@@ -1,3 +1,4 @@
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,16 +6,16 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("kotlin-parcelize")
-    //id("com.google.devtools.ksp")
-    // alias(libs.plugins.ksp)
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+//    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.example.egnss4coffeev2"
+    namespace = "org.technoserve.cafetraorg.technoserve.cafetrac"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.egnss4coffeev2"
+        applicationId = "org.technoserve.cafetrac"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -24,17 +25,72 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["room.schemaLocation"] =
+                    "$projectDir/schemas"
+            }
         }
     }
+    buildTypes {
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Load BASE_URL from local.properties
+            val baseUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("BASE_URL") ?: "default_debug_url"
+                } else {
+                    "default_debug_url"
+                }
+            }
+            buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+
+            // Load DATA_PRIVACY_URL from local.properties
+            val dataPrivacyUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("DATA_PRIVACY_URL") ?: "https://www.default-privacy-url.com/"
+                } else {
+                    "https://www.default-privacy-url.com/"
+                }
+            }
+            buildConfigField("String", "DATA_PRIVACY_URL", "\"$dataPrivacyUrl\"")
+        }
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Load BASE_URL from local.properties
+            val baseUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("BASE_URL") ?: "default_release_url"
+                } else {
+                    "default_release_url"
+                }
+            }
+            buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+
+            // Load DATA_PRIVACY_URL from local.properties
+            val dataPrivacyUrl = project.rootProject.file("local.properties").let { propertiesFile ->
+                if (propertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(propertiesFile.inputStream())
+                    properties.getProperty("DATA_PRIVACY_URL") ?: "https://www.default-privacy-url.com/"
+                } else {
+                    "https://www.default-privacy-url.com/"
+                }
+            }
+            buildConfigField("String", "DATA_PRIVACY_URL", "\"$dataPrivacyUrl\"")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -44,6 +100,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -85,6 +142,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.compose.android)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.paging.common.android)
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.shimmer.compose.shimmer)
+
+
     kapt(libs.hilt.compiler)
     implementation(libs.gms.play.services.ads.identifier)
     implementation(libs.maps.ktx)
@@ -92,14 +155,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     kapt(libs.androidx.room.compiler)
-//
-//    implementation(libs.google.accompanist.pager)
-//    implementation(libs.accompanist.pager.indicators)
-
 
     //ksp(libs.androidx.room.compiler)  // Correctly added KSP dependency
-
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
